@@ -55,21 +55,64 @@ Tre conduttori significa che nella cornetta viaggiano **solo segnali analogici**
 microfono digitale I2S ne richiederebbe cinque: per questo il progetto usa un codec nella
 base e una capsula electret nella cornetta, invece di un microfono I2S.
 
-| Filo | Va a | Nota |
+| Filo | Ruolo | Va a |
 |---|---|---|
-| **Massa comune** | `AGND` del WM8960 | condivisa tra mic e capsula d'ascolto |
-| **Segnale microfono** | `LINPUT1` del WM8960 | bias fornito da `MICBIAS` del codec |
-| **Segnale ascolto** | `HP_L` del WM8960 | **uscita cuffia**, non speaker (vedi sotto) |
+| **blu** | massa comune | `AGND` del WM8960 |
+| **rosso** | segnale ascolto | `HP_L` del WM8960 — **uscita cuffia**, non speaker (vedi sotto) |
+| **bianco** | segnale microfono | `LINPUT1` del WM8960, bias da `MICBIAS` |
+
+> ⚠️ Questi colori valgono **per l'esemplare di questo progetto**, verificati col
+> multimetro. Sui telefoni italiani di quell'epoca le convenzioni cromatiche cambiavano
+> da lotto a lotto e da riparazione a riparazione: sul tuo apparecchio **rifai le misure**
+> con la procedura qui sotto invece di fidarti di questa tabella.
+
+### Come identificare i tre fili col multimetro
+
+I tre fili non sono tre circuiti separati: formano una **stella**. Un filo è la massa
+comune, e dagli altri due partono microfono e capsula d'ascolto. Ne segue una relazione
+che rende l'identificazione certa invece che a tentativi:
+
+```
+        ┌──── microfono ────┐
+comune ─┤                   ├── i due segnali
+        └──── ascolto ──────┘
+
+R(mic ↔ ascolto)  =  R(comune ↔ mic)  +  R(comune ↔ ascolto)
+```
+
+**La misura più alta delle tre è sempre la somma delle altre due**, e il filo che non
+compare in quella coppia è il comune.
+
+1. **Preparazione.** Multimetro in ohm, portata 200 Ω o automatica, niente alimentazione
+   collegata. Tocca le punte tra loro e annota l'offset dei puntali (0,2-0,5 Ω): va
+   sottratto dalle misure basse.
+2. **Misura dal lato base**, con la cornetta montata: così il cordone è incluso nella
+   misura, ed è la parte che dopo cinquant'anni cede più spesso. Registra tutte e tre le
+   coppie.
+3. **Trova il comune**: è il filo escluso dalla coppia con la lettura maggiore.
+4. **Distingui mic e ascolto** picchiettando la capsula del microfono mentre misuri:
+   - **microfono a carbone** — la lettura *balla*, cambia premendo o girando la capsula
+     (i granelli di carbone si spostano). Tipico 20-200 Ω, instabile.
+   - **capsula d'ascolto** — la lettura è *immobile*, ed è una bobina. Tipico 50-600 Ω;
+     alcune capsule magnetiche d'epoca arrivano a 1-2 kΩ.
+
+   Conferma gratuita: toccando e staccando i puntali sulla coppia dell'ascolto si
+   **sente un clic nella capsula**, mossa dalla corrente di prova del multimetro.
+
+**Se due letture su tre danno `OL`**: il microfono a carbone è morto — succede spesso, i
+granelli si compattano e si ossidano. Non è un problema, va sostituito comunque: la sola
+coppia con valore finito è l'ascolto, e il terzo filo è quello del microfono.
+
+**Controllo da fare comunque**: con i puntali su una coppia che legge, **piega e torci il
+cordone spiralato** vicino ai due imbocchi. Se la lettura sfarfalla o va a `OL`, un
+conduttore si sta spezzando — è il punto in cui questi cordoni cedono sempre, e conviene
+scoprirlo prima di richiudere la cassetta.
 
 ⚠️ **Va usata l'uscita cuffia, non quella speaker.** L'uscita speaker del WM8960 è a ponte
 (BTL): entrambi i terminali sono pilotati, nessuno dei due è a massa, quindi servirebbero
 due fili dedicati. Con tre conduttori totali non è utilizzabile. L'uscita cuffia è
 single-ended e condivide la massa: 40 mW su 16 Ω sono enormemente più di quanto serva a
 una capsula da orecchio.
-
-> **Identifica i fili col multimetro prima di collegare**: misura la resistenza tra le
-> coppie. La coppia che dà qualche decina o centinaia di ohm è la capsula d'ascolto.
-> Non fidarti dei colori: dopo cinquant'anni le convenzioni cambiavano da lotto a lotto.
 
 ### Codec WM8960 (Waveshare 15019, nella base)
 
