@@ -134,6 +134,21 @@ void test_fallback_disattivo_con_timeout_zero(void)
     TEST_ASSERT_EQUAL_UINT8(3, digit);
 }
 
+void test_zero_pulses_a_zero_usa_il_default_italiano(void)
+{
+    /* Una configurazione dimenticata (o azzerata dalla pagina web) renderebbe
+       ogni cifra uno 0, perche' qualunque conteggio supererebbe la soglia.
+       Il default deve subentrare. */
+    uint8_t digit = 0xFF;
+    init_with(0, 0);
+
+    TEST_ASSERT_TRUE(dial_digit(5, &digit));
+    TEST_ASSERT_EQUAL_UINT8(5, digit);
+
+    TEST_ASSERT_TRUE(dial_digit(10, &digit));
+    TEST_ASSERT_EQUAL_UINT8(0, digit);
+}
+
 void test_impulsi_fuori_rotazione_sono_ignorati(void)
 {
     /* Vibrazioni a disco fermo non devono contare. */
@@ -156,6 +171,7 @@ int main(void)
     RUN_TEST(test_fallback_completa_la_cifra_senza_rilascio_nsi);
     RUN_TEST(test_nessuna_doppia_emissione_tra_nsi_e_fallback);
     RUN_TEST(test_fallback_disattivo_con_timeout_zero);
+    RUN_TEST(test_zero_pulses_a_zero_usa_il_default_italiano);
     RUN_TEST(test_impulsi_fuori_rotazione_sono_ignorati);
     return UNITY_END();
 }

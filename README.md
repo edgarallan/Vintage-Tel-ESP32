@@ -49,7 +49,26 @@ cioè esattamente il ruolo "vivavoce d'auto" che serve qui.
 
 ## Stato
 
-🚧 **In costruzione.** Fase 1 (BOM e mappa GPIO) completata; il firmware è in sviluppo.
+🚧 **In costruzione.**
+
+| Fase | Stato |
+|---|---|
+| 1 — BOM e mappa GPIO | ✅ completata |
+| 2 — nucleo portabile (`core/`) | ✅ **67 test verdi, 98,8% di copertura** |
+| 3 — driver ESP-IDF (`hal/`) e bring-up | ⏳ attende i componenti |
+| 4 — integrazione e prima chiamata | ⏳ |
+| 5 — documentazione di montaggio | ⏳ |
+
+### Eseguire i test
+
+Non serve un ESP32, non serve ESP-IDF: bastano CMake e il compilatore di sistema.
+
+```bash
+cd firmware
+cmake -S tests -B tests/build && cmake --build tests/build
+ctest --test-dir tests/build --output-on-failure
+./tests/coverage.sh          # copertura di core/, soglia 80%
+```
 
 ## Documentazione in italiano
 

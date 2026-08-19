@@ -21,3 +21,4 @@ secrets.h
 
 # Unity vendorizzato: tracciato apposta, i test devono girare offline
 !firmware/tests/unity/
+firmware/tests/cov/
