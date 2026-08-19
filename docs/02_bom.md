@@ -191,6 +191,52 @@ Arriva in 2-4 settimane, cioe' quando serve davvero. Prezzi reali verificati sul
 | **Interruttore KCD11 10×15 mm** | rosso, 10 pz | 1,69 € | on/off sul fondo |
 | **Distanziali nylon** | **M2.5, 10 mm, nero, 30 set** | 3,20 € | montaggio schede |
 
+### ⚠️ I dazi di importazione cambiano i conti — leggere prima di ordinare
+
+Su un ordine di **16,46 €** AliExpress addebita **29,35 € di oneri di importazione**:
+un sovrapprezzo del **178%**, che porta il totale a **45,81 €**.
+
+Il meccanismo va capito perche' e' controintuitivo:
+
+> Per gli ordini da fuori UE sotto i 150 €, AliExpress applica **3 € di dazio forfettario
+> per ogni *tipo* di oggetto diverso**, piu' IVA. Piu' unita' dello stesso oggetto contano
+> come un tipo solo.
+
+Quindi il dazio **non dipende da quanto compri, ma da quante voci diverse ci sono**.
+Con IVA al 22% ogni voce costa **~3,67 € fissi**, qualunque sia il suo prezzo. Un modulo
+WS2812 da 0,90 € ne costa in realta' **4,57**.
+
+**Conseguenza pratica: su AliExpress non conviene mai aggiungere un articolo economico
+singolo.** Conviene invece aumentare le quantita' di voci gia' presenti, perche' le unita'
+aggiuntive non pagano dazio.
+
+#### Confronto reale, dazi inclusi
+
+| Articolo | AliExpress + dazio | Amazon | Migliore |
+|---|---|---|---|
+| L298N | 6,21 € | 11,99 € | AliExpress |
+| OLED 0,96" | 6,21 € | 13,99 € | AliExpress |
+| XL6009 | 5,57 € | 9,99 € | AliExpress |
+| Modulo UPS | 5,61 € | 10,72 € | AliExpress |
+| Condensatori | 5,42 € | 12,99 € | AliExpress |
+| WS2812 | 4,57 € | 11,99 € | AliExpress |
+| Distanziali M2.5 | 6,87 € | ~10 € | AliExpress |
+| Interruttore KCD11 | 5,36 € | **4,79 €** | **Amazon** |
+| **Totale** | **45,81 €** | **~86 €** | |
+
+**Anche con i dazi l'ordine cinese resta conveniente**, ma il margine si dimezza: da ~70 €
+di risparmio teorico a ~40 € reali.
+
+#### Variante piu' economica: comprare in Italia cio' che si trova in Italia
+
+Tre voci sono banali da procurare in qualunque negozio di elettronica e pagano dazio come
+le altre: **condensatori** (5,42 €, in negozio ~0,60), **interruttore** (5,36 €, ~1 €) e
+**distanziali** (6,87 €, ~3 €). Toglierle dall'ordine fa scendere il totale a **28,17 €**
+per le cinque voci che dalla Cina convengono davvero — L298N, XL6009, UPS, OLED, WS2812 —
+contro ~5 € di spesa locale.
+
+**Totale: ~33 € invece di 45,81**, al costo di un giro in negozio.
+
 ### Tre trappole trovate comprando, che valgono per chiunque rifaccia questo ordine
 
 1. **Il L298N esiste in due formati.** La versione **Mini** costa meno ma regge solo ~12 V:
