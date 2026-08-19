@@ -176,20 +176,36 @@ questa BOM.
 > impiega comunque 2-4 settimane, e la sequenza di bring-up mette l'audio per ultimo:
 > NVS, LED, display, gancio, disco e campanello vengono prima.
 
-## Ordine B — AliExpress, in parallelo (16,46 €)
+## Ordine B — AliExpress, solo il non reperibile in Italia (~29 €)
 
-Arriva in 2-4 settimane, cioe' quando serve davvero. Prezzi reali verificati sul carrello.
+Ridotto a **cinque voci** dopo aver scoperto i dazi (vedi sotto): restano solo i moduli
+che dalla Cina convengono davvero anche pagando 3,67 € di dazio ciascuno.
 
-| Articolo | Variante | Prezzo | Serve per |
-|---|---|---|---|
-| **L298N** (versione grande) | Rosso | 2,54 € | campanello — ponte H |
-| **XL6009** boost regolabile | 1 pz, 5-32 V → 5-50 V | 1,90 € | campanello — genera i ~24 V |
-| **Modulo UPS 18650** | **5V module** | 1,94 € | tampone anti-blackout |
-| **Condensatori elettrolitici** | **50V 100UF, 20 pz** | 1,75 € | campanello — picchi degli squilli |
-| **OLED 0,96" I2C SSD1306** | bianco, 1 pz | 2,54 € | display |
-| **Modulo breakout WS2812** | 1 pz | 0,90 € | LED di stato |
-| **Interruttore KCD11 10×15 mm** | rosso, 10 pz | 1,69 € | on/off sul fondo |
-| **Distanziali nylon** | **M2.5, 10 mm, nero, 30 set** | 3,20 € | montaggio schede |
+| Articolo | Variante | Q.tà | Prezzo | Serve per |
+|---|---|---|---|---|
+| **L298N** (versione grande) | Rosso | 1 | 2,54 € | campanello — ponte H |
+| **OLED 0,96" I2C SSD1306** | bianco | 1 | 2,54 € | display |
+| **Modulo UPS 18650** | **5V module** | 1 | 1,94 € | tampone anti-blackout |
+| **XL6009** boost regolabile | 5-32 V → 5-50 V | 1 | 1,90 € | campanello — genera i ~24 V |
+| **Modulo breakout WS2812** | 1 pz | **2** | 1,80 € | LED di stato (uno di scorta) |
+| | **Merce** | | **10,72 €** | spedizione gratuita |
+| | **Dazi stimati** (5 voci × 3,67) | | **~18,35 €** | |
+| | **Totale** | | **~29 €** | consegna 26 ago - 2 set |
+
+> **Perche' due WS2812 invece di uno.** Sotto i 10 € di merce la spedizione costa 1,99 €.
+> Aggiungendo una seconda unita' di una voce **gia' presente** si superano i 10 € senza
+> pagare un dazio in piu' — le unita' aggiuntive dello stesso oggetto non contano come
+> nuovo tipo. Costo 0,90 €, risparmio 1,99 €, e resta un pezzo di scorta.
+
+### Da comprare in un negozio di elettronica in Italia (~5 €)
+
+Queste tre voci pagavano **17,65 € di dazi e merce** su AliExpress e si trovano ovunque:
+
+| Articolo | In negozio | Note |
+|---|---|---|
+| **Condensatori elettrolitici 100 µF / 50 V** ×2 | ~0,60 € | uno sull'ingresso e uno sull'uscita dell'XL6009 |
+| **Interruttore a bilanciere** ~10×15 mm, 2 pin | ~1 € | on/off sul fondo della cassetta |
+| **Distanziali nylon M2.5**, ~10 mm | ~3 € | montaggio delle schede |
 
 ### ⚠️ I dazi di importazione cambiano i conti — leggere prima di ordinare
 
