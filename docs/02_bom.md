@@ -127,3 +127,60 @@ Escluse spedizioni e il telefono stesso (sui mercatini italiani 20-50 €).
 - **Adafruit / Mouser / RS** — PowerBoost 1000C, DRV8871
 - **AliExpress** — DevKitC, basetta a morsetti, WS2812, XL6009, OLED, capsula electret
 - **Subito.it / eBay.it** — telefoni SIP vintage italiani
+
+
+---
+
+# Lista d'acquisto — Amazon.it
+
+Verificata articolo per articolo il 19/08/2026: nome, prezzo e disponibilità controllati
+sulle schede prodotto reali. **Tutto da un unico fornitore**, consegna rapida e resi facili.
+
+> Molte voci sono **multipack** perché su Amazon costano meno del pezzo singolo. Ti restano
+> scorte di quasi tutto — su un primo montaggio è un vantaggio, non uno spreco: il pezzo
+> che bruci non ferma il progetto per una settimana.
+
+| # | Articolo | Prezzo | Link |
+|---|---|---|---|
+| 1 | **WM8960 Audio Board** — il codec, cuore audio del progetto | 20,99 € | [B0CNNFWLNV](https://www.amazon.it/dp/B0CNNFWLNV) |
+| 2 | **ESP32 WROOM 38 pin ×2** — il cervello, con scorta | 15,99 € | [B0GJTNCWMZ](https://www.amazon.it/dp/B0GJTNCWMZ) |
+| 3 | **Breakout 38 pin a morsetti a vite** — azzera le saldature | 13,99 € | [B0G92N76V4](https://www.amazon.it/dp/B0G92N76V4) |
+| 4 | **OLED 0,96" I2C ×3** | 13,99 € | [B0D8XMBX8S](https://www.amazon.it/dp/B0D8XMBX8S) |
+| 5 | **Moduli WS2812 ×5** — LED di stato | 11,99 € | [B096ZY5NYQ](https://www.amazon.it/dp/B096ZY5NYQ) |
+| 6 | **Boost XL6009 ×5** (3-30 V → 5-35 V) — alimenta il campanello | 9,99 € | [B07BVWV74J](https://www.amazon.it/dp/B07BVWV74J) |
+| 7 | **L298N ×5** — ponte H per le bobine, regge 46 V | 11,99 € | [B07MY33PC9](https://www.amazon.it/dp/B07MY33PC9) |
+| 8 | **Modulo UPS 5 V per 18650** — alimentazione continua | 10,72 € | [B0B6SPMJZB](https://www.amazon.it/dp/B0B6SPMJZB) |
+| 9 | **Capsule electret 9,7 mm ×5, già cablate** | 13,90 € | [B0GZDKXBLW](https://www.amazon.it/dp/B0GZDKXBLW) |
+| 10 | **Jack 3,5 mm 4 poli a morsetti a vite ×5** — la cornetta senza stagno | 9,99 € | [B0C6M851WD](https://www.amazon.it/dp/B0C6M851WD) |
+| 11 | **Cella 18650 1S con connettore JST** | 17,81 € | [B0D1NHXSFR](https://www.amazon.it/dp/B0D1NHXSFR) |
+| 12 | **WAGO 221-412 ×16** — giunzioni a leva | 10,34 € | [B01KI1I8SG](https://www.amazon.it/dp/B01KI1I8SG) |
+| 13 | **Alimentatore USB 5 V / 3 A** | 9,99 € | [B0BF9RJVY9](https://www.amazon.it/dp/B0BF9RJVY9) |
+| 14 | **Cavetti Dupont 120 pz** (M-M, M-F, F-F) | 11,99 € | [B0H86XQTKW](https://www.amazon.it/dp/B0H86XQTKW) |
+| | **Totale** | **183,67 €** | |
+
+## Tre scelte che si discostano dal progetto iniziale
+
+**ESP32 WROOM invece di WROVER.** Nel piano avevo motivato il WROVER con la PSRAM,
+stimando **1 € di differenza**. Sbagliato: sul mercato italiano l'ESP32-DevKitC-VIE
+originale Espressif costa **35,58 €**, contro 8 € a scheda del WROOM in coppia. La PSRAM
+serviva come margine, non come necessità — l'esempio HFP di ESP-IDF gira sui 520 KB del
+WROOM, e qui WiFi e Bluetooth **non convivono mai** (il WiFi si accende solo in modalità
+configurazione), che è proprio il caso che consuma RAM. Si parte col WROOM; se la memoria
+stringe, il WROVER resta un aggiornamento da 35 € a progetto già funzionante.
+
+**L298N invece di DRV8871.** Le bobine del campanello sono da ~1700 Ω: a 24 V assorbono
+**circa 15 mA**. Il DRV8871 era dimensionato per una corrente che in questo circuito non
+esiste; l'unico requisito vero è la tensione, e il L298N regge 46 V. Costa un quinto e ha
+i morsetti a vite.
+
+**Modulo UPS invece di PowerBoost 1000C.** Il PowerBoost avrebbe imposto un secondo
+ordine su Mouser per un solo pezzo, con spedizione pari al prezzo. Il modulo UPS scelto fa
+alimentazione continua da 18650 con uscita 5 V. Resta valido il vincolo di firmware:
+**il consumo a riposo non deve scendere sotto ~60 mA**, quindi display e LED non si
+spengono mai del tutto.
+
+## Cosa NON comprare
+
+Il **jack a 4 poli** rende superfluo qualunque connettore per la cornetta: i tre fili
+(blu → massa, rosso → L, bianco → MIC) si avvitano nello spinotto e questo entra nel jack
+del WM8960. Nessuna saldatura, nessun adattatore.
