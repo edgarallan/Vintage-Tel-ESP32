@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 660" role="img" aria-label="Mappa di conversione: tieni, rimuovi, aggiungi">
+<title>Mappa di conversione — tieni / rimuovi / aggiungi</title>
+<desc>Vista dall'alto della cassetta S62 con i componenti da tenere (verde), da rimuovere (rosso) e i nuovi moduli da aggiungere (blu).</desc>
+<style>
+  text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #2C2C2A; }
+  .t { font-size: 14px; }
+  .ts { font-size: 12px; }
+  .th { font-size: 14px; font-weight: 500; }
+  .c-teal rect { fill: #E1F5EE; stroke: #0F6E56; }
+  .c-teal .th, .c-teal .t { fill: #085041; }
+  .c-teal .ts { fill: #0F6E56; }
+  .c-red rect { fill: #FBE9E7; stroke: #C0271E; }
+  .c-red .th, .c-red .t { fill: #8C1D14; }
+  .c-red .ts { fill: #C0271E; }
+  .c-blue rect { fill: #E6F1FB; stroke: #185FA5; }
+  .c-blue .th, .c-blue .t { fill: #0C447C; }
+  .c-blue .ts { fill: #185FA5; }
+  @media (prefers-color-scheme: dark) {
+    text { fill: #D3D1C7; }
+    .c-teal rect { fill: #085041; stroke: #5DCAA5; }
+    .c-teal .th, .c-teal .t { fill: #E1F5EE; }
+    .c-teal .ts { fill: #5DCAA5; }
+    .c-red rect { fill: #7A1B14; stroke: #F0A89F; }
+    .c-red .th, .c-red .t { fill: #FBE9E7; }
+    .c-red .ts { fill: #F0A89F; }
+    .c-blue rect { fill: #0C447C; stroke: #85B7EB; }
+    .c-blue .th, .c-blue .t { fill: #E6F1FB; }
+    .c-blue .ts { fill: #85B7EB; }
+  }
+</style>
+
+<text class="th" x="340" y="30" text-anchor="middle">Mappa di conversione della cassetta</text>
+<text class="ts" x="340" y="50" text-anchor="middle">Verde = tieni (ricabla) · Rosso = rimuovi · Blu = aggiungi</text>
+
+<!-- ===== Cornetta (fuori cassetta) col mic nuovo ===== -->
+<g>
+  <rect x="455" y="62" width="150" height="30" rx="15" fill="#85B7EB" fill-opacity="0.30" stroke="#185FA5" stroke-width="1"/>
+  <circle cx="473" cy="77" r="9" fill="#185FA5"/><text x="473" y="81" text-anchor="middle" font-size="11" font-weight="600" fill="#fff">10</text>
+  <text class="ts" x="540" y="81" text-anchor="middle">cornetta (mic)</text>
+</g>
+<line x1="500" y1="92" x2="470" y2="118" stroke="#185FA5" stroke-width="1" stroke-dasharray="4 3"/>
+
+<!-- ===== Cassetta (vista dall'alto) ===== -->
+<rect x="90" y="118" width="500" height="380" rx="16" fill="none" stroke="#888780" stroke-width="1.2" stroke-dasharray="6 4"/>
+
+<!-- Zona liberata da 2+3 -> Raspberry Pi -->
+<rect x="232" y="150" width="206" height="150" rx="10" fill="#85B7EB" fill-opacity="0.16" stroke="#185FA5" stroke-width="1.2" stroke-dasharray="5 4"/>
+<circle cx="258" cy="284" r="11" fill="#185FA5"/><text x="258" y="288" text-anchor="middle" font-size="12" font-weight="600" fill="#fff">7</text>
+<text class="ts" x="332" y="288" text-anchor="middle">spazio per il Pi</text>
+
+<!-- #2 trasformatore (rimuovi) -->
+<rect x="250" y="166" width="78" height="74" rx="6" fill="#E0503A" fill-opacity="0.28" stroke="#C0271E" stroke-width="1"/>
+<circle cx="263" cy="179" r="11" fill="#C0271E"/><text x="263" y="183" text-anchor="middle" font-size="12" font-weight="600" fill="#fff">2</text>
+
+<!-- #3 condensatore + rete (rimuovi) -->
+<rect x="342" y="166" width="78" height="74" rx="6" fill="#E0503A" fill-opacity="0.28" stroke="#C0271E" stroke-width="1"/>
+<circle cx="355" cy="179" r="11" fill="#C0271E"/><text x="355" y="183" text-anchor="middle" font-size="12" font-weight="600" fill="#fff">3</text>
+
+<!-- #1 commutatore a gancio (tieni) -->
+<rect x="112" y="150" width="104" height="48" rx="6" fill="#5DCAA5" fill-opacity="0.30" stroke="#0F6E56" stroke-width="1"/>
+<circle cx="127" cy="174" r="11" fill="#0F6E56"/><text x="127" y="178" text-anchor="middle" font-size="12" font-weight="600" fill="#fff">1</text>
+<text class="ts" x="172" y="178" text-anchor="middle">gancio</text>
+
+<!-- #4 morsettiera (tieni) -->
+<rect x="112" y="330" width="104" height="46" rx="6" fill="#5DCAA5" fill-opacity="0.30" stroke="#0F6E56" stroke-width="1"/>
+<circle cx="127" cy="353" r="11" fill="#0F6E56"/><text x="127" y="357" text-anchor="middle" font-size="12" font-weight="600" fill="#fff">4</text>
+<text class="ts" x="174" y="357" text-anchor="middle">morsettiera</text>
+
+<!-- #6 disco combinatore (tieni) -->
+<circle cx="470" cy="320" r="86" fill="#5DCAA5" fill-opacity="0.16" stroke="#0F6E56" stroke-width="1.2"/>
+<circle cx="470" cy="320" r="70" fill="none" stroke="#0F6E56" stroke-width="0.5"/>
+<circle cx="470" cy="320" r="14" fill="#5DCAA5" fill-opacity="0.5" stroke="#0F6E56" stroke-width="0.5"/>
+<g fill="#0F6E56">
+<circle cx="470" cy="250" r="3.5"/><circle cx="520" cy="270" r="3.5"/><circle cx="540" cy="320" r="3.5"/>
+<circle cx="520" cy="370" r="3.5"/><circle cx="470" cy="390" r="3.5"/><circle cx="420" cy="370" r="3.5"/>
+<circle cx="400" cy="320" r="3.5"/><circle cx="420" cy="270" r="3.5"/>
+</g>
+<circle cx="470" cy="248" r="11" fill="#0F6E56"/><text x="470" y="252" text-anchor="middle" font-size="12" font-weight="600" fill="#fff">6</text>
+
+<!-- #5 campanello (tieni) -->
+<circle cx="165" cy="445" r="32" fill="#5DCAA5" fill-opacity="0.30" stroke="#0F6E56" stroke-width="1"/>
+<circle cx="165" cy="445" r="20" fill="none" stroke="#0F6E56" stroke-width="0.5"/>
+<circle cx="165" cy="445" r="11" fill="#0F6E56"/><text x="165" y="449" text-anchor="middle" font-size="12" font-weight="600" fill="#fff">5</text>
+
+<!-- #9 boost + H-bridge (aggiungi) - vicino al campanello -->
+<rect x="232" y="424" width="120" height="42" rx="6" fill="#85B7EB" fill-opacity="0.30" stroke="#185FA5" stroke-width="1"/>
+<circle cx="247" cy="445" r="11" fill="#185FA5"/><text x="247" y="449" text-anchor="middle" font-size="12" font-weight="600" fill="#fff">9</text>
+<text class="ts" x="300" y="449" text-anchor="middle">boost+Hbridge</text>
+
+<!-- #8 DAC/ampli I2S (aggiungi) - vicino auricolare/disco -->
+<rect x="372" y="424" width="120" height="42" rx="6" fill="#85B7EB" fill-opacity="0.30" stroke="#185FA5" stroke-width="1"/>
+<circle cx="387" cy="445" r="11" fill="#185FA5"/><text x="387" y="449" text-anchor="middle" font-size="12" font-weight="600" fill="#fff">8</text>
+<text class="ts" x="440" y="449" text-anchor="middle">ampli MAX98357A</text>
+
+<!-- ===== Legenda ===== -->
+<g class="c-teal">
+  <rect x="20" y="520" width="210" height="124" rx="8" stroke-width="0.5"/>
+  <text class="th" x="40" y="542">TIENI (ricabla)</text>
+</g>
+<g><circle cx="40" cy="566" r="9" fill="#0F6E56"/><text x="40" y="570" text-anchor="middle" font-size="11" font-weight="600" fill="#fff">1</text><text class="ts" x="58" y="570">Gancio -> GPIO27</text></g>
+<g><circle cx="40" cy="590" r="9" fill="#0F6E56"/><text x="40" y="594" text-anchor="middle" font-size="11" font-weight="600" fill="#fff">6</text><text class="ts" x="58" y="594">Disco -> GPIO4 / 17</text></g>
+<g><circle cx="40" cy="614" r="9" fill="#0F6E56"/><text x="40" y="618" text-anchor="middle" font-size="11" font-weight="600" fill="#fff">5</text><text class="ts" x="58" y="618">Campanello -> GPIO22/23</text></g>
+<g><circle cx="40" cy="638" r="9" fill="#0F6E56"/><text x="40" y="642" text-anchor="middle" font-size="11" font-weight="600" fill="#fff">4</text><text class="ts" x="58" y="642">Morsettiera (nodo)</text></g>
+
+<g class="c-red">
+  <rect x="240" y="520" width="200" height="124" rx="8" stroke-width="0.5"/>
+  <text class="th" x="260" y="542">RIMUOVI</text>
+</g>
+<g><circle cx="260" cy="566" r="9" fill="#C0271E"/><text x="260" y="570" text-anchor="middle" font-size="11" font-weight="600" fill="#fff">2</text><text class="ts" x="278" y="570">Bobina d'induzione</text></g>
+<g><circle cx="260" cy="590" r="9" fill="#C0271E"/><text x="260" y="594" text-anchor="middle" font-size="11" font-weight="600" fill="#fff">3</text><text class="ts" x="278" y="594">Condensatore + rete</text></g>
+<text class="ts" x="260" y="624">analogica (resistori,</text>
+<text class="ts" x="260" y="640">varistore): non più usati</text>
+
+<g class="c-blue">
+  <rect x="450" y="520" width="210" height="124" rx="8" stroke-width="0.5"/>
+  <text class="th" x="470" y="542">AGGIUNGI</text>
+</g>
+<g><circle cx="470" cy="566" r="9" fill="#185FA5"/><text x="470" y="570" text-anchor="middle" font-size="11" font-weight="600" fill="#fff">7</text><text class="ts" x="488" y="570">Raspberry Pi (centro)</text></g>
+<g><circle cx="470" cy="590" r="9" fill="#185FA5"/><text x="470" y="594" text-anchor="middle" font-size="11" font-weight="600" fill="#fff">8</text><text class="ts" x="488" y="594">Ampli MAX98357A</text></g>
+<g><circle cx="470" cy="614" r="9" fill="#185FA5"/><text x="470" y="618" text-anchor="middle" font-size="11" font-weight="600" fill="#fff">9</text><text class="ts" x="488" y="618">Boost + H-bridge</text></g>
+<g><circle cx="470" cy="638" r="9" fill="#185FA5"/><text x="470" y="642" text-anchor="middle" font-size="11" font-weight="600" fill="#fff">10</text><text class="ts" x="490" y="642">Mic SPH0645 (cornetta)</text></g>
+
+</svg>

@@ -1,0 +1,20 @@
+# ESP-IDF
+build/
+sdkconfig
+sdkconfig.old
+managed_components/
+dependencies.lock
+
+# Test nativi
+firmware/tests/build/
+*.gcda
+*.gcno
+*.info
+coverage/
+
+# Configurazione locale con dati personali (MAC del cellulare, contatti)
+secrets.h
+*.local.json
+
+# macOS
+.DS_Store

@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 580" role="img" aria-label="Mappa dei contatti originali">
+<title>Mappa dei contatti originali</title>
+<desc>Vista dall'alto del telefono aperto con localizzazione di tutti i componenti elettromeccanici</desc>
+<style>
+  text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #2C2C2A; }
+  .t { font-size: 14px; }
+  .ts { font-size: 12px; }
+  .th { font-size: 14px; font-weight: 500; }
+  .c-blue rect { fill: #E6F1FB; stroke: #185FA5; }
+  .c-blue .th, .c-blue .t { fill: #0C447C; }
+  .c-blue .ts { fill: #185FA5; }
+  .c-teal rect { fill: #E1F5EE; stroke: #0F6E56; }
+  .c-teal .th, .c-teal .t { fill: #085041; }
+  .c-teal .ts { fill: #0F6E56; }
+  .c-purple rect { fill: #EEEDFE; stroke: #534AB7; }
+  .c-purple .th, .c-purple .t { fill: #3C3489; }
+  .c-purple .ts { fill: #534AB7; }
+  .c-coral rect { fill: #FAECE7; stroke: #993C1D; }
+  .c-coral .th, .c-coral .t { fill: #712B13; }
+  .c-coral .ts { fill: #993C1D; }
+  @media (prefers-color-scheme: dark) {
+    text { fill: #D3D1C7; }
+    .c-blue rect { fill: #0C447C; stroke: #85B7EB; }
+    .c-blue .th, .c-blue .t { fill: #E6F1FB; }
+    .c-blue .ts { fill: #85B7EB; }
+    .c-teal rect { fill: #085041; stroke: #5DCAA5; }
+    .c-teal .th, .c-teal .t { fill: #E1F5EE; }
+    .c-teal .ts { fill: #5DCAA5; }
+    .c-purple rect { fill: #3C3489; stroke: #AFA9EC; }
+    .c-purple .th, .c-purple .t { fill: #EEEDFE; }
+    .c-purple .ts { fill: #AFA9EC; }
+    .c-coral rect { fill: #712B13; stroke: #F0997B; }
+    .c-coral .th, .c-coral .t { fill: #FAECE7; }
+    .c-coral .ts { fill: #F0997B; }
+  }
+</style>
+
+<text class="th" x="340" y="30" text-anchor="middle">Step 2 — mappa dei componenti originali</text>
+<text class="ts" x="340" y="50" text-anchor="middle">Vista dall'alto col coperchio rimosso</text>
+
+<rect x="120" y="80" width="440" height="380" rx="14" fill="none" stroke="#888780" stroke-width="1" stroke-dasharray="6 4"/>
+
+<circle cx="340" cy="270" r="100" fill="none" stroke="#888780" stroke-width="1.5"/>
+<circle cx="340" cy="270" r="85" fill="none" stroke="#888780" stroke-width="0.5"/>
+<circle cx="340" cy="270" r="15" fill="#888780" stroke="#444441" stroke-width="0.5"/>
+<g fill="#444441">
+<circle cx="340" cy="185" r="4"/>
+<circle cx="400" cy="210" r="4"/>
+<circle cx="425" cy="270" r="4"/>
+<circle cx="400" cy="330" r="4"/>
+<circle cx="340" cy="355" r="4"/>
+<circle cx="280" cy="330" r="4"/>
+<circle cx="255" cy="270" r="4"/>
+<circle cx="280" cy="210" r="4"/>
+</g>
+
+<rect x="160" y="110" width="120" height="60" rx="6" fill="none" stroke="#888780" stroke-width="0.5"/>
+<circle cx="190" cy="140" r="14" fill="#5F5E5A" stroke="#2C2C2A" stroke-width="0.5"/>
+<circle cx="250" cy="140" r="14" fill="#5F5E5A" stroke="#2C2C2A" stroke-width="0.5"/>
+<rect x="205" y="135" width="30" height="10" fill="#444441" opacity="0.6"/>
+
+<rect x="400" y="110" width="140" height="80" rx="6" fill="none" stroke="#888780" stroke-width="0.5"/>
+<rect x="420" y="130" width="100" height="20" rx="3" fill="none" stroke="#888780" stroke-width="0.5"/>
+<rect x="420" y="160" width="100" height="10" rx="2" fill="#888780" opacity="0.5"/>
+
+<line x1="220" y1="80" x2="220" y2="460" stroke="#888780" stroke-width="0.3" stroke-dasharray="2 4" opacity="0.5"/>
+
+<line x1="120" y1="180" x2="50" y2="120" stroke="#888780" stroke-width="0.5" stroke-dasharray="3 3"/>
+<line x1="560" y1="170" x2="615" y2="120" stroke="#888780" stroke-width="0.5" stroke-dasharray="3 3"/>
+<line x1="340" y1="370" x2="340" y2="480" stroke="#888780" stroke-width="0.5" stroke-dasharray="3 3"/>
+<line x1="220" y1="240" x2="50" y2="290" stroke="#888780" stroke-width="0.5" stroke-dasharray="3 3"/>
+
+<g class="c-blue">
+<rect x="20" y="490" width="155" height="80" rx="8" stroke-width="0.5"/>
+<text class="th" x="97" y="513" text-anchor="middle">Disco combinatore</text>
+<text class="ts" x="97" y="532" text-anchor="middle">Al centro, 4 fili</text>
+<text class="ts" x="97" y="549" text-anchor="middle">2 NSI + 2 pulse</text>
+</g>
+
+<g class="c-teal">
+<rect x="185" y="490" width="155" height="80" rx="8" stroke-width="0.5"/>
+<text class="th" x="262" y="513" text-anchor="middle">Campanello</text>
+<text class="ts" x="262" y="532" text-anchor="middle">Due bobine in serie</text>
+<text class="ts" x="262" y="549" text-anchor="middle">2 fili, ~1-2 kΩ</text>
+</g>
+
+<g class="c-purple">
+<rect x="350" y="490" width="155" height="80" rx="8" stroke-width="0.5"/>
+<text class="th" x="427" y="513" text-anchor="middle">Hook switch</text>
+<text class="ts" x="427" y="532" text-anchor="middle">Sotto la culla</text>
+<text class="ts" x="427" y="549" text-anchor="middle">2 fili</text>
+</g>
+
+<g class="c-coral">
+<rect x="515" y="490" width="155" height="80" rx="8" stroke-width="0.5"/>
+<text class="th" x="592" y="513" text-anchor="middle">Bornier cornetta</text>
+<text class="ts" x="592" y="532" text-anchor="middle">4 fili totali</text>
+<text class="ts" x="592" y="549" text-anchor="middle">mic + speaker</text>
+</g>
+
+</svg>

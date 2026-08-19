@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 560" role="img" aria-label="Layout fisico interno">
+<title>Layout fisico interno</title>
+<desc>Vista isometrica del posizionamento di Raspberry Pi, batterie, PCB e moduli dentro il telefono</desc>
+<style>
+  text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #2C2C2A; }
+  .t { font-size: 14px; }
+  .ts { font-size: 12px; }
+  .th { font-size: 14px; font-weight: 500; }
+  .c-purple rect { fill: #EEEDFE; stroke: #534AB7; }
+  .c-purple .th, .c-purple .t { fill: #3C3489; }
+  .c-purple .ts { fill: #534AB7; }
+  .c-amber rect { fill: #FAEEDA; stroke: #BA7517; }
+  .c-amber .th, .c-amber .t { fill: #633806; }
+  .c-amber .ts { fill: #854F0B; }
+  .c-coral rect { fill: #FAECE7; stroke: #993C1D; }
+  .c-coral .th, .c-coral .t { fill: #712B13; }
+  .c-coral .ts { fill: #993C1D; }
+  @media (prefers-color-scheme: dark) {
+    text { fill: #D3D1C7; }
+    .c-purple rect { fill: #3C3489; stroke: #AFA9EC; }
+    .c-purple .th, .c-purple .t { fill: #EEEDFE; }
+    .c-purple .ts { fill: #AFA9EC; }
+    .c-amber rect { fill: #633806; stroke: #FAC775; }
+    .c-amber .th, .c-amber .t { fill: #FAEEDA; }
+    .c-amber .ts { fill: #FAC775; }
+    .c-coral rect { fill: #712B13; stroke: #F0997B; }
+    .c-coral .th, .c-coral .t { fill: #FAECE7; }
+    .c-coral .ts { fill: #F0997B; }
+  }
+</style>
+
+<text class="th" x="340" y="30" text-anchor="middle">Step 5 — layout fisico interno</text>
+<text class="ts" x="340" y="50" text-anchor="middle">Dove posizionare ogni componente dentro la scocca</text>
+
+<g transform="translate(60, 80)">
+<polygon points="20,260 20,80 100,30 460,30 540,80 540,260 460,310 100,310" fill="#D3D1C7" stroke="#2C2C2A" stroke-width="0.8"/>
+<polygon points="20,80 100,30 460,30 540,80 460,130 100,130" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="0.5"/>
+<polygon points="20,80 20,260 100,310 100,130" fill="#B4B2A9" stroke="#2C2C2A" stroke-width="0.5"/>
+
+<g>
+<polygon points="280,55 350,55 370,75 300,75" fill="#5DCAA5" stroke="#0F6E56" stroke-width="0.5" opacity="0.8"/>
+<text class="ts" x="320" y="70" text-anchor="middle" fill="#04342C">campanello</text>
+</g>
+
+<g>
+<polygon points="130,85 230,85 250,105 150,105" fill="#7F77DD" stroke="#3C3489" stroke-width="0.5" opacity="0.8"/>
+<text class="ts" x="190" y="100" text-anchor="middle" fill="#26215C">Pi + DAC</text>
+</g>
+
+<g>
+<polygon points="270,85 410,85 430,105 290,105" fill="#F0997B" stroke="#712B13" stroke-width="0.5" opacity="0.8"/>
+<text class="ts" x="350" y="100" text-anchor="middle" fill="#4A1B0C">PCB interfacce</text>
+</g>
+
+<g>
+<polygon points="130,140 250,140 270,160 150,160" fill="#FAC775" stroke="#854F0B" stroke-width="0.5" opacity="0.8"/>
+<text class="ts" x="200" y="155" text-anchor="middle" fill="#412402">2x 18650</text>
+</g>
+
+<g>
+<polygon points="290,140 380,140 400,160 310,160" fill="#85B7EB" stroke="#185FA5" stroke-width="0.5" opacity="0.8"/>
+<text class="ts" x="345" y="155" text-anchor="middle" fill="#042C53">TP4056</text>
+</g>
+
+<g>
+<polygon points="415,140 465,140 485,160 435,160" fill="#85B7EB" stroke="#185FA5" stroke-width="0.5" opacity="0.8"/>
+<text class="ts" x="450" y="155" text-anchor="middle" fill="#042C53">MT3608</text>
+</g>
+
+<ellipse cx="290" cy="195" rx="60" ry="22" fill="#888780" stroke="#2C2C2A" stroke-width="0.5" opacity="0.5"/>
+<text class="ts" x="290" y="200" text-anchor="middle">sede disco</text>
+
+<g>
+<rect x="50" y="265" width="40" height="14" rx="3" fill="#888780" stroke="#2C2C2A" stroke-width="0.5"/>
+<text class="ts" x="70" y="275" text-anchor="middle" fill="#F1EFE8">USB-C</text>
+</g>
+</g>
+
+<line x1="265" y1="160" x2="80" y2="430" stroke="#888780" stroke-width="0.5" stroke-dasharray="3 3"/>
+<line x1="410" y1="160" x2="350" y2="430" stroke="#888780" stroke-width="0.5" stroke-dasharray="3 3"/>
+<line x1="290" y1="220" x2="600" y2="430" stroke="#888780" stroke-width="0.5" stroke-dasharray="3 3"/>
+
+<g class="c-purple">
+<rect x="30" y="440" width="195" height="100" rx="8" stroke-width="0.5"/>
+<text class="th" x="127" y="463" text-anchor="middle">Raspberry Pi</text>
+<text class="ts" x="127" y="483" text-anchor="middle">Fissato con M2.5</text>
+<text class="ts" x="127" y="501" text-anchor="middle">+ biadesivo</text>
+<text class="ts" x="127" y="519" text-anchor="middle">Lato sinistro</text>
+</g>
+
+<g class="c-amber">
+<rect x="245" y="440" width="195" height="100" rx="8" stroke-width="0.5"/>
+<text class="th" x="342" y="463" text-anchor="middle">Batterie + power</text>
+<text class="ts" x="342" y="483" text-anchor="middle">Portacelle 18650</text>
+<text class="ts" x="342" y="501" text-anchor="middle">su biadesivo industriale</text>
+<text class="ts" x="342" y="519" text-anchor="middle">Sotto al disco</text>
+</g>
+
+<g class="c-coral">
+<rect x="460" y="440" width="195" height="100" rx="8" stroke-width="0.5"/>
+<text class="th" x="557" y="463" text-anchor="middle">USB-C ricarica</text>
+<text class="ts" x="557" y="483" text-anchor="middle">Sul fondo o sul retro</text>
+<text class="ts" x="557" y="501" text-anchor="middle">In posizione discreta</text>
+<text class="ts" x="557" y="519" text-anchor="middle">Accessibile dall'esterno</text>
+</g>
+
+</svg>
