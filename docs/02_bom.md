@@ -159,22 +159,37 @@ Tutto cio' che serve per far parlare il telefono.
 > consegna rapida. Non e' un problema, perche' nella sequenza di bring-up l'audio viene
 > per ultimo.
 
-## Ordine B — AliExpress, in parallelo (~15-20 €)
+## Ordine B — AliExpress, in parallelo (16,46 €)
 
-Arriva in 2-4 settimane, cioe' quando serve davvero. Prezzi verificati: **1-5 € a modulo**.
+Arriva in 2-4 settimane, cioe' quando serve davvero. Prezzi reali verificati sul carrello.
 
-| Articolo | Serve per |
-|---|---|
-| L298N (ponte H, 46 V) | campanello |
-| XL6009 (boost regolabile fino a 35 V) | campanello |
-| Condensatori 100 µF / 50 V ×2 | campanello — assorbono i picchi degli squilli |
-| OLED 0,96" I2C SSD1306 | display |
-| Modulo WS2812 | LED di stato |
-| Modulo UPS 5 V per 18650 | tampone anti-blackout |
-| Interruttore a bilanciere KCD11 10×15 mm | on/off sul fondo |
+| Articolo | Variante | Prezzo | Serve per |
+|---|---|---|---|
+| **L298N** (versione grande) | Rosso | 2,54 € | campanello — ponte H |
+| **XL6009** boost regolabile | 1 pz, 5-32 V → 5-50 V | 1,90 € | campanello — genera i ~24 V |
+| **Modulo UPS 18650** | **5V module** | 1,94 € | tampone anti-blackout |
+| **Condensatori elettrolitici** | **50V 100UF, 20 pz** | 1,75 € | campanello — picchi degli squilli |
+| **OLED 0,96" I2C SSD1306** | bianco, 1 pz | 2,54 € | display |
+| **Modulo breakout WS2812** | 1 pz | 0,90 € | LED di stato |
+| **Interruttore KCD11 10×15 mm** | rosso, 10 pz | 1,69 € | on/off sul fondo |
+| **Distanziali nylon** | **M2.5, 10 mm, nero, 30 set** | 3,20 € | montaggio schede |
 
-> Su Amazon questi stessi pezzi costavano **86 €**: quasi tutto il divario tra i due
-> preventivi sta qui.
+### Tre trappole trovate comprando, che valgono per chiunque rifaccia questo ordine
+
+1. **Il L298N esiste in due formati.** La versione **Mini** costa meno ma regge solo ~12 V:
+   sul campanello a 24-30 V si distrugge. Serve quella grande, riconoscibile a vista dal
+   **dissipatore nero** e dai **morsetti a vite blu**. Le specifiche dei venditori sono
+   quasi sempre vuote: va identificata dalla foto.
+2. **Il modulo UPS ha il default a 12 V.** Va selezionata a mano la variante **5V module**,
+   altrimenti arrivano 12 V sull'ESP32.
+3. **I kit assortiti costano piu' dei pezzi mirati.** Un kit condensatori da 391 pezzi
+   costava **21,59 €**; la variante mirata `50V 100UF` ne costa **1,75**. Stessa cosa per i
+   distanziali: il set da 850 pezzi costava **19,09 €**, quello da 30 set **3,20**.
+
+> **Occhio alla spedizione.** Molti articoli sono **Choice con spedizione gratuita**: basta
+> un solo venditore fuori da quel circuito per far comparire ~3,87 € di trasporto, che
+> annullano qualunque risparmio. Verifica che tutti gli articoli stiano nel gruppo
+> "Spedito da AliExpress" prima di pagare.
 
 ## Non serve comprare
 
@@ -202,7 +217,7 @@ testa piatta**, ~8-10 €.
 | | Costo |
 |---|---|
 | Ordine A (Amazon, subito) | 66,95 € |
-| Ordine B (AliExpress, in parallelo) | ~15-20 € |
+| Ordine B (AliExpress, in parallelo) | 16,46 € |
 | Cella 18650 (specializzato, quando serve) | ~9 € |
 | **Totale** | **~92 €** |
 
