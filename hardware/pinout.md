@@ -66,6 +66,24 @@ base e una capsula electret nella cornetta, invece di un microfono I2S.
 > da lotto a lotto e da riparazione a riparazione: sul tuo apparecchio **rifai le misure**
 > con la procedura qui sotto invece di fidarti di questa tabella.
 
+**Misure rilevate su questo apparecchio:**
+
+| Coppia | Valore |
+|---|---|
+| bianco – rosso | **261 Ω** ← la maggiore |
+| bianco – blu | 220 Ω |
+| rosso – blu | 41 Ω |
+
+La somma torna al singolo ohm (220 + 41 = 261), e questo dice due cose. La prima è che il
+**blu è la massa comune**. La seconda, meno ovvia: nella cornetta **non c'è nessun
+componente in parallelo** alle capsule — nessun varistore, nessun condensatore, come si
+trova spesso sui telefoni d'epoca. Se ci fosse, aggiungerebbe un percorso e la somma non
+tornerebbe esatta.
+
+I 220 Ω sul microfono sono alti per una capsula a carbone: è il sintomo dei granelli
+**compattati e ossidati** dopo cinquant'anni. La capsula funziona ancora, ma suona
+impastata — motivo in più per sostituirla con un electret.
+
 ### Come identificare i tre fili col multimetro
 
 I tre fili non sono tre circuiti separati: formano una **stella**. Un filo è la massa
