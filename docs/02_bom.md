@@ -131,70 +131,79 @@ Escluse spedizioni e il telefono stesso (sui mercatini italiani 20-50 €).
 
 ---
 
-# Lista d'acquisto — Amazon.it
+# Lista d'acquisto — due ordini, seguendo le fasi
 
-Verificata articolo per articolo il 19/08/2026: nome, prezzo e disponibilità controllati
-sulle schede prodotto reali. **Tutto da un unico fornitore**, consegna rapida e resi facili.
+Comprare tutto insieme costava **183 €**. Comprare *quando serve* costa **~85 €**, e non
+rallenta di un giorno: il piano di montaggio e' gia' a tappe, e il campanello e il display
+servono settimane dopo il primo bring-up.
 
-> Molte voci sono **multipack** perché su Amazon costano meno del pezzo singolo. Ti restano
-> scorte di quasi tutto — su un primo montaggio è un vantaggio, non uno spreco: il pezzo
-> che bruci non ferma il progetto per una settimana.
+Il ragionamento che ha fatto la differenza non riguarda i multipack — quelli sono la parte
+sana della lista: XL6009 e jack vengono **2,00 € l'uno**, L298N e WS2812 2,40, interruttore
+0,48. Comprarli singoli da un distributore costerebbe di piu', perche' a quei prezzi la
+spedizione vale piu' della merce. L'errore era **pagare il prezzo Amazon per pezzi che
+useremo fra tre settimane**.
 
-| # | Articolo | Prezzo | Link |
-|---|---|---|---|
-| 1 | **WM8960 Audio Board** — il codec, cuore audio del progetto | 20,99 € | [B0CNNFWLNV](https://www.amazon.it/dp/B0CNNFWLNV) |
-| 2 | **ESP32 WROOM 38 pin ×2** — il cervello, con scorta | 15,99 € | [B0GJTNCWMZ](https://www.amazon.it/dp/B0GJTNCWMZ) |
-| 3 | **Breakout 38 pin a morsetti a vite** — azzera le saldature | 13,99 € | [B0G92N76V4](https://www.amazon.it/dp/B0G92N76V4) |
-| 4 | **OLED 0,96" I2C ×3** | 13,99 € | [B0D8XMBX8S](https://www.amazon.it/dp/B0D8XMBX8S) |
-| 5 | **Moduli WS2812 ×5** — LED di stato | 11,99 € | [B096ZY5NYQ](https://www.amazon.it/dp/B096ZY5NYQ) |
-| 6 | **Boost XL6009 ×5** (3-30 V → 5-35 V) — alimenta il campanello | 9,99 € | [B07BVWV74J](https://www.amazon.it/dp/B07BVWV74J) |
-| 7 | **L298N ×5** — ponte H per le bobine, regge 46 V | 11,99 € | [B07MY33PC9](https://www.amazon.it/dp/B07MY33PC9) |
-| 8 | **Modulo UPS 5 V per 18650** — alimentazione continua | 10,72 € | [B0B6SPMJZB](https://www.amazon.it/dp/B0B6SPMJZB) |
-| 9 | **Capsule electret 9,7 mm ×5, già cablate** | 13,90 € | [B0GZDKXBLW](https://www.amazon.it/dp/B0GZDKXBLW) |
-| 10 | **Jack 3,5 mm 4 poli a morsetti a vite ×5** — la cornetta senza stagno | 9,99 € | [B0C6M851WD](https://www.amazon.it/dp/B0C6M851WD) |
-| 11 | **Condensatori 100 µF / 50 V** — sui morsetti del boost, assorbono i picchi dello squillo | 12,99 € | [B0CMQ8XQ4N](https://www.amazon.it/dp/B0CMQ8XQ4N) |
-| 12 | **Interruttore a bilanciere KCD11 10×15 mm** — on/off sul fondo | 4,79 € | [B0H24NKJHJ](https://www.amazon.it/dp/B0H24NKJHJ) |
-| 13 | **WAGO 221-412 ×16** — giunzioni a leva | 10,34 € | [B01KI1I8SG](https://www.amazon.it/dp/B01KI1I8SG) |
-| 14 | **Alimentatore USB 5 V / 3 A** | 9,99 € | [B0BF9RJVY9](https://www.amazon.it/dp/B0BF9RJVY9) |
-| 15 | **Cavetti Dupont 120 pz** (M-M, M-F, F-F) | 11,99 € | [B0H86XQTKW](https://www.amazon.it/dp/B0H86XQTKW) |
-| | **Totale** | **183,64 €** | |
+## Ordine A — subito, Amazon.it (66,95 €)
 
-## Tre scelte che si discostano dal progetto iniziale
+Tutto cio' che serve per far parlare il telefono.
 
-**ESP32 WROOM invece di WROVER.** Nel piano avevo motivato il WROVER con la PSRAM,
-stimando **1 € di differenza**. Sbagliato: sul mercato italiano l'ESP32-DevKitC-VIE
-originale Espressif costa **35,58 €**, contro 8 € a scheda del WROOM in coppia. La PSRAM
-serviva come margine, non come necessità — l'esempio HFP di ESP-IDF gira sui 520 KB del
-WROOM, e qui WiFi e Bluetooth **non convivono mai** (il WiFi si accende solo in modalità
-configurazione), che è proprio il caso che consuma RAM. Si parte col WROOM; se la memoria
-stringe, il WROVER resta un aggiornamento da 35 € a progetto già funzionante.
+| Articolo | Prezzo | Link |
+|---|---|---|
+| **WM8960 Audio Board** — il codec | 20,99 € | [B0CNNFWLNV](https://www.amazon.it/dp/B0CNNFWLNV) |
+| **ESP32 WROOM 38 pin ×2** — con scorta | 15,99 € | [B0GJTNCWMZ](https://www.amazon.it/dp/B0GJTNCWMZ) |
+| **Cavetti Dupont 120 pz** | 11,99 € | [B0H86XQTKW](https://www.amazon.it/dp/B0H86XQTKW) |
+| **Jack 3,5 mm 4 poli a morsetti ×5** — la cornetta senza stagno | 9,99 € | [B0C6M851WD](https://www.amazon.it/dp/B0C6M851WD) |
+| **Capsule electret ×10, gia' cablate** | 7,99 € | [B07LFFV8T3](https://www.amazon.it/dp/B07LFFV8T3) |
 
-**L298N invece di DRV8871.** Le bobine del campanello sono da ~1700 Ω: a 24 V assorbono
-**circa 15 mA**. Il DRV8871 era dimensionato per una corrente che in questo circuito non
-esiste; l'unico requisito vero è la tensione, e il L298N regge 46 V. Costa un quinto e ha
-i morsetti a vite.
+> La capsula arriva da venditore terzo: **2-3 settimane e 2 € di spedizione** invece della
+> consegna rapida. Non e' un problema, perche' nella sequenza di bring-up l'audio viene
+> per ultimo.
 
-**Modulo UPS invece di PowerBoost 1000C.** Il PowerBoost avrebbe imposto un secondo
-ordine su Mouser per un solo pezzo, con spedizione pari al prezzo. Il modulo UPS scelto fa
-alimentazione continua da 18650 con uscita 5 V. Resta valido il vincolo di firmware:
-**il consumo a riposo non deve scendere sotto ~60 mA**, quindi display e LED non si
-spengono mai del tutto.
+## Ordine B — AliExpress, in parallelo (~15-20 €)
+
+Arriva in 2-4 settimane, cioe' quando serve davvero. Prezzi verificati: **1-5 € a modulo**.
+
+| Articolo | Serve per |
+|---|---|
+| L298N (ponte H, 46 V) | campanello |
+| XL6009 (boost regolabile fino a 35 V) | campanello |
+| Condensatori 100 µF / 50 V ×2 | campanello — assorbono i picchi degli squilli |
+| OLED 0,96" I2C SSD1306 | display |
+| Modulo WS2812 | LED di stato |
+| Modulo UPS 5 V per 18650 | tampone anti-blackout |
+| Interruttore a bilanciere KCD11 10×15 mm | on/off sul fondo |
+
+> Su Amazon questi stessi pezzi costavano **86 €**: quasi tutto il divario tra i due
+> preventivi sta qui.
+
+## Non serve comprare
+
+- **Alimentatore USB 5 V** — gia' disponibile
+- **Basetta a morsetti per il DevKitC** (13,99 €) — si salta saldando a mano. Si perde il
+  "zero saldature" sui contatti del telefono, ma **il jack a 4 poli resta**, quindi la
+  cornetta — la parte davvero scomoda — continua a non richiedere stagno
+- **WAGO 221** — sostituiti dalle saldature
 
 ## Da procurare altrove — la cella 18650
 
 **Amazon.it non vende celle 18650 nude**: sono merci pericolose e le tratta solo come
-pacchi già cablati con connettore JST. Ma il modulo UPS scelto **include il portacelle**
-e vuole quindi una **cella nuda**: un pacco con reofori saldati non entra nell'alloggiamento.
+pacchi gia' cablati con connettore JST. Ma il modulo UPS **include il portacelle** e vuole
+quindi una **cella nuda**: un pacco con reofori saldati non entra nell'alloggiamento.
 
 Va comprata da un rivenditore specializzato — **18650.it** o equivalente — dove peraltro
-le celle sono di capacità reale invece che dichiarata. Cerca una **18650 protetta,
-3000-3500 mAh, testa piatta**, ~8-10 €.
+le capacita' sono reali invece che dichiarate. Cerca una **18650 protetta, 3000-3500 mAh,
+testa piatta**, ~8-10 €.
 
-> **Non è bloccante.** L'alimentazione primaria è la rete: senza cella il telefono
-> funziona comunque, perde solo la sopravvivenza ai blackout. Si può montare dopo.
+> **Non e' bloccante.** L'alimentazione primaria e' la rete: senza cella il telefono
+> funziona comunque, perde solo la sopravvivenza ai blackout.
 
-## Cosa NON comprare
+## Riepilogo
 
-Il **jack a 4 poli** rende superfluo qualunque connettore per la cornetta: i tre fili
-(blu → massa, rosso → L, bianco → MIC) si avvitano nello spinotto e questo entra nel jack
-del WM8960. Nessuna saldatura, nessun adattatore.
+| | Costo |
+|---|---|
+| Ordine A (Amazon, subito) | 66,95 € |
+| Ordine B (AliExpress, in parallelo) | ~15-20 € |
+| Cella 18650 (specializzato, quando serve) | ~9 € |
+| **Totale** | **~92 €** |
+
+Contro i **183 €** del carrello unico iniziale.
