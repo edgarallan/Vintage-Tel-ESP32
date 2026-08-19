@@ -152,11 +152,12 @@ sulle schede prodotto reali. **Tutto da un unico fornitore**, consegna rapida e 
 | 8 | **Modulo UPS 5 V per 18650** — alimentazione continua | 10,72 € | [B0B6SPMJZB](https://www.amazon.it/dp/B0B6SPMJZB) |
 | 9 | **Capsule electret 9,7 mm ×5, già cablate** | 13,90 € | [B0GZDKXBLW](https://www.amazon.it/dp/B0GZDKXBLW) |
 | 10 | **Jack 3,5 mm 4 poli a morsetti a vite ×5** — la cornetta senza stagno | 9,99 € | [B0C6M851WD](https://www.amazon.it/dp/B0C6M851WD) |
-| 11 | **Cella 18650 1S con connettore JST** | 17,81 € | [B0D1NHXSFR](https://www.amazon.it/dp/B0D1NHXSFR) |
-| 12 | **WAGO 221-412 ×16** — giunzioni a leva | 10,34 € | [B01KI1I8SG](https://www.amazon.it/dp/B01KI1I8SG) |
-| 13 | **Alimentatore USB 5 V / 3 A** | 9,99 € | [B0BF9RJVY9](https://www.amazon.it/dp/B0BF9RJVY9) |
-| 14 | **Cavetti Dupont 120 pz** (M-M, M-F, F-F) | 11,99 € | [B0H86XQTKW](https://www.amazon.it/dp/B0H86XQTKW) |
-| | **Totale** | **183,67 €** | |
+| 11 | **Condensatori 100 µF / 50 V** — sui morsetti del boost, assorbono i picchi dello squillo | 12,99 € | [B0CMQ8XQ4N](https://www.amazon.it/dp/B0CMQ8XQ4N) |
+| 12 | **Interruttore a bilanciere KCD11 10×15 mm** — on/off sul fondo | 4,79 € | [B0H24NKJHJ](https://www.amazon.it/dp/B0H24NKJHJ) |
+| 13 | **WAGO 221-412 ×16** — giunzioni a leva | 10,34 € | [B01KI1I8SG](https://www.amazon.it/dp/B01KI1I8SG) |
+| 14 | **Alimentatore USB 5 V / 3 A** | 9,99 € | [B0BF9RJVY9](https://www.amazon.it/dp/B0BF9RJVY9) |
+| 15 | **Cavetti Dupont 120 pz** (M-M, M-F, F-F) | 11,99 € | [B0H86XQTKW](https://www.amazon.it/dp/B0H86XQTKW) |
+| | **Totale** | **183,64 €** | |
 
 ## Tre scelte che si discostano dal progetto iniziale
 
@@ -178,6 +179,19 @@ ordine su Mouser per un solo pezzo, con spedizione pari al prezzo. Il modulo UPS
 alimentazione continua da 18650 con uscita 5 V. Resta valido il vincolo di firmware:
 **il consumo a riposo non deve scendere sotto ~60 mA**, quindi display e LED non si
 spengono mai del tutto.
+
+## Da procurare altrove — la cella 18650
+
+**Amazon.it non vende celle 18650 nude**: sono merci pericolose e le tratta solo come
+pacchi già cablati con connettore JST. Ma il modulo UPS scelto **include il portacelle**
+e vuole quindi una **cella nuda**: un pacco con reofori saldati non entra nell'alloggiamento.
+
+Va comprata da un rivenditore specializzato — **18650.it** o equivalente — dove peraltro
+le celle sono di capacità reale invece che dichiarata. Cerca una **18650 protetta,
+3000-3500 mAh, testa piatta**, ~8-10 €.
+
+> **Non è bloccante.** L'alimentazione primaria è la rete: senza cella il telefono
+> funziona comunque, perde solo la sopravvivenza ai blackout. Si può montare dopo.
 
 ## Cosa NON comprare
 
