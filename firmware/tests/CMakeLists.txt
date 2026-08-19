@@ -34,3 +34,6 @@ function(add_core_test name)
 endfunction()
 
 add_core_test(test_dial_decode ../core/dial_decode.c)
+add_core_test(test_phonebook ../core/phonebook.c)
+add_core_test(test_ring_pattern ../core/ring_pattern.c)
+add_core_test(test_tones ../core/tones.c)
