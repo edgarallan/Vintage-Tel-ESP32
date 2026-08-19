@@ -22,7 +22,7 @@ rapido: [`../assets/diagrams/09_conversion_map.svg`](../assets/diagrams/09_conve
 |--------|-----------|------|
 | **Tieni** | Disco combinatore, commutatore a gancio, campanello (campane + bobina), morsettiera, altoparlante cornetta | Da ricablare verso l'ESP32 (vedi [`03_wiring.md`](03_wiring.md)) |
 | **Rimuovi** | Bobina d'induzione (trasformatore), condensatore + rete analogica (resistori/varistore) | Era il circuito fonia analogico, ora sostituito da ESP32 + I2S |
-| **Aggiungi** | ESP32-DevKitC-VE su basetta a morsetti, ampli MAX98357A, boost + H-bridge campanello, mic INMP441 (in cornetta) | La basetta a morsetti va nello spazio centrale liberato |
+| **Aggiungi** | ESP32-DevKitC-VE su basetta a morsetti, codec WM8960, boost + H-bridge campanello, capsula electret (in cornetta) | La basetta a morsetti va nello spazio centrale liberato |
 
 ## Mappatura completa
 
@@ -38,9 +38,9 @@ dei contatti col multimetro: vedi [`../hardware/retrofit_layout.md`](../hardware
 | 2 | Rimuovi | Bobina d'induzione / trasformatore | — |
 | 3 | Rimuovi | Condensatore + rete analogica | — |
 | 7 | Aggiungi | ESP32 su basetta a morsetti (zona centrale) | — |
-| 8 | Aggiungi | Ampli MAX98357A (vicino auricolare) | I2S |
+| 8 | Aggiungi | Codec WM8960 (nella base) | I2S + I2C |
 | 9 | Aggiungi | Boost + H-bridge (vicino campanello) | — |
-| 10 | Aggiungi | Mic MEMS INMP441 (nella cornetta) | I2S — 5 fili sul cordone |
+| 10 | Aggiungi | Capsula electret (nella cornetta) | analogico — 3 fili sul cordone |
 
 ## Procedura consigliata (l'ordine conta)
 
@@ -65,7 +65,7 @@ I numeri rimandano ai marker dell'immagine; gli Step a [`04_installation.md`](04
 |--------|-------|-------|----------|
 | 1 | **⑦ ESP32 su basetta a morsetti** nello spazio centrale | alimentazione 5V | `idf.py monitor` mostra il boot |
 | 2 | segnali a bassa tensione | ① gancio→GPIO18, ⑥ impulsi→GPIO4, NSI→GPIO32 — **direttamente sui morsetti**, senza optoaccoppiatori né rete RC | bring-up: gancio a log e ogni cifra 0-9 corretta (10 impulsi → `0`) |
-| 3 | **⑩ mic INMP441** in cornetta + **⑧ ampli MAX98357A** | bus I2S (BCLK 26 e WS 25 condivisi) | test audio loopback: si parla e ci si sente |
+| 3 | **⑩ capsula electret** in cornetta + **⑧ codec WM8960** nella base | 3 fili del cordone: massa, mic, ascolto | test audio loopback: si parla e ci si sente |
 | 4 | **⑨ boost + H-bridge** | bobina **⑤ campanello** | test campanello (3 squilli, 1 s on / 4 s off) |
 | 5 | alimentazione (rete + tampone) + display/WS2812 | — | LED stato, OLED |
 | 6 | — | — | **bring-up completa**, tutti i sottosistemi in sequenza |

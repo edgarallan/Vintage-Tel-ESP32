@@ -30,12 +30,12 @@ Servono **13 segnali**. Margine: **zero**.
 | Campanello — IN2 | **14** | OUT | esp_timer | In **antifase** con IN1, ~22 Hz |
 | Pulsante rubrica | **23** | IN, pull-up | GPIO | All'avvio: config mode. In esercizio: richiama ultimo numero |
 | LED di stato WS2812 | **27** | OUT | RMT | Un pixel indirizzabile |
-| I2S — BCLK | **26** | OUT | I2S0 | **Condiviso** INMP441 + MAX98357A |
-| I2S — WS / LRCLK | **25** | OUT | I2S0 | **Condiviso** INMP441 + MAX98357A |
-| I2S — DIN (dal mic) | **33** | IN | I2S0 | `SD` dell'INMP441 |
-| I2S — DOUT (all'ampli) | **22** | OUT | I2S0 | `DIN` del MAX98357A |
-| I2C — SDA | **21** | I/O | I2C0 | SSD1306 |
-| I2C — SCL | **19** | OUT | I2C0 | SSD1306 |
+| I2S — BCLK | **26** | OUT | I2S0 | Codec WM8960 |
+| I2S — WS / LRCLK | **25** | OUT | I2S0 | Codec WM8960 |
+| I2S — DIN (dal codec) | **33** | IN | I2S0 | `ADCDAT`: microfono della cornetta |
+| I2S — DOUT (al codec) | **22** | OUT | I2S0 | `DACDAT`: capsula d'ascolto |
+| I2C — SDA | **21** | I/O | I2C0 | **Bus condiviso**: WM8960 `0x1A` + SSD1306 `0x3C` |
+| I2C — SCL | **19** | OUT | I2C0 | **Bus condiviso**: WM8960 `0x1A` + SSD1306 `0x3C` |
 
 ## Riserva
 
@@ -45,29 +45,46 @@ pull-up esterna da 10 kΩ** verso 3V3. È l'unica saldatura di riserva prevista 
 
 ## Collegamenti dei moduli
 
-### INMP441 (microfono, nella cornetta)
+### Cornetta — tre conduttori, e perché bastano
+
+Il cordone dell'S62 ha **tre fili**: rosso, bianco, blu. Sono tutti presenti sui morsetti
+del microfono, e solo due (rosso e blu) proseguono verso la capsula d'ascolto. È il
+cablaggio classico: **una massa comune, un segnale mic, un segnale ascolto**.
+
+Tre conduttori significa che nella cornetta viaggiano **solo segnali analogici**. Un
+microfono digitale I2S ne richiederebbe cinque: per questo il progetto usa un codec nella
+base e una capsula electret nella cornetta, invece di un microfono I2S.
+
+| Filo | Va a | Nota |
+|---|---|---|
+| **Massa comune** | `AGND` del WM8960 | condivisa tra mic e capsula d'ascolto |
+| **Segnale microfono** | `LINPUT1` del WM8960 | bias fornito da `MICBIAS` del codec |
+| **Segnale ascolto** | `HP_L` del WM8960 | **uscita cuffia**, non speaker (vedi sotto) |
+
+⚠️ **Va usata l'uscita cuffia, non quella speaker.** L'uscita speaker del WM8960 è a ponte
+(BTL): entrambi i terminali sono pilotati, nessuno dei due è a massa, quindi servirebbero
+due fili dedicati. Con tre conduttori totali non è utilizzabile. L'uscita cuffia è
+single-ended e condivide la massa: 40 mW su 16 Ω sono enormemente più di quanto serva a
+una capsula da orecchio.
+
+> **Identifica i fili col multimetro prima di collegare**: misura la resistenza tra le
+> coppie. La coppia che dà qualche decina o centinaia di ohm è la capsula d'ascolto.
+> Non fidarti dei colori: dopo cinquant'anni le convenzioni cambiavano da lotto a lotto.
+
+### Codec WM8960 (Waveshare 15019, nella base)
+
 | Pin modulo | Va a |
 |---|---|
-| VDD | 3V3 |
-| GND | GND |
-| SCK | GPIO 26 |
-| WS | GPIO 25 |
-| SD | GPIO 33 |
-| L/R | GND (canale sinistro) — ponticello **sul modulo**, non fino alla base |
-
-Sono **5 fili** fino alla cornetta. Contali sul cordone originale prima di ordinare:
-se sono 4, il cablaggio interno al cordone va rifatto.
-
-### MAX98357A (ampli, nella base)
-| Pin modulo | Va a |
-|---|---|
-| VIN | 5V |
+| VCC | 3V3 |
 | GND | GND |
 | BCLK | GPIO 26 |
-| LRC | GPIO 25 |
-| DIN | GPIO 22 |
-| GAIN | libero (+9 dB) |
-| Morsetto a vite | **Capsula della cornetta** |
+| LRCLK / DACLRC | GPIO 25 |
+| ADCDAT | GPIO 33 |
+| DACDAT | GPIO 22 |
+| SDA / SCL | GPIO 21 / 19 (in parallelo all'OLED) |
+
+Il modulo ha anche microfoni MEMS a bordo e un jack cuffia da 3,5 mm: **non si usano**.
+L'ingresso attivo va instradato via I2C su `LINPUT1`.
 
 ### DRV8871 (campanello)
 | Pin modulo | Va a |
@@ -81,5 +98,5 @@ se sono 4, il cablaggio interno al cordone va rifatto.
 Porta IN1=IN2=0 (coast) e togli alimentazione **prima** di scollegare i cavi.
 
 ### SSD1306 e WS2812
-OLED: VCC 3V3, GND, SDA 21, SCL 19 — indirizzo I2C `0x3C`.
+OLED: VCC 3V3, GND, SDA 21, SCL 19 — indirizzo I2C `0x3C`, **stesso bus del codec**.
 WS2812: VCC 5V, GND, DIN 27.

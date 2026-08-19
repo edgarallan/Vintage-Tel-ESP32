@@ -21,15 +21,36 @@ PiMoroni, AliExpress; per i componenti critici (alimentazione) meglio Adafruit/M
 
 | # | Componente | Q.tà | € | Note |
 |---|-----------|------|---|------|
-| 3 | Ampli I2S **MAX98357A** (breakout) | 1 | 6 | Capsula della cornetta sul **morsetto a vite**. Pin `GAIN` libero = +9 dB |
-| 4 | Mic I2S MEMS **INMP441** (modulo con header pre-saldati) | 1 | 2 | Va **nella cornetta**, al posto della capsula a carbone |
+| 3 | **Waveshare WM8960 Audio Board** (cod. 15019) | 1 | 16 | Codec stereo: ADC **e** DAC, ingresso mic con bias per electret, uscita cuffia. **Header goldpin già saldati** a 2,54 mm |
+| 4 | Capsula **microfonica electret** Ø ~10 mm, 2 fili | 1 | 2 | Sostituisce la capsula a carbone **dentro il suo guscio originale** |
 
-Mic e ampli condividono BCLK e WS su un unico bus I2S full-duplex a 16 kHz, slot a 32 bit.
-Nessun codec I2C: l'I2C resta libero per il display.
+### Perché un codec e non mic + ampli separati
 
-> **Da verificare al montaggio**: l'INMP441 richiede **5 fili** fino alla cornetta
-> (3V3, GND, SCK, WS, SD). I cordoni originali ne hanno spesso solo 4. Se non bastano,
-> va sostituito il cablaggio interno al cordone.
+Il cordone della cornetta dell'S62 ha **tre conduttori** (rosso, bianco, blu): una massa
+comune, un filo per la capsula d'ascolto, uno per il microfono. È il cablaggio classico
+dei telefoni a cornetta.
+
+Tre fili significa che dentro la cornetta possono viaggiare **solo segnali analogici**.
+Un microfono digitale I2S come l'INMP441 ne richiederebbe cinque (3V3, GND, SCK, WS, SD)
+ed è quindi impossibile senza rifare il cordone — cosa che su un cordone spiralato
+d'epoca vuol dire distruggerlo.
+
+Il WM8960 risolve il vincolo e semplifica: **un solo modulo al posto di due**, perché
+integra sia l'ADC per il microfono sia il driver per la capsula d'ascolto. In più porta
+un **ALC** (controllo automatico di livello) sull'ingresso mic, che su una cornetta vale
+parecchio: compensa da solo quanto vicino alla bocca la tieni.
+
+**Non serve un pin in più**: usa gli stessi 4 pin I2S e condivide il bus I2C con il
+display, avendo indirizzi diversi (codec `0x1A`, OLED `0x3C`).
+
+> La capsula d'ascolto va sull'**uscita cuffia**, che è single-ended e può quindi
+> condividere la massa col microfono. L'uscita speaker del WM8960 è a ponte (BTL) e
+> richiederebbe due fili dedicati: con tre conduttori totali non è utilizzabile.
+
+> **Alternative se il Waveshare non si trova**: il modulo **ES8388 di PCB Artists**
+> (~15 €, in stock) è equivalente come funzioni, ma **spedisce senza header** — vanno
+> richiesti pre-saldati alla conferma d'ordine. Il breakout **SparkFun WM8960** è stato
+> **ritirato** e non è più acquistabile.
 
 ## Alimentazione
 
@@ -86,9 +107,9 @@ Vedi `hardware/bell_driver.md` per la fisica delle bobine e le verifiche meccani
 
 | Configurazione | Costo |
 |----------------|-------|
-| **Minimo** (BT + disco + gancio + audio, alimentazione da rete senza tampone) | ~65 € |
-| **Medio** (+ campanello + WS2812) | ~80 € |
-| **Completo** (+ display + tampone PowerBoost + cella) | ~120 € |
+| **Minimo** (BT + disco + gancio + audio, alimentazione da rete senza tampone) | ~75 € |
+| **Medio** (+ campanello + WS2812) | ~90 € |
+| **Completo** (+ display + tampone PowerBoost + cella) | ~130 € |
 
 Escluse spedizioni e il telefono stesso (sui mercatini italiani 20-50 €).
 
@@ -102,6 +123,7 @@ Escluse spedizioni e il telefono stesso (sui mercatini italiani 20-50 €).
 
 ## Fornitori
 
-- **Adafruit / Mouser / RS** — PowerBoost 1000C, MAX98357A, DRV8871
-- **AliExpress** — DevKitC, basetta a morsetti, INMP441, WS2812, XL6009, OLED
+- **Botland / Kamami** — Waveshare WM8960 Audio Board (spediscono in Italia)
+- **Adafruit / Mouser / RS** — PowerBoost 1000C, DRV8871
+- **AliExpress** — DevKitC, basetta a morsetti, WS2812, XL6009, OLED, capsula electret
 - **Subito.it / eBay.it** — telefoni SIP vintage italiani
