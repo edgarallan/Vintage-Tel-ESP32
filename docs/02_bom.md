@@ -153,11 +153,28 @@ Tutto cio' che serve per far parlare il telefono.
 | **ESP32 WROOM 38 pin ×2** — con scorta | 15,99 € | [B0GJTNCWMZ](https://www.amazon.it/dp/B0GJTNCWMZ) |
 | **Cavetti Dupont 120 pz** | 11,99 € | [B0H86XQTKW](https://www.amazon.it/dp/B0H86XQTKW) |
 | **Jack 3,5 mm 4 poli a morsetti ×5** — la cornetta senza stagno | 9,99 € | [B0C6M851WD](https://www.amazon.it/dp/B0C6M851WD) |
-| **Capsule electret ×10, gia' cablate** | 7,99 € | [B07LFFV8T3](https://www.amazon.it/dp/B07LFFV8T3) |
+| **Capsule electret 9,5 mm ×2** | 8,99 € | [B08BX48RMR](https://www.amazon.it/dp/B08BX48RMR) |
 
-> La capsula arriva da venditore terzo: **2-3 settimane e 2 € di spedizione** invece della
-> consegna rapida. Non e' un problema, perche' nella sequenza di bring-up l'audio viene
-> per ultimo.
+### Il codec deve essere la scheda nuda, non l'HAT per Raspberry
+
+Su Amazon esistono molte schede WM8960 che arrivano in **1-2 giorni** invece che a fine
+mese, ma sono tutte **HAT per Raspberry Pi**, e non vanno bene. La differenza sta in una
+riga della descrizione:
+
+| Scheda | Jack da 3,5 mm |
+|---|---|
+| **Audio Board** (quella giusta) | *«4-segment earphone jack, allows sound **recording** via external earphones **with Mic**»* |
+| **Audio HAT** (piu' veloce) | *«3.5mm earphone jack, **play music** via external earphone»* |
+
+L'HAT ha il jack in sola **uscita**. Senza ingresso microfonico sul jack, il microfono
+della cornetta non ha piu' un punto d'ingresso: i microfoni MEMS dell'HAT stanno nella
+base, non nella cornetta, e i pin `LINPUT` del codec non sono portati fuori. L'unica via
+sarebbe saldare sui pad SMD dei MEMS di bordo — delicato, e l'opposto del criterio di
+questa BOM.
+
+> **La consegna lenta del codec non e' il collo di bottiglia.** L'Ordine B da AliExpress
+> impiega comunque 2-4 settimane, e la sequenza di bring-up mette l'audio per ultimo:
+> NVS, LED, display, gancio, disco e campanello vengono prima.
 
 ## Ordine B — AliExpress, in parallelo (16,46 €)
 
