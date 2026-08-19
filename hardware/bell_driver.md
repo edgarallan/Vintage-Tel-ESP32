@@ -36,8 +36,8 @@ Due bobine in serie attorno a un nucleo ferromagnetico. Quando ci passa corrente
          │     │   Boost     │── +24V ──────►│ GND ◄── GND          │   │ campan. │
          │     │ 5V→~24V     │               │ OUT1 ───[morsetto]───┼──►│ (orig.) │
          │     │ (modulo)    │               │ OUT2 ───[morsetto]───┼──►│         │
-         │     └─────────────┘               │ IN1  ◄── GPIO 22     │   └─────────┘
-         │                                   │ IN2  ◄── GPIO 23     │
+         │     └─────────────┘               │ IN1  ◄── GPIO 13     │   └─────────┘
+         │                                   │ IN2  ◄── GPIO 14     │
         GND                                  └──────────────────────┘
 ```
 
@@ -71,10 +71,14 @@ niente inverter, niente diodi/snubber esterni.
 
 ### Codice
 
-Vedi `firmware/src/bell_driver.py` — alterna IN1 (GPIO 22) / IN2 (GPIO 23) alla
-frequenza di squillo, col pattern italiano (1s on / 4s off, fino a hook up o
-timeout). Il toggle è software (a 22 Hz l'inerzia meccanica del campanello rende
-irrilevante il jitter).
+Vedi `firmware/hal/bell_drv8871.c` — alterna IN1 (GPIO 13) / IN2 (GPIO 14) alla
+frequenza di squillo, col pattern italiano (1s on / 4s off, fino a cornetta sollevata
+o timeout). Il toggle usa un `esp_timer`, che è agganciato a un timer hardware e ha
+precisione al microsecondo: a 22 Hz il jitter è comunque irrilevante, perché l'inerzia
+meccanica del martelletto filtra tutto.
+
+Il pattern di squillo (durate e numero massimo) vive in `firmware/core/ring_pattern.c`,
+senza dipendenze ESP-IDF, ed è quindi coperto dai test che girano sul PC.
 
 ### Pro e contro
 
@@ -126,14 +130,15 @@ ON  ████████████░░░░░░░░░░░░░�
     1 sec        4 sec di pausa                 1 sec
 ```
 
-Il file `bell_driver.py` implementa questo pattern. Personalizzabile via `config.yaml`:
+`firmware/core/ring_pattern.c` implementa questo pattern. I parametri stanno in **NVS**
+e si modificano dalla pagina web in modalità configurazione, senza riaprire il telefono:
 
-```yaml
-bell:
-  pattern_on_ms: 1000   # 1 secondo squillo
-  pattern_off_ms: 4000  # 4 secondi pausa
-  max_rings: 30         # massimo 30 squilli (~2.5 minuti)
-```
+| Chiave NVS | Default | Significato |
+|---|---|---|
+| `bell_on_ms` | 1000 | durata dello squillo |
+| `bell_off_ms` | 4000 | pausa tra gli squilli |
+| `bell_max_rings` | 30 | massimo ~2,5 minuti |
+| `bell_freq_hz` | 22 | frequenza di alternanza IN1/IN2 |
 
 ## Verifica meccanica del campanello
 
