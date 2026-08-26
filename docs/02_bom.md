@@ -11,11 +11,26 @@ PiMoroni, AliExpress; per i componenti critici (alimentazione) meglio Adafruit/M
 
 | # | Componente | Q.tà | € | Note |
 |---|-----------|------|---|------|
-| 1 | **ESP32-DevKitC-VE** (modulo WROVER-E, 8 MB PSRAM) | 1 | 8 | **Deve essere l'ESP32 originale**: S3/C3/C6/H2 non hanno il Bluetooth Classic e quindi non possono fare HFP |
+| 1 | **ESP32 WROOM-32 DevKit, 38 pin** | 1 | 8 | **Deve essere l'ESP32 originale**: S3/C3/C6/H2 non hanno il Bluetooth Classic e quindi non possono fare HFP |
 | 2 | **Basetta breakout a morsetti a vite** per ESP32-DevKitC (38 pin) | 1 | 8 | Venduta **assemblata, zero saldature**. Il DevKitC si innesta e ogni GPIO diventa una vite |
 
-> Verifica all'acquisto che la basetta sia per il formato del tuo DevKitC (larghezza 0.9" o 1.0").
-> Il WROVER-E è la versione larga.
+> Verifica all'acquisto che la basetta sia per il formato del tuo DevKit (larghezza 0.9" o 1.0").
+
+> **Perché WROOM e non WROVER, con misure alla mano.** La prima stesura chiedeva un
+> DevKitC-VE con modulo WROVER-E e 8 MB di PSRAM. Il modulo acquistato e verificato il
+> 26/08/2026 è invece un **ESP32-D0WD-V3 in package WROOM-32E**, senza PSRAM e con **4 MB
+> di flash**. Va benissimo lo stesso, e su un punto è meglio:
+>
+> - **La PSRAM non serve.** Compilando l'esempio `hfp_hf` di ESP-IDF v5.5.5 con percorso
+>   vHCI, Wide Band Speech e PBAC restano **~70 KB di DRAM liberi** con lo stack Bluetooth
+>   completo caricato. WiFi e Bluetooth non convivono mai (vincolo #5), quindi i due picchi
+>   di memoria non si sommano.
+> - **I 4 MB bastano anche con l'OTA.** Quell'esempio pesa **750 KB**; con WiFi, server HTTP
+>   e la logica del telefono la stima è ~1,2 MB, dentro slot OTA da 1,94 MB — vedi
+>   `firmware/partitions.csv`.
+> - **Si guadagnano due GPIO.** Sui WROVER i pin 16 e 17 servono alla PSRAM; qui sono
+>   liberi. Il progetto passa da margine zero a due pin di riserva, e sparisce l'unica
+>   saldatura di ripiego che era prevista. Vedi `hardware/pinout.md`.
 
 ## Audio
 
@@ -296,8 +311,16 @@ testa piatta**, ~8-10 €.
 | | Costo |
 |---|---|
 | Ordine A (Amazon, subito) | 66,95 € |
-| Ordine B (AliExpress, in parallelo) | 16,46 € |
-| Cella 18650 (specializzato, quando serve) | ~9 € |
-| **Totale** | **~92 €** |
+| Ordine B (AliExpress, 5 voci) — merce 10,72 € + **dazi 18,35 €** | **29,07 €** |
+| Negozio di elettronica in Italia (condensatori, interruttore, distanziali) | ~5 € |
+| Cella 18650 (rivenditore specializzato, quando serve) | ~9 € |
+| **Totale** | **~110 €** |
 
 Contro i **183 €** del carrello unico iniziale.
+
+> **Perché non sono più i ~92 € della prima stesura.** Quel totale era calcolato prima di
+> scoprire gli oneri di importazione: dava l'Ordine B a 16,46 €, cioè il solo valore della
+> merce. I dazi aggiungono **3,67 € per ogni tipo di articolo** a prescindere dal prezzo, e
+> su otto voci facevano 29,35 € di sovrapprezzo. Riducendo l'ordine a cinque voci e
+> comprando le altre tre in Italia il danno scende, ma non sparisce: il conto onesto è
+> **~110 €**. Resta comunque 73 € sotto il carrello unico di partenza.
