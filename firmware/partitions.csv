@@ -1,0 +1,13 @@
+# Tabella delle partizioni — flash da 4 MB del modulo WROOM-32E.
+#
+# Due slot OTA perche' l'aggiornamento passa dalla pagina di configurazione.
+# Misura del 26/08/2026: l'esempio HFP di ESP-IDF con vHCI, WBS e PBAC pesa
+# 750 KB; con WiFi, server HTTP, I2S, OLED e la logica del telefono la stima
+# e' ~1,2 MB. In uno slot da 1,94 MB restano circa il 38% di margine.
+#
+# Nome,     Tipo, Sottotipo, Offset,   Dimensione
+nvs,        data, nvs,       0x9000,   0x4000
+otadata,    data, ota,       0xd000,   0x2000
+phy_init,   data, phy,       0xf000,   0x1000
+ota_0,      app,  ota_0,     0x10000,  0x1F0000
+ota_1,      app,  ota_1,     0x200000, 0x1F0000
