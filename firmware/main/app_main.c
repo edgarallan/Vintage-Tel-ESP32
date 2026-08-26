@@ -60,8 +60,20 @@ static void phone_task(void *arg)
     }
 }
 
+#ifdef VT_DIAG_DIAL
+void diag_dial_run(void);
+#endif
+
 void app_main(void)
 {
+#ifdef VT_DIAG_DIAL
+    /* Modalita' di misura: nessuna macchina a stati, solo i fronti grezzi dei
+       contatti del disco con la marca temporale. Si abilita da
+       main/CMakeLists.txt. Vedi diag_dial.c. */
+    diag_dial_run();
+    return;
+#endif
+
     /* NVS serve allo stack Bluetooth per le chiavi di accoppiamento, oltre
        che alla configurazione del telefono. */
     esp_err_t err = nvs_flash_init();
