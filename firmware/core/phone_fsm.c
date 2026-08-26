@@ -308,8 +308,18 @@ void phone_init(phone_t *p, const hw_iface_t *hw, phonebook_t *pb,
     p->hw    = hw;
     p->pb    = pb;
     p->cfg   = *cfg;
-    p->state = ST_IDLE;
     ring_init(&p->ring, ring_cfg);
+
+    /* Non basta assegnare lo stato iniziale: vanno applicati anche i suoi
+       effetti. Senza questa chiamata il telefono si accende con il LED spento
+       e il display vuoto, e ci resta finche' non arriva il primo evento —
+       cioe' finche' qualcuno non alza la cornetta. Sul modulo di alimentazione
+       scelto quello e' proprio lo scenario che ne disabilita l'uscita
+       (vincolo #6: display e LED non vanno mai spenti del tutto).
+
+       Passandoci da transition() l'invariante "nessuno assegna p->state a
+       mano" diventa vera senza eccezioni, init compreso. */
+    transition(p, ST_IDLE);
 }
 
 void phone_handle(phone_t *p, const phone_ev_t *ev)

@@ -324,6 +324,23 @@ void test_il_quick_dial_alimenta_il_richiamo(void)
 
 /* --- coerenza generale ---------------------------------------------------- */
 
+void test_all_avvio_led_e_display_sono_gia_impostati(void)
+{
+    /* setUp() ha chiamato phone_init() e nient'altro: e' esattamente lo stato
+       del telefono appena acceso, prima che qualcuno tocchi la cornetta.
+       Se qui il LED risulta non impostato, sull'apparecchio vero l'accensione
+       avviene con LED spento e display vuoto, e ci si resta fino al primo
+       evento. Il modulo di alimentazione scelto disabilita l'uscita sotto i
+       ~50 mA, quindi non e' un problema estetico: e' il telefono che si
+       spegne da solo in silenzio (vincolo #6). */
+    /* Attenzione a NON asserire su last_led: LED_IDLE e' il primo valore
+       dell'enum, vale 0, e fake_hw_init() azzera la struct — l'asserzione
+       passerebbe anche se set_led non fosse mai stata chiamata. Va contato
+       il numero di chiamate effettive. */
+    TEST_ASSERT_EQUAL(1, fake_count(&g_fake, "led:0"));   /* led:0 = LED_IDLE */
+    TEST_ASSERT_EQUAL_STRING("IDLE", g_fake.display_state);
+}
+
 void test_ogni_stato_aggiorna_il_led(void)
 {
     /* Il LED e' l'unico segnale visibile a telefono chiuso: nessuna
@@ -396,6 +413,7 @@ int main(void)
     RUN_TEST(test_il_pulsante_richiama_l_ultimo_numero);
     RUN_TEST(test_il_pulsante_non_fa_nulla_senza_un_numero_precedente);
     RUN_TEST(test_il_quick_dial_alimenta_il_richiamo);
+    RUN_TEST(test_all_avvio_led_e_display_sono_gia_impostati);
     RUN_TEST(test_ogni_stato_aggiorna_il_led);
     RUN_TEST(test_eventi_fuori_contesto_non_rompono_nulla);
     return UNITY_END();
