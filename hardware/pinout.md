@@ -1,4 +1,4 @@
-# Mappa GPIO — ESP32-WROVER-E
+# Mappa GPIO — ESP32-WROOM-32E
 
 **Fonte di verità per l'assegnazione dei pin.** Se un modulo del firmware usa un pin
 diverso da questa tabella, è un bug — oppure va aggiornata questa tabella nello stesso commit.
@@ -11,19 +11,25 @@ l'assegnazione obbligata invece che arbitraria.
 | GPIO | Perché è escluso |
 |---|---|
 | 6, 7, 8, 9, 10, 11 | Collegati alla flash SPI interna. Usarli manda in crash il chip |
-| 16, 17 | Usati dalla **PSRAM** sui moduli WROVER. Su un WROOM sarebbero liberi |
 | 1, 3 | UART0 TX/RX: console seriale e flashing |
 | 0, 2, 5, 12, 15 | **Strapping pin**: il loro livello all'accensione decide modalità di boot e tensione della flash. Se un contatto esterno li tiene bassi o alti al momento sbagliato, **il telefono non si avvia** |
 | 34, 35, 36, 39 | **Solo input e senza pull-up interno.** Inutilizzabili per i contatti puliti di disco e gancio senza resistenze esterne saldate |
 
-Restano **13 pin** utilizzabili: 4, 13, 14, 18, 19, 21, 22, 23, 25, 26, 27, 32, 33.
-Servono **13 segnali**. Margine: **zero**.
+Restano **15 pin** utilizzabili: 4, 13, 14, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 32, 33.
+Servono **13 segnali**. Margine: **due pin**.
+
+> **I GPIO 16 e 17 sono liberi perche' il modulo e' un WROOM.** Sui WROVER li
+> occupa la PSRAM, e la prima stesura di questo documento li dava per persi. Il
+> modulo effettivamente acquistato e verificato il 26/08/2026 e' un
+> **ESP32-D0WD-V3 in package WROOM-32E**, senza PSRAM e con 4 MB di flash
+> (`esptool flash-id`: `PKG_VERSION=1`, feature `Wi-Fi, BT`, nessuna PSRAM).
+> Il progetto ci guadagna: vedi la sezione Riserva.
 
 ## Assegnazione
 
 | Funzione | GPIO | Direzione | Peripheral | Note |
 |---|---|---|---|---|
-| Disco — impulsi | **4** | IN, pull-up | PCNT | Filtro anti-glitch hardware: niente debounce software |
+| Disco — impulsi | **4** | IN, pull-up | PCNT | Filtro anti-glitch hardware **contro il rumore elettrico**. Non basta contro il rimbalzo meccanico: vedi sotto |
 | Disco — NSI (fuori-normale) | **32** | IN, pull-up | GPIO | Abilita il conteggio mentre il disco ruota |
 | Gancio (cornetta) | **18** | IN, pull-up | GPIO + ISR | `xQueueSendFromISR` verso il task telefono |
 | Campanello — IN1 | **13** | OUT | esp_timer | DRV8871 |
@@ -37,11 +43,52 @@ Servono **13 segnali**. Margine: **zero**.
 | I2C — SDA | **21** | I/O | I2C0 | **Bus condiviso**: WM8960 `0x1A` + SSD1306 `0x3C` |
 | I2C — SCL | **19** | OUT | I2C0 | **Bus condiviso**: WM8960 `0x1A` + SSD1306 `0x3C` |
 
+## Il filtro anti-glitch del PCNT non e' un antirimbalzo
+
+Va detto chiaramente perche' la prima stesura di questo documento lasciava intendere il
+contrario, e sul disco combinatore la differenza si paga in cifre sbagliate.
+
+Il peripheral PCNT ha un filtro hardware che scarta gli impulsi piu' corti di una soglia.
+La soglia pero' ha un tetto fisico. Da `components/esp_driver_pcnt/src/pulse_cnt.c`:
+
+```c
+glitch_filter_thres = esp_clk_apb_freq() / 1000000 * config->max_glitch_ns / 1000;
+ESP_RETURN_ON_FALSE(glitch_filter_thres <= PCNT_LL_MAX_GLITCH_WIDTH, ...)
+```
+
+e `PCNT_LL_MAX_GLITCH_WIDTH` vale **1023** (`hal/esp32/include/hal/pcnt_ll.h`). Con APB a
+80 MHz il massimo filtrabile e' **1023 / 80 MHz ≈ 12,8 µs**.
+
+Il rimbalzo di un contatto meccanico dura **da 1 a 5 ms**: due o tre ordini di grandezza
+oltre quel tetto. Il filtro elimina benissimo i disturbi elettrici captati dai cavi, ma un
+contatto che rimbalza tre volte produce tre conteggi che il PCNT non ha modo di distinguere
+da tre impulsi veri. Un "3" composto diventerebbe un "9".
+
+**Nemmeno il software oggi lo copre**: `core/dial_decode.c`, in `dial_on_pulse()`,
+incrementa a ogni fronte senza imporre un intervallo minimo — il campo `last_pulse_ms`
+serve solo al fallback a tempo. L'unica rete di sicurezza presente e' la saturazione a
+`zero_pulses`, che trasforma un sovraconteggio in uno 0 invece che in spazzatura.
+
+**Cosa fare**, in ordine di preferenza:
+
+1. **Intervallo minimo tra impulsi in `dial_decode.c`.** A 10 impulsi al secondo due
+   impulsi veri distano ~100 ms, quindi una finestra cieca di 30-40 ms dopo ogni conteggio
+   e' larghissima rispetto al segnale e strettissima rispetto al rimbalzo. E' logica pura:
+   sta in `core/`, si prova sul Mac, non costa una saldatura.
+2. Filtro RC sul contatto. Funziona, ma aggiunge componenti e stagno.
+
+La scelta va fatta **dopo aver misurato il rimbalzo del disco vero**, non prima: gli S62
+hanno un contatto a strisciamento che potrebbe rimbalzare molto meno di un pulsante.
+
 ## Riserva
 
-Non c'è un pin libero. Se in corso d'opera ne servisse uno, l'unica manovra possibile è
-spostare **gancio** o **NSI** su un pin solo-input (34-39) aggiungendo una **resistenza di
-pull-up esterna da 10 kΩ** verso 3V3. È l'unica saldatura di riserva prevista dal progetto.
+Restano **due pin liberi: GPIO 16 e 17**, entrambi bidirezionali e con pull-up interno,
+quindi utilizzabili senza alcun componente aggiuntivo.
+
+Questo **cancella l'unica saldatura di riserva prevista dal progetto**. La stesura
+precedente, che assumeva un WROVER, non aveva pin liberi e prevedeva come ripiego di
+spostare **gancio** o **NSI** su un pin solo-input (34-39) con una **resistenza di pull-up
+esterna da 10 kΩ** verso 3V3. Con il WROOM quel ripiego non serve piu'.
 
 ## Collegamenti dei moduli
 

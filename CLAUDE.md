@@ -8,7 +8,8 @@ Retrofit hardware/software che trasforma un **Siemens/FATME S62** italiano degli
 (telefono a disco) in un **vivavoce Bluetooth HFP** per il cellulare, conservando cornetta,
 disco combinatore e campanello elettromeccanico originali.
 
-Hardware target: **ESP32 originale** (ESP-WROOM-32), firmware in **C/ESP-IDF**.
+Hardware target: **ESP32 originale** (ESP-WROOM-32E, chip D0WD-V3, **4 MB di flash, senza
+PSRAM**), firmware in **C/ESP-IDF v5.5.5**.
 Documentazione e commenti del codice sono **in italiano**.
 
 > **Versione 2.** La v1 girava su Raspberry Pi Zero 2 W in Python:
@@ -43,7 +44,10 @@ sono già costati indagini e non vanno riscoperti.
 - `firmware/core/` — **logica pura in C, zero `#include "esp_*"`**. È ciò che rende il
   firmware testabile su un PC. Dipende dall'hardware solo tramite `hw_iface.h`, una struct
   di puntatori a funzione.
-- `firmware/hal/` — driver ESP-IDF sottili che implementano quella struct.
+- `firmware/phone_hal/` — driver ESP-IDF sottili che implementano quella struct.
+  **Non rinominarlo `hal`**: ESP-IDF ha un proprio componente `hal`, presente nei
+  `common_component_reqs`, e una cartella omonima lo sostituisce silenziosamente. La build
+  muore altrove con un incomprensibile `hal/efuse_ll.h: No such file or directory`.
 - `firmware/main/` — `app_main.c`: crea la coda eventi e avvia i task.
 - `firmware/tests/` — Unity + CMake nativo. Gira **senza ESP32 e senza ESP-IDF**.
 - `hardware/` — `pinout.md` (fonte di verità dei GPIO), `bell_driver.md` (campanello).
@@ -91,8 +95,11 @@ Invarianti da preservare:
    Il tempo arriva sempre dal chiamante (campo `now_ms` dell'evento), mai da un orologio:
    è ciò che rende i test deterministici e istantanei.
 4. **GPIO interrupt-driven, mai in polling.** Niente `while (1) { leggi(); }`.
-5. **Il debounce è hardware.** Il filtro anti-glitch del peripheral PCNT sostituisce
-   optoaccoppiatori e reti RC della v1.
+5. **Il debounce hardware copre solo il rumore elettrico.** Il filtro anti-glitch del PCNT
+   sostituisce gli optoaccoppiatori della v1, ma satura a **~12,8 µs** (`PCNT_LL_MAX_GLITCH_WIDTH`
+   = 1023 cicli APB): non è un antirimbalzo meccanico, che servirebbe sui millisecondi.
+   Oggi **nessuno dei due livelli filtra i rimbalzi** — `dial_on_pulse()` conta ogni fronte.
+   Decisione aperta, da prendere misurando il disco vero: vedi `hardware/pinout.md`.
 
 ### Disco combinatore
 
@@ -123,8 +130,9 @@ si aggiorna `pinout.md` nello stesso commit.
 | I2S BCLK / WS / DIN / DOUT | 26 / 25 / 33 / 22 |
 | I2C SDA / SCL | 21 / 19 |
 
-**Restano 13 pin utilizzabili per 13 segnali: margine zero.** Sono esclusi i GPIO 6-11
-(flash SPI), 16-17 (PSRAM su WROVER), 1/3 (console UART), 0/2/5/12/15 (strapping: se
+**Restano 15 pin utilizzabili per 13 segnali: margine due.** I GPIO 16-17, che sui moduli
+WROVER servono alla PSRAM, qui sono liberi. Sono esclusi i GPIO 6-11
+(flash SPI), 1/3 (console UART), 0/2/5/12/15 (strapping: se
 caricati impediscono il boot) e 34-39 (solo input e **senza pull-up interno**, quindi
 inservibili per i contatti puliti di disco e gancio).
 
