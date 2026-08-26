@@ -75,6 +75,12 @@ I numeri rimandano ai marker dell'immagine; gli Step a [`04_installation.md`](04
 
 ## Materiale di riferimento
 
-- Schema originale Siemens S62: [`../assets/retrofit/s62_schema.jpg`](../assets/retrofit/s62_schema.jpg)
+- Schema originale Siemens S62, due varianti dello stesso apparecchio:
+  [a spina](../assets/retrofit/s62_schema.jpg) (`Fg sm 54 S8049 g,h`) e
+  [a borchia](../assets/retrofit/s62_schema_borchia.jpg) (`a,b`). Concordano sulla
+  morsettiera del disco, trascritta in [`../hardware/pinout.md`](../hardware/pinout.md)
+- Interno dell'apparecchio: [completo](../assets/retrofit/s62_interno_completo.jpg),
+  [morsettiere](../assets/retrofit/s62_morsettiere.jpg),
+  [dettaglio contatti](../assets/retrofit/s62_dettaglio_contatti.jpg)
 - Foto cassetta smontata: [`../assets/retrofit/cassetta_smontata.jpg`](../assets/retrofit/cassetta_smontata.jpg)
 - Mappa tecnica completa: [`../hardware/retrofit_layout.md`](../hardware/retrofit_layout.md)

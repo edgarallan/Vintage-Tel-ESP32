@@ -95,11 +95,13 @@ Invarianti da preservare:
    Il tempo arriva sempre dal chiamante (campo `now_ms` dell'evento), mai da un orologio:
    è ciò che rende i test deterministici e istantanei.
 4. **GPIO interrupt-driven, mai in polling.** Niente `while (1) { leggi(); }`.
-5. **Il debounce hardware copre solo il rumore elettrico.** Il filtro anti-glitch del PCNT
-   sostituisce gli optoaccoppiatori della v1, ma satura a **~12,8 µs** (`PCNT_LL_MAX_GLITCH_WIDTH`
-   = 1023 cicli APB): non è un antirimbalzo meccanico, che servirebbe sui millisecondi.
-   Oggi **nessuno dei due livelli filtra i rimbalzi** — `dial_on_pulse()` conta ogni fronte.
-   Decisione aperta, da prendere misurando il disco vero: vedi `hardware/pinout.md`.
+5. **L'antirimbalzo è software, e l'ISR non deve mai leggere il livello del pin.** Il
+   filtro anti-glitch del PCNT satura a ~12,8 µs contro rimbalzi misurati fino a 797 µs:
+   il peripheral è stato **rimosso**. Restano due livelli — assestamento di 3 ms in
+   `phone_hal/hal_input.c` e finestra cieca di 8 ms in `core/dial_decode.c` — entrambi
+   dimensionati sulle misure del 26/08/2026 (impulso 61 ms, rimbalzo 1,3 ms).
+   Leggere `gpio_get_level()` dentro l'ISR restituisce un livello che non corrisponde al
+   fronte che l'ha svegliata: è cosa nota e già costata una serata. Vedi `hardware/pinout.md`.
 
 ### Disco combinatore
 

@@ -29,7 +29,7 @@ Servono **13 segnali**. Margine: **due pin**.
 
 | Funzione | GPIO | Direzione | Peripheral | Note |
 |---|---|---|---|---|
-| Disco — impulsi | **4** | IN, pull-up | PCNT | Filtro anti-glitch hardware **contro il rumore elettrico**. Non basta contro il rimbalzo meccanico: vedi sotto |
+| Disco — impulsi | **4** | IN, pull-up | GPIO + ISR | Antirimbalzo software: assestamento 3 ms nel HAL + finestra cieca 8 ms in `core/`. **Niente PCNT**, vedi sotto |
 | Disco — NSI (fuori-normale) | **32** | IN, pull-up | GPIO | Abilita il conteggio mentre il disco ruota |
 | Gancio (cornetta) | **18** | IN, pull-up | GPIO + ISR | `xQueueSendFromISR` verso il task telefono |
 | Campanello — IN1 | **13** | OUT | esp_timer | DRV8871 |
@@ -43,42 +43,112 @@ Servono **13 segnali**. Margine: **due pin**.
 | I2C — SDA | **21** | I/O | I2C0 | **Bus condiviso**: WM8960 `0x1A` + SSD1306 `0x3C` |
 | I2C — SCL | **19** | OUT | I2C0 | **Bus condiviso**: WM8960 `0x1A` + SSD1306 `0x3C` |
 
-## Il filtro anti-glitch del PCNT non e' un antirimbalzo
+## L'antirimbalzo, misurato invece che stimato
 
-Va detto chiaramente perche' la prima stesura di questo documento lasciava intendere il
-contrario, e sul disco combinatore la differenza si paga in cifre sbagliate.
+La prima stesura di questo documento sosteneva che il debounce fosse risolto in hardware
+dal filtro anti-glitch del peripheral PCNT. **È falso**, e il 26/08/2026 è costato una
+serata di bring-up: il disco componeva cifre a caso.
 
-Il peripheral PCNT ha un filtro hardware che scarta gli impulsi piu' corti di una soglia.
-La soglia pero' ha un tetto fisico. Da `components/esp_driver_pcnt/src/pulse_cnt.c`:
+### Perché il filtro hardware non poteva bastare
+
+Da `components/esp_driver_pcnt/src/pulse_cnt.c`:
 
 ```c
 glitch_filter_thres = esp_clk_apb_freq() / 1000000 * config->max_glitch_ns / 1000;
 ESP_RETURN_ON_FALSE(glitch_filter_thres <= PCNT_LL_MAX_GLITCH_WIDTH, ...)
 ```
 
-e `PCNT_LL_MAX_GLITCH_WIDTH` vale **1023** (`hal/esp32/include/hal/pcnt_ll.h`). Con APB a
-80 MHz il massimo filtrabile e' **1023 / 80 MHz ≈ 12,8 µs**.
+con `PCNT_LL_MAX_GLITCH_WIDTH` = **1023** (`hal/esp32/include/hal/pcnt_ll.h`). Ad APB
+80 MHz il massimo filtrabile è **1023 / 80 MHz ≈ 12,8 µs**.
 
-Il rimbalzo di un contatto meccanico dura **da 1 a 5 ms**: due o tre ordini di grandezza
-oltre quel tetto. Il filtro elimina benissimo i disturbi elettrici captati dai cavi, ma un
-contatto che rimbalza tre volte produce tre conteggi che il PCNT non ha modo di distinguere
-da tre impulsi veri. Un "3" composto diventerebbe un "9".
+### Le misure sull'apparecchio reale
 
-**Nemmeno il software oggi lo copre**: `core/dial_decode.c`, in `dial_on_pulse()`,
-incrementa a ogni fronte senza imporre un intervallo minimo — il campo `last_pulse_ms`
-serve solo al fallback a tempo. L'unica rete di sicurezza presente e' la saturazione a
-`zero_pulses`, che trasforma un sovraconteggio in uno 0 invece che in spazzatura.
+Registrando ogni fronte con marca temporale al microsecondo (`firmware/main/diag_dial.c`):
 
-**Cosa fare**, in ordine di preferenza:
+| Grandezza | Misura |
+|---|---|
+| Durata di un impulso vero | **61 ms** (a norma per un disco a 10 imp/s) |
+| Distanza fra impulsi veri | **~100 ms** |
+| Durata della raffica di rimbalzo | **1,3 ms**, 15 fronti spuri |
+| Fronte di rimbalzo più distante | **797 µs** |
 
-1. **Intervallo minimo tra impulsi in `dial_decode.c`.** A 10 impulsi al secondo due
-   impulsi veri distano ~100 ms, quindi una finestra cieca di 30-40 ms dopo ogni conteggio
-   e' larghissima rispetto al segnale e strettissima rispetto al rimbalzo. E' logica pura:
-   sta in `core/`, si prova sul Mac, non costa una saldatura.
-2. Filtro RC sul contatto. Funziona, ma aggiunge componenti e stagno.
+I fronti di rimbalzo misurati distano 19, 24, 35, 57, 61, 74, 77 µs e uno addirittura 797:
+il filtro da 12,8 µs ne avrebbe eliminati **due su quindici**.
 
-La scelta va fatta **dopo aver misurato il rimbalzo del disco vero**, non prima: gli S62
-hanno un contatto a strisciamento che potrebbe rimbalzare molto meno di un pulsante.
+### La soluzione adottata, su due livelli
+
+**Il PCNT è stato rimosso.** Contava anche i rimbalzi, e servendo comunque la marca
+temporale di ogni fronte per filtrarli, il contatore hardware non aggiungeva nulla.
+
+1. **Assestamento di 3 ms in `phone_hal/hal_input.c`.** Ogni fronte fa ripartire un'attesa;
+   solo quando la linea è ferma da 3 ms il task legge il livello vero. Una raffica di
+   quindici rimbalzi diventa un evento solo. Il valore sta al doppio del rimbalzo misurato
+   e a un decimo del tempo di chiusura del contatto, quindi non può mascherare un impulso.
+2. **Finestra cieca di 8 ms in `core/dial_decode.c`** (`min_pulse_gap_ms`), come seconda
+   linea di difesa e perché è logica pura, testabile sul Mac. Sta sei volte sopra il
+   rimbalzo e dodici volte sotto la distanza fra impulsi veri.
+
+### ⚠️ L'ISR non deve leggere il livello del pin
+
+È l'errore che ha causato il guasto, e va evitato in qualunque driver futuro di questo
+progetto. La prima stesura leggeva `gpio_get_level()` **dentro** l'interruzione. Nei dati
+comparivano fronti consecutivi con lo **stesso livello** — otto `NSI 1` di fila — cosa
+impossibile per fronti veri: nei microsecondi fra l'interruzione e la lettura la linea era
+già rimbalzata di nuovo.
+
+Il driver deduceva «disco in rotazione» da quel valore, perdeva i rilasci dell'NSI e
+accumulava gli impulsi di più cifre in una sola. **Il livello si legge nel task, dopo
+l'assestamento.** L'ISR segnala soltanto *dove* e *quando*.
+
+## Morsettiera del disco combinatore
+
+Dallo schema originale AUSO Siemens ([variante a spina](../assets/retrofit/s62_schema.jpg),
+[variante a borchia](../assets/retrofit/s62_schema_borchia.jpg) — concordi su questo punto):
+
+| Morsetto | Filo | Contatto | A riposo |
+|---|---|---|---|
+| 1 | **bi** (bianco) | impulsi (`cid`) | **chiuso** |
+| 2 | **rs** (rosso) | impulsi (`cid`) | **chiuso** |
+| 3 | **bl** (blu) | NSI / fuori-normale | **aperto** |
+| 4 | **ma** (marrone) | NSI / fuori-normale | **aperto** |
+
+Che 1-2 sia il contatto degli impulsi lo dice la nota in calce allo schema:
+
+> *«Se manca il disco combinatore ponticellare 1 con 2»*
+
+Sostituire il disco con un ponticello fisso ha senso solo se a riposo quel contatto è già
+un ponticello — cioè se è normalmente chiuso, come dev'essere un contatto che genera
+impulsi interrompendo un circuito.
+
+**Verifica col multimetro prima di fidarti dei colori.** Sui telefoni italiani di
+quell'epoca le convenzioni cromatiche cambiavano da lotto a lotto e da riparazione a
+riparazione. Con i quattro fili svitati dalla morsettiera, in continuità:
+
+1. Misura tutte e sei le combinazioni **a riposo**: una sola coppia legge zero, ed è quella
+   degli impulsi. Gli altri due fili sono l'NSI per esclusione.
+2. Conferma l'NSI **tenendo il disco fermo a fine corsa**: deve chiudersi e restare chiuso
+   per tutta la rotazione. È una misura statica, non serve inseguire fronti veloci.
+
+> **Se leggi tutto aperto, non è guasto: è ossido.** Su questo apparecchio le sei coppie
+> risultavano inizialmente tutte aperte. I contatti dei dischi sono **autopulenti per
+> progetto** — strisciano a ogni rotazione — e sono bastate cinque o sei composizioni per
+> farli tornare a condurre. Se durante il bring-up mancano impulsi, il primo sospetto è di
+> nuovo l'ossido; se invece ne arrivano troppi, è il rimbalzo.
+
+### Collegamento all'ESP32
+
+I quattro fili vanno **scollegati dalla morsettiera** e portati diretti al chip. Lasciandoli
+collegati, il contatto resterebbe in parallelo alle bobine da 47 e 29, ai condensatori da
+2,2 µF e 1 µF e alla rete RC: il pull-up interno non riuscirebbe a portare il pin a un
+livello netto. Non è un espediente temporaneo — quella rete analogica va rimossa comunque,
+vedi `docs/07_retrofit_layout.md`.
+
+La polarità non conta, sono contatti puliti:
+
+```
+bianco  → GPIO 4     rosso    → GND
+blu     → GPIO 32    marrone  → GND
+```
 
 ## Riserva
 
