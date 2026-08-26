@@ -15,6 +15,18 @@ static void init_with(uint8_t zero_pulses, uint32_t timeout_ms)
     dial_init(&d, &cfg);
 }
 
+/* Come init_with, ma con la finestra cieca attiva. Tenuta separata perche'
+   gli altri test spaziano gli impulsi di 10 ms e vogliono che passino tutti. */
+static void init_con_finestra(uint32_t gap_ms)
+{
+    dial_config_t cfg = {
+        .zero_pulses      = 10,
+        .digit_timeout_ms = 0,
+        .min_pulse_gap_ms = gap_ms,
+    };
+    dial_init(&d, &cfg);
+}
+
 void setUp(void)    { init_with(10, 0); }
 void tearDown(void) { }
 
@@ -27,6 +39,93 @@ static bool dial_digit(uint8_t pulses, uint8_t *out)
         dial_on_pulse(&d, 100 + i * 10);
     }
     return dial_on_nsi(&d, false, out);
+}
+
+/* --- finestra cieca contro il rimbalzo del contatto ----------------------- */
+
+void test_il_rimbalzo_non_gonfia_la_cifra(void)
+{
+    /* Riproduce il rimbalzo misurato il 26/08/2026 sull'apparecchio reale:
+       dopo ogni impulso vero il contatto produce una raffica di fronti spuri
+       entro ~1,3 ms. Qui sono modellati come impulsi a +1 e +2 ms.
+       Senza finestra cieca un "3" diventerebbe un "9". */
+    init_con_finestra(8);
+
+    uint8_t digit = 0;
+    uint8_t ignored;
+    dial_on_nsi(&d, true, &ignored);
+
+    for (int i = 0; i < 3; i++) {
+        const uint32_t t = 100 + i * 100;   /* impulsi veri: 100 ms di distanza */
+        dial_on_pulse(&d, t);
+        dial_on_pulse(&d, t + 1);           /* rimbalzo */
+        dial_on_pulse(&d, t + 2);           /* rimbalzo */
+    }
+
+    TEST_ASSERT_TRUE(dial_on_nsi(&d, false, &digit));
+    TEST_ASSERT_EQUAL_UINT8(3, digit);
+}
+
+void test_senza_finestra_il_rimbalzo_falsa_la_cifra(void)
+{
+    /* Controprova: e' il comportamento che il firmware aveva sull'hardware
+       vero, ed e' il motivo per cui un 3 composto usciva come cifra sbagliata.
+       Serve a dimostrare che il test sopra misura davvero qualcosa. */
+    init_con_finestra(0);   /* 0 = disattivata */
+
+    uint8_t digit = 0;
+    uint8_t ignored;
+    dial_on_nsi(&d, true, &ignored);
+
+    for (int i = 0; i < 3; i++) {
+        const uint32_t t = 100 + i * 100;
+        dial_on_pulse(&d, t);
+        dial_on_pulse(&d, t + 1);
+        dial_on_pulse(&d, t + 2);
+    }
+
+    TEST_ASSERT_TRUE(dial_on_nsi(&d, false, &digit));
+    TEST_ASSERT_NOT_EQUAL(3, digit);   /* nove impulsi contati, non tre */
+}
+
+void test_la_finestra_non_mangia_impulsi_veri(void)
+{
+    /* Il rischio opposto: una finestra troppo larga perderebbe impulsi buoni.
+       A 10 impulsi al secondo la distanza vera e' ~100 ms, quindi anche una
+       finestra da 8 ms ha un margine di dodici volte. Uno "0" deve restare 0,
+       cioe' dieci impulsi tutti contati. */
+    init_con_finestra(8);
+
+    uint8_t digit = 99;
+    uint8_t ignored;
+    dial_on_nsi(&d, true, &ignored);
+    for (int i = 0; i < 10; i++) {
+        dial_on_pulse(&d, 100 + i * 100);
+    }
+    TEST_ASSERT_TRUE(dial_on_nsi(&d, false, &digit));
+    TEST_ASSERT_EQUAL_UINT8(0, digit);
+}
+
+void test_il_primo_impulso_passa_sempre(void)
+{
+    /* last_pulse_ms sopravvive alla rotazione precedente: se il primo impulso
+       fosse confrontato con quel residuo, la prima cifra composta dopo una
+       pausa breve perderebbe un impulso. */
+    init_con_finestra(8);
+
+    uint8_t digit = 0;
+    uint8_t ignored;
+
+    dial_on_nsi(&d, true, &ignored);
+    dial_on_pulse(&d, 1000);
+    TEST_ASSERT_TRUE(dial_on_nsi(&d, false, &digit));
+    TEST_ASSERT_EQUAL_UINT8(1, digit);
+
+    /* Seconda cifra a soli 2 ms dall'impulso precedente. */
+    dial_on_nsi(&d, true, &ignored);
+    dial_on_pulse(&d, 1002);
+    TEST_ASSERT_TRUE(dial_on_nsi(&d, false, &digit));
+    TEST_ASSERT_EQUAL_UINT8(1, digit);
 }
 
 /* --- conteggio impulsi -> cifra ------------------------------------------ */
@@ -173,5 +272,9 @@ int main(void)
     RUN_TEST(test_fallback_disattivo_con_timeout_zero);
     RUN_TEST(test_zero_pulses_a_zero_usa_il_default_italiano);
     RUN_TEST(test_impulsi_fuori_rotazione_sono_ignorati);
+    RUN_TEST(test_il_rimbalzo_non_gonfia_la_cifra);
+    RUN_TEST(test_senza_finestra_il_rimbalzo_falsa_la_cifra);
+    RUN_TEST(test_la_finestra_non_mangia_impulsi_veri);
+    RUN_TEST(test_il_primo_impulso_passa_sempre);
     return UNITY_END();
 }

@@ -21,6 +21,19 @@
 typedef struct {
     uint8_t  zero_pulses;      /* quanti impulsi valgono 0 (IT: 10) */
     uint32_t digit_timeout_ms; /* fallback se il rilascio NSI si perde; 0 = disattivo */
+
+    /* Finestra cieca dopo un impulso contato: gli impulsi che arrivano prima
+       sono rimbalzi del contatto e vengono scartati. 0 = disattivata.
+
+       Misura del 26/08/2026 sull'S62 di questo progetto: il contatto rimbalza
+       per ~1,3 ms producendo una quindicina di fronti spuri, mentre gli
+       impulsi veri distano ~100 ms. Fra i due c'e' un fattore 75, quindi
+       qualunque valore fra 5 e 20 ms funziona; il progetto usa 8.
+
+       Non e' ridondante rispetto al filtro hardware: il filtro anti-glitch
+       del PCNT satura a ~12,8 us e i fronti di rimbalzo misurati arrivano a
+       797 us, cioe' sessanta volte oltre la sua portata. */
+    uint32_t min_pulse_gap_ms;
 } dial_config_t;
 
 typedef struct {

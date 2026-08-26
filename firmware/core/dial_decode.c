@@ -61,6 +61,13 @@ void dial_on_pulse(dial_decoder_t *d, uint32_t now_ms)
     if (!d->rotating || d->emitted) {
         return;
     }
+    /* Finestra cieca contro il rimbalzo del contatto. Il primo impulso della
+       rotazione passa sempre: last_pulse_ms verrebbe da quella precedente e
+       non significherebbe nulla qui. */
+    if (d->pulses > 0 && d->cfg.min_pulse_gap_ms > 0 &&
+        (now_ms - d->last_pulse_ms) < d->cfg.min_pulse_gap_ms) {
+        return;
+    }
     if (d->pulses < UINT8_MAX) {
         d->pulses++;
     }
