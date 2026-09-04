@@ -162,6 +162,37 @@ esterna da 10 kΩ** verso 3V3. Con il WROOM quel ripiego non serve piu'.
 
 ## Collegamenti dei moduli
 
+### Gancio — misure del commutatore
+
+Coppia di lamelle **più a sinistra** della pila dietro il commutatore
+(`assets/retrofit/s62_gancio_retro.jpeg`), collegata diretta a **GPIO 18 + GND**: nessuna
+via parallela, non serve isolarla.
+
+| | |
+|---|---|
+| cornetta **appoggiata** | contatto aperto → pull-up → livello **1** |
+| cornetta **sollevata** | contatto chiuso → livello **0** |
+
+Verificato il 04/09/2026 su cinque cicli: il livello a riposo con la cornetta giù è `1`, e
+i cicli alternano `0,1,0,1…` chiudendo su `1`. Il verso non è deducibile a priori e va
+misurato: invertirlo produce un telefono che risponde quando riagganci e riaggancia quando
+rispondi — un guasto simmetrico che sembra un problema di Bluetooth e non lo è.
+
+**Il contatto produce due fenomeni distinti**, ed è facile confonderli:
+
+| | |
+|---|---|
+| rimbalzo vero | 3-10 fronti in **meno di 1 ms** |
+| chiacchiera di corsa | fino a 6 fronti su **247 ms**, intervalli di 20, 19, **140**, 21, 47 ms |
+
+Il secondo è quello che determina l'antirimbalzo — ma il numero che conta **non è la durata
+totale**, bensì l'**intervallo massimo fra due fronti**: l'attesa in `hal_input.c` è
+ritriggerabile e ogni fronte fa ripartire il conto. Con 140 ms di intervallo peggiore, i
+150 ms stimati inizialmente stavano appena sopra la soglia, e una cornetta sollevata un filo
+più adagio spezzava la raffica in due transizioni. **L'assestamento è quindi 400 ms**:
+molto sopra i 140 ms di chiacchiera e molto sotto il tempo minimo fra due gesti umani
+distinti, che non potrebbero mai essere fusi in uno.
+
 ### Cornetta — tre conduttori, e perché bastano
 
 Il cordone dell'S62 ha **tre fili**: rosso, bianco, blu. Sono tutti presenti sui morsetti
@@ -200,6 +231,15 @@ tornerebbe esatta.
 I 220 Ω sul microfono sono alti per una capsula a carbone: è il sintomo dei granelli
 **compattati e ossidati** dopo cinquant'anni. La capsula funziona ancora, ma suona
 impastata — motivo in più per sostituirla con un electret.
+
+**Conferma del verso, 04/09/2026.** La somma degli ohm dimostra che il blu è il comune,
+ma non dice quale fra bianco e rosso sia il microfono: per quello serve una prova
+dinamica. Misurando la coppia **bianco – blu** e parlando nella cornetta, **la lettura
+sale** — è la modulazione dei granelli di carbone sotto la pressione sonora. Solo un
+microfono fa variare la propria resistenza col suono; una bobina d'ascolto resta immobile.
+
+La tabella dei fili qui sopra è quindi **misurata, non dedotta**, ed è la mappa da seguire
+per cablare il codec.
 
 ### Come identificare i tre fili col multimetro
 
