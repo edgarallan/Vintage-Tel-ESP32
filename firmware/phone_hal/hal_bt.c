@@ -65,6 +65,7 @@ static QueueHandle_t s_evt_q;
 static esp_bd_addr_t s_peer;
 static bool          s_ho_peer;
 static esp_timer_handle_t s_riconn;
+static uint32_t           s_tentativi;
 
 /* Connessione di livello servizio: sotto questa soglia l'AG non risponde ai
    comandi, quindi e' lei e non la connessione RFCOMM a dire "collegato". */
@@ -179,14 +180,29 @@ static void salva_peer(const uint8_t *bda)
 
 /* Ritenta la connessione finche' il cellulare non torna a portata. Gira su un
    timer e non su un task: e' un tentativo ogni dieci secondi, non vale uno
-   stack dedicato. */
+   stack dedicato.
+
+   L'esito di ogni tentativo va a log. Buttarlo via rendeva il difetto
+   invisibile: un telefono che non si ricollega e non dice perche' costringe a
+   indovinare fra "non ci prova", "ci prova e il cellulare rifiuta" e "ci prova
+   e lo stack e' occupato". */
 static void riprova_connessione(void *arg)
 {
     (void)arg;
     if (s_slc || !s_ho_peer) {
         return;
     }
-    esp_hf_client_connect(s_peer);
+
+    s_tentativi++;
+    const esp_err_t err = esp_hf_client_connect(s_peer);
+    if (err == ESP_OK) {
+        ESP_LOGI(TAG, "tentativo %lu di ricollegarmi a %s: accettato",
+                 (unsigned long)s_tentativi, mac_corto(s_peer));
+    } else {
+        ESP_LOGW(TAG, "tentativo %lu di ricollegarmi a %s: %s",
+                 (unsigned long)s_tentativi, mac_corto(s_peer),
+                 esp_err_to_name(err));
+    }
 }
 
 static void hf_cb(esp_hf_client_cb_event_t event, esp_hf_client_cb_param_t *param)
@@ -334,11 +350,11 @@ void hal_bt_init(QueueHandle_t evt_q)
     ESP_ERROR_CHECK(esp_timer_create(&targs, &s_riconn));
     ESP_ERROR_CHECK(esp_timer_start_periodic(s_riconn, 10 * 1000 * 1000));
 
-    if (s_ho_peer) {
-        /* Primo tentativo subito: il caso normale e' un riavvio con il
-           cellulare gia' in casa, e aspettare dieci secondi sarebbe gratuito. */
-        esp_hf_client_connect(s_peer);
-    }
+    /* Niente tentativo immediato. Al riavvio il cellulare ristabilisce da solo
+       il collegamento radio, e chiamare connect() mentre lo sta facendo
+       produce un ACL "gia' esistente" (stato 0x0b) che Bluedroid non sa
+       recuperare: molla il ritentativo e resta fermo. Il primo tentativo
+       arriva col timer, dopo dieci secondi, quando la radio si e' assestata. */
 
     ESP_LOGI(TAG, "in attesa di accoppiamento come \"%s\"", BT_DEV_NAME);
 }
