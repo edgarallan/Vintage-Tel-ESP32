@@ -30,3 +30,12 @@ CONFIG_BT_HFP_WBS_ENABLE=y
 
 # Rubrica scaricata dal cellulare invece che digitata a mano.
 CONFIG_BT_PBAC_ENABLED=y
+
+# --- Verbosita' di Bluedroid ------------------------------------------------
+# Con una chiamata in corso, HCI e APPL riempiono la seriale a livello WARNING:
+# ogni ciclo di sniff del cellulare stampa "unsniff"/"mode change", e la
+# console a 115200 diventa il collo di bottiglia proprio mentre il telefono
+# deve reagire in tempo reale. Restano gli errori veri, che sono cio' che
+# serve davvero durante il collaudo.
+CONFIG_BT_LOG_HCI_TRACE_LEVEL_ERROR=y
+CONFIG_BT_LOG_APPL_TRACE_LEVEL_ERROR=y
