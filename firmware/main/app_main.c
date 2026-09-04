@@ -60,17 +60,17 @@ static void phone_task(void *arg)
     }
 }
 
-#ifdef VT_DIAG_DIAL
-void diag_dial_run(void);
+#ifdef VT_DIAG_INPUT
+void diag_input_run(void);
 #endif
 
 void app_main(void)
 {
-#ifdef VT_DIAG_DIAL
+#ifdef VT_DIAG_INPUT
     /* Modalita' di misura: nessuna macchina a stati, solo i fronti grezzi dei
-       contatti del disco con la marca temporale. Si abilita da
-       main/CMakeLists.txt. Vedi diag_dial.c. */
-    diag_dial_run();
+       contatti con la marca temporale, e la durata delle raffiche di rimbalzo.
+       Si abilita da main/CMakeLists.txt. Vedi diag_input.c. */
+    diag_input_run();
     return;
 #endif
 
