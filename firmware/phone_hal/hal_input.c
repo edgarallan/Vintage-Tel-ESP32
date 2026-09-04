@@ -49,12 +49,52 @@ static const char *TAG = "hal_input";
 #define DIAL_MIN_GAP_MS      8
 
 /*
- * Assestamento dopo un fronte, prima di fidarsi del livello. Il rimbalzo
- * misurato dura 1,3 ms; 3 ms danno piu' del doppio di margine e restano
- * abbondantemente sotto il tempo di chiusura del contatto (~39 ms), quindi
- * non possono mascherare un impulso vero.
+ * Assestamento dopo un fronte, prima di fidarsi del livello. NON puo' essere
+ * una costante unica: i contatti di questo telefono rimbalzano in modo
+ * profondamente diverso, e il 27/08/2026 usarne una sola ha reso il gancio
+ * inutilizzabile mentre il disco funzionava perfettamente.
+ *
+ *   disco impulsi   rimbalzo ~1,3 ms   lamella leggera, a strisciamento
+ *   gancio          due fenomeni distinti, vedi sotto
+ *
+ * Il vincolo che limita ciascun valore verso l'alto e' diverso e va rispettato
+ * singolarmente:
+ *
+ *   - il DISCO non puo' superare qualche ms: gli impulsi durano 61 ms e vanno
+ *     contati tutti, quindi l'assestamento deve stare molto sotto
+ *   - il GANCIO non ha alcun vincolo di velocita': sollevare o riappoggiare
+ *     una cornetta e' un gesto umano lento
+ *
+ * IL GANCIO, MISURATO (04/09/2026, cinque cicli solleva/riappoggia).
+ *
+ * Il commutatore produce due cose diverse che e' facile confondere:
+ *
+ *   a) rimbalzo vero e proprio: raffiche di 3-10 fronti in meno di 1 ms
+ *   b) contatto che "chiacchiera" durante la corsa meccanica: fino a 6 fronti
+ *      distribuiti su 247 ms, con intervalli di 20, 19, 140, 21 e 47 ms
+ *
+ * Il caso (b) e' quello che conta, e il criterio NON e' la durata totale della
+ * raffica. L'attesa qui e' ritriggerabile: ogni fronte fa ripartire il conto,
+ * quindi per tenere insieme una raffica basta superarne l'INTERVALLO MASSIMO
+ * fra due fronti, non la sua durata complessiva.
+ *
+ * Ecco perche' i 150 ms stimati a occhio fallivano in modo intermittente: il
+ * peggior intervallo misurato e' 140 ms, appena sotto la soglia. Bastava una
+ * cornetta sollevata un filo piu' adagio perche' la raffica si spezzasse in
+ * due e il telefono vedesse due transizioni al posto di una.
+ *
+ * 400 ms stanno comodamente in mezzo ai due limiti reali: molto sopra i 140 ms
+ * di chiacchiera, e molto sotto il tempo minimo fra due gesti umani distinti
+ * (nessuno solleva e riappoggia in mezzo secondo), quindi non possono fondere
+ * due gesti veri in uno.
  */
-#define SETTLE_US            3000
+#define SETTLE_PULSE_US      3000
+#define SETTLE_NSI_US        5000
+#define SETTLE_HOOK_US     400000
+
+/* Non misurato: il pulsante non e' ancora cablato. Stima prudente da rivedere
+   con diag_input.c quando ci sara'. */
+#define SETTLE_BUTTON_US    50000
 
 /* Un fronte grezzo, senza interpretazione: solo dove e quando. */
 typedef struct {
@@ -65,6 +105,7 @@ typedef struct {
 /* Stato dell'antirimbalzo per un pin. */
 typedef struct {
     uint8_t pin;
+    int64_t settle_us; /* quanto dev'essere ferma la linea per fidarsi */
     int     stable;    /* ultimo livello considerato buono */
     int64_t edge_us;   /* istante dell'ultimo fronte grezzo */
     bool    pending;   /* c'e' un fronte in attesa di assestarsi */
@@ -121,7 +162,20 @@ static void on_stable_change(int idx, int level, uint32_t now_ms)
     }
 
     case DB_HOOK:
-        send_ev(level ? EV_HOOK_UP : EV_HOOK_DOWN, now_ms, 0);
+        /* Misurato sull'S62, coppia di lamelle piu' a sinistra del
+           commutatore: il contatto e' CHIUSO con la cornetta sollevata e
+           aperto con la cornetta appoggiata. Con il pull-up interno chiuso
+           significa livello basso, quindi basso = sganciato.
+
+           Confermato il 04/09/2026 leggendo il pin: a riposo con la cornetta
+           appoggiata vale 1, e cinque cicli solleva/riappoggia alternano
+           0,1,0,1... chiudendo su 1 con la cornetta giu'.
+
+           Il verso non e' deducibile a priori e va misurato: invertirlo
+           produce un telefono che risponde quando riagganci e riaggancia
+           quando rispondi, cioe' un guasto perfettamente simmetrico che
+           sembra un problema del Bluetooth e non lo e'. */
+        send_ev(level ? EV_HOOK_DOWN : EV_HOOK_UP, now_ms, 0);
         break;
 
     case DB_BUTTON:
@@ -163,7 +217,7 @@ static void input_task(void *arg)
         const uint32_t ora_ms = (uint32_t)(ora_us / 1000);
 
         for (int i = 0; i < DB_COUNT; i++) {
-            if (!s_db[i].pending || (ora_us - s_db[i].edge_us) < SETTLE_US) {
+            if (!s_db[i].pending || (ora_us - s_db[i].edge_us) < s_db[i].settle_us) {
                 continue;
             }
             s_db[i].pending = false;
@@ -215,10 +269,17 @@ void hal_input_init(QueueHandle_t evt_q)
         [DB_HOOK]   = PIN_HOOK,
         [DB_BUTTON] = PIN_BUTTON,
     };
+    static const int64_t settle[DB_COUNT] = {
+        [DB_PULSE]  = SETTLE_PULSE_US,
+        [DB_NSI]    = SETTLE_NSI_US,
+        [DB_HOOK]   = SETTLE_HOOK_US,
+        [DB_BUTTON] = SETTLE_BUTTON_US,
+    };
     for (int i = 0; i < DB_COUNT; i++) {
-        s_db[i].pin     = pins[i];
-        s_db[i].stable  = gpio_get_level(pins[i]);   /* stato di partenza reale */
-        s_db[i].pending = false;
+        s_db[i].pin       = pins[i];
+        s_db[i].settle_us = settle[i];
+        s_db[i].stable    = gpio_get_level(pins[i]);  /* stato di partenza reale */
+        s_db[i].pending   = false;
     }
 
     ESP_ERROR_CHECK(gpio_install_isr_service(0));
