@@ -86,7 +86,7 @@ void app_main(void)
     s_evt_q = xQueueCreate(EVT_QUEUE_LEN, sizeof(phone_ev_t));
     configASSERT(s_evt_q);
 
-    const hw_iface_t *hw = hal_init(s_evt_q);
+    const hw_iface_t *hw = phone_hal_init(s_evt_q);
 
     pb_init(&s_pb);
 

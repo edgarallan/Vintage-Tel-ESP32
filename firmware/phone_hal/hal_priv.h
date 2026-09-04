@@ -31,7 +31,7 @@ void hal_out_play_tone(tone_t tone);
 void hal_out_display_state(const char *state, const char *extra);
 void hal_out_display_incoming(const char *name, const char *number);
 
-void hal_bt_init(void);
+void hal_bt_init(QueueHandle_t evt_q);
 bool hal_bt_place_call(const char *number);
 bool hal_bt_answer(void);
 bool hal_bt_reject(void);

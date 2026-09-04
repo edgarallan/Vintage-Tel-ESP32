@@ -28,11 +28,11 @@ static const hw_iface_t s_hw = {
     .now_ms            = hal_now_ms,
 };
 
-const hw_iface_t *hal_init(QueueHandle_t evt_q)
+const hw_iface_t *phone_hal_init(QueueHandle_t evt_q)
 {
     hal_out_init();
     hal_bell_init();
-    hal_bt_init();
+    hal_bt_init(evt_q);
     hal_input_init(evt_q);
     return &s_hw;
 }
