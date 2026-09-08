@@ -164,13 +164,58 @@ static void testo_centrato(int y, const char *s, int scala)
     testo((OLED_W - larghezza(s, scala)) / 2, y, s, scala);
 }
 
-/* Il dato principale, grande quanto puo' stare. Un numero di dieci cifre a
-   scala 2 occupa 120 pixel dei 128 disponibili: sopra le dieci cifre si
-   ripiega su scala 1 invece di troncare, perche' meta' numero di telefono e'
-   peggio di un numero piccolo. */
-static void protagonista(int y, const char *s)
+#define ALTEZZA_2   14   /* un carattere a scala 2 */
+#define INTERLINEA  2
+
+/*
+ * Il dato principale, il piu' grande che ci stia.
+ *
+ * A scala 2 un carattere occupa 12 pixel, quindi in una riga da 128 ne entrano
+ * dieci. Sopra le dieci la prima versione ripiegava su scala 1, e il salto era
+ * brutale: il testo dimezzava di colpo e un numero di undici cifre si leggeva
+ * peggio di uno di dieci. Ora si SPEZZA SU DUE RIGHE restando grande, che e'
+ * anche cio' che fanno i telefoni veri con i numeri lunghi.
+ *
+ * Il taglio cade su uno spazio se c'e' — "MARIO ROSSI" si divide fra nome e
+ * cognome, non a meta' del cognome — e altrimenti a meta', che per una fila di
+ * cifre e' l'unica scelta sensata.
+ *
+ * Scala 1 resta come ultima spiaggia oltre le venti battute: meta' numero di
+ * telefono e' peggio di un numero piccolo.
+ */
+static void protagonista(int y_banda, int h_banda, const char *s)
 {
-    testo_centrato(y, s, larghezza(s, 2) <= OLED_W ? 2 : 1);
+    const int n = (int)strlen(s);
+
+    if (larghezza(s, 2) <= OLED_W) {
+        testo_centrato(y_banda + (h_banda - ALTEZZA_2) / 2, s, 2);
+        return;
+    }
+
+    if (n * FONT_PASSO * 2 > OLED_W * 2) {
+        /* Non ci sta nemmeno su due righe grandi. */
+        testo_centrato(y_banda + (h_banda - 7) / 2, s, 1);
+        return;
+    }
+
+    /* Punto di taglio: uno spazio vicino alla meta', altrimenti la meta'. */
+    int taglio = (n + 1) / 2;
+    for (int d = 0; d < n / 2; d++) {
+        if (taglio - d > 0 && s[taglio - d] == ' ') { taglio -= d; break; }
+        if (taglio + d < n && s[taglio + d] == ' ') { taglio += d; break; }
+    }
+
+    char riga1[24], riga2[24];
+    const int len1 = taglio < (int)sizeof(riga1) ? taglio : (int)sizeof(riga1) - 1;
+    memcpy(riga1, s, (size_t)len1);
+    riga1[len1] = '\0';
+    snprintf(riga2, sizeof(riga2), "%s", s[taglio] == ' ' ? s + taglio + 1
+                                                          : s + taglio);
+
+    const int h = ALTEZZA_2 * 2 + INTERLINEA;
+    const int y = y_banda + (h_banda - h) / 2;
+    testo_centrato(y, riga1, 2);
+    testo_centrato(y + ALTEZZA_2 + INTERLINEA, riga2, 2);
 }
 
 static void mostra(void)
@@ -275,7 +320,7 @@ static void disegna_stato(void)
         /* Il numero e' il dato che conta: sta grande al centro, e lo stato
            diventa l'etichetta piccola in alto. */
         testo_centrato(0, parola(state), 1);
-        protagonista(26, extra);
+        protagonista(12, OLED_H - 12, extra);
     } else {
         testo_centrato(24, parola(state), 2);
         /* A riposo la domanda vera e' un'altra: il telefono funziona? Senza
@@ -336,12 +381,13 @@ void hal_display_incoming(const char *name, const char *number)
     if (chi) {
         /* Se la rubrica conosce il nome, il nome e' il protagonista e il
            numero resta sotto come conferma. */
-        protagonista(22, chi);
+        protagonista(10, 44, chi);
         if (number && *number) {
             testo_centrato(56, number, 1);
         }
     } else {
-        protagonista(26, (number && *number) ? number : "SCONOSCIUTO");
+        protagonista(12, OLED_H - 12, (number && *number) ? number
+                                                            : "SCONOSCIUTO");
     }
     mostra();
     xSemaphoreGive(s_lock);
