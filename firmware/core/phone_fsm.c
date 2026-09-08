@@ -121,6 +121,22 @@ static void place_call(phone_t *p, const char *number, uint32_t now_ms)
        cosi' il pulsante non ripete un tentativo mai partito. */
     snprintf(p->last_number, sizeof(p->last_number), "%s", number);
     clear_dialed(p);
+
+    /* Si RESTA in CALLING. Il comando e' stato accettato dal cellulare, ma
+       dall'altra parte sta ancora squillando: passare subito a IN_CALL
+       significherebbe dichiarare una conversazione che non e' cominciata, e
+       con l'audio si sentirebbe il tono di libero col telefono che si crede
+       gia' in chiamata. La conversazione la apre EV_CALL_ANSWERED, quando
+       l'Audio Gateway segnala la chiamata attiva. */
+}
+
+static void on_call_answered(phone_t *p)
+{
+    /* Vale solo per le uscenti: sulle entranti la conversazione l'ha gia'
+       aperta la cornetta sollevata, e l'indicatore arriva comunque. */
+    if (p->state != ST_CALLING) {
+        return;
+    }
     transition(p, ST_IN_CALL);
 }
 
@@ -330,6 +346,7 @@ void phone_handle(phone_t *p, const phone_ev_t *ev)
     case EV_DIGIT:         on_digit(p, ev->digit, ev->now_ms);     break;
     case EV_BUTTON:        on_button(p, ev->now_ms);               break;
     case EV_INCOMING_CALL: on_incoming(p, ev->caller, ev->now_ms); break;
+    case EV_CALL_ANSWERED: on_call_answered(p);                    break;
     case EV_CALL_ENDED:    on_call_ended(p);                       break;
     case EV_TICK:          on_tick(p, ev->now_ms);                 break;
     default:                                                       break;

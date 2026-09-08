@@ -155,6 +155,55 @@ void test_compone_dopo_la_pausa_tra_cifre(void)
 
     tick_to(300 + INTERDIGIT_MS);
     TEST_ASSERT_TRUE(fake_did(&g_fake, "place_call:123"));
+
+    /* Il comando e' partito, ma nessuno ha ancora risposto: si sta chiamando,
+       non si sta parlando. */
+    TEST_ASSERT_EQUAL(ST_CALLING, phone_state(&ph));
+}
+
+void test_chiamata_uscente_resta_in_calling_finche_non_rispondono(void)
+{
+    /* Misurato sull'apparecchio il 06/09/2026: CALLING e IN_CALL comparivano
+       nello stesso millisecondo, quindi il LED andava verde mentre l'altro
+       capo stava ancora squillando. Con l'audio si sentirebbe il libero con
+       il telefono che si dichiara in conversazione. */
+    send(EV_HOOK_UP);
+    at(100); send_digit(5);
+    tick_to(100 + INTERDIGIT_MS);
+
+    TEST_ASSERT_EQUAL(ST_CALLING, phone_state(&ph));
+    TEST_ASSERT_EQUAL(LED_CALLING, g_fake.last_led);
+
+    send(EV_CALL_ANSWERED);
+    TEST_ASSERT_EQUAL(ST_IN_CALL, phone_state(&ph));
+    TEST_ASSERT_EQUAL(LED_IN_CALL, g_fake.last_led);
+}
+
+void test_chi_non_risponde_lascia_riagganciare(void)
+{
+    /* Nessuno risponde: la cornetta giu' deve chiudere il tentativo. */
+    send(EV_HOOK_UP);
+    at(100); send_digit(5);
+    tick_to(100 + INTERDIGIT_MS);
+    TEST_ASSERT_EQUAL(ST_CALLING, phone_state(&ph));
+
+    send(EV_HOOK_DOWN);
+    TEST_ASSERT_EQUAL(ST_IDLE, phone_state(&ph));
+    TEST_ASSERT_TRUE(fake_did(&g_fake, "hangup"));
+}
+
+void test_risposta_fuori_contesto_non_apre_una_conversazione(void)
+{
+    /* L'indicatore di chiamata attiva arriva anche per le entranti, quando la
+       cornetta e' gia' stata sollevata: fuori da CALLING non deve fare nulla,
+       men che meno svegliare un telefono a riposo. */
+    send(EV_CALL_ANSWERED);
+    TEST_ASSERT_EQUAL(ST_IDLE, phone_state(&ph));
+
+    send_incoming("x");
+    send(EV_HOOK_UP);
+    TEST_ASSERT_EQUAL(ST_IN_CALL, phone_state(&ph));
+    send(EV_CALL_ANSWERED);
     TEST_ASSERT_EQUAL(ST_IN_CALL, phone_state(&ph));
 }
 
@@ -400,6 +449,9 @@ int main(void)
     RUN_TEST(test_cornetta_su_da_tono_di_libero);
     RUN_TEST(test_la_prima_cifra_zittisce_il_tono_di_libero);
     RUN_TEST(test_compone_dopo_la_pausa_tra_cifre);
+    RUN_TEST(test_chiamata_uscente_resta_in_calling_finche_non_rispondono);
+    RUN_TEST(test_chi_non_risponde_lascia_riagganciare);
+    RUN_TEST(test_risposta_fuori_contesto_non_apre_una_conversazione);
     RUN_TEST(test_quick_dial_con_una_cifra_sola);
     RUN_TEST(test_una_seconda_cifra_annulla_il_quick_dial);
     RUN_TEST(test_cifra_senza_quick_dial_aspetta_la_pausa_lunga);

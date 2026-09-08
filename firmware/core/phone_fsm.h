@@ -41,6 +41,7 @@ typedef enum {
     EV_DIGIT,          /* cifra composta col disco */
     EV_BUTTON,         /* pulsante rubrica premuto */
     EV_INCOMING_CALL,  /* il cellulare segnala una chiamata in arrivo */
+    EV_CALL_ANSWERED,  /* il chiamato ha risposto: la conversazione comincia */
     EV_CALL_ENDED,     /* la chiamata e' finita dal lato remoto */
     EV_TICK,           /* battito periodico: fa scadere i timeout */
 } phone_ev_type_t;

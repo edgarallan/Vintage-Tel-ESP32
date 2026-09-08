@@ -233,10 +233,20 @@ static void hf_cb(esp_hf_client_cb_event_t event, esp_hf_client_cb_param_t *para
         }
         break;
 
-    case ESP_HF_CLIENT_CIND_CALL_EVT:
+    case ESP_HF_CLIENT_CIND_CALL_EVT: {
+        const bool prima = s_call;
         s_call = (param->call.status == ESP_HF_CALL_STATUS_CALL_IN_PROGRESS);
+
+        /* Il passaggio da "nessuna chiamata" a "chiamata attiva" e' il momento
+           in cui dall'altra parte hanno alzato: e' cio' che distingue una
+           uscente che sta squillando da una conversazione vera. */
+        if (s_call && !prima) {
+            ESP_LOGI(TAG, "hanno risposto");
+            send_ev(EV_CALL_ANSWERED, NULL);
+        }
         valuta_fine();
         break;
+    }
 
     case ESP_HF_CLIENT_CIND_CALL_SETUP_EVT:
         s_setup = param->call_setup.status;
