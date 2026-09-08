@@ -90,7 +90,7 @@ display, avendo indirizzi diversi (codec `0x1A`, OLED `0x3C`).
 | # | Componente | Q.tà | € | Note |
 |---|-----------|------|---|------|
 | 9 | Boost 5V→~24V (**XL6009** col trimmer) | 1 | 4 | Alimenta solo l'H-bridge; +47-100 µF su ingresso e uscita |
-| 10 | **H-bridge DRV8871** (breakout) | 1 | 8 | Regge 45 V, **morsetti a vite**. **NON** L9110S/DRV8833 (max ~12 V) |
+| 10 | **Ponte H L298N** (modulo) | 1 | 3 | Regge 46 V, **morsetti a vite**. Due ponticelli da gestire: vedi `hardware/bell_driver.md`. **NON** L9110S/DRV8833 (max ~12 V) |
 
 Vedi `hardware/bell_driver.md` per la fisica delle bobine e le verifiche meccaniche.
 
@@ -139,7 +139,7 @@ Escluse spedizioni e il telefono stesso (sui mercatini italiani 20-50 €).
 ## Fornitori
 
 - **Botland / Kamami** — Waveshare WM8960 Audio Board (spediscono in Italia)
-- **Adafruit / Mouser / RS** — PowerBoost 1000C, DRV8871
+- **Adafruit / Mouser / RS** — PowerBoost 1000C
 - **AliExpress** — DevKitC, basetta a morsetti, WS2812, XL6009, OLED, capsula electret
 - **Subito.it / eBay.it** — telefoni SIP vintage italiani
 

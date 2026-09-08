@@ -9,8 +9,18 @@
  * La cadenza 1 s / 4 s NON sta qui: e' logica, vive in core/ring_pattern.c
  * ed e' testata sul PC. Qui c'e' solo il rubinetto.
  *
- * ATTENZIONE: a valle di questi due pin c'e' una linea a 24-30 V generata
- * dall'XL6009. Le modifiche al cablaggio vanno in hardware/bell_driver.md.
+ * Il ponte montato e' un L298N con ENA tenuto alto da un ponticello. Il codice
+ * sarebbe identico con un DRV8871 — dal lato firmware i due si comandano allo
+ * stesso modo — ma il comportamento a riposo cambia: con ENA alto l'L298N non
+ * va in alta impedenza, e IN1=IN2=0 accende entrambi i lati bassi
+ * CORTOCIRCUITANDO la bobina. E' una frenata, non un coast, e per un
+ * martelletto e' meglio: la corrente residua si smorza e smette di vibrare
+ * subito invece di continuare per inerzia.
+ *
+ * ATTENZIONE: a valle di questi due pin c'e' una linea a 26-28 V generata
+ * dall'XL6009, e sull'L298N ci sono due ponticelli che vanno messi giusti prima
+ * di collegare qualsiasi cosa, pena distruggere il modulo. Le modifiche al
+ * cablaggio vanno in hardware/bell_driver.md.
  */
 
 #include "hal_priv.h"

@@ -32,7 +32,7 @@ Servono **13 segnali**. Margine: **due pin**.
 | Disco — impulsi | **4** | IN, pull-up | GPIO + ISR | Antirimbalzo software: assestamento 3 ms nel HAL + finestra cieca 8 ms in `core/`. **Niente PCNT**, vedi sotto |
 | Disco — NSI (fuori-normale) | **32** | IN, pull-up | GPIO | Abilita il conteggio mentre il disco ruota |
 | Gancio (cornetta) | **18** | IN, pull-up | GPIO + ISR | `xQueueSendFromISR` verso il task telefono |
-| Campanello — IN1 | **13** | OUT | esp_timer | DRV8871 |
+| Campanello — IN1 | **13** | OUT | esp_timer | L298N, canale A |
 | Campanello — IN2 | **14** | OUT | esp_timer | In **antifase** con IN1, ~22 Hz |
 | Pulsante rubrica | **23** | IN, pull-up | GPIO | All'avvio: config mode. In esercizio: richiama ultimo numero |
 | LED di stato WS2812 | **27** | OUT | RMT | Un pixel indirizzabile |
@@ -304,13 +304,19 @@ una capsula da orecchio.
 Il modulo ha anche microfoni MEMS a bordo e un jack cuffia da 3,5 mm: **non si usano**.
 L'ingresso attivo va instradato via I2C su `LINPUT1`.
 
-### DRV8871 (campanello)
+### L298N (campanello)
 | Pin modulo | Va a |
 |---|---|
 | IN1 / IN2 | GPIO 13 / 14 |
-| VM | Uscita boost XL6009 (~24 V) |
-| GND | GND |
-| Morsetti OUT1/OUT2 | **Bobine del campanello originale** |
+| ENA | **ponticello verso 5 V, da lasciare inserito** |
+| 12V / VMS | Uscita boost XL6009, regolata a 26-28 V |
+| 5V | **+5 V dei nostri**, perché il regolatore di bordo va disabilitato |
+| GND | GND comune |
+| Morsetti OUT1/OUT2 | **Bobine del campanello originale** (≈1700 Ω) |
+
+⚠️ **Il ponticello del regolatore 5 V va TOLTO prima di collegare il boost.** Di fabbrica
+è inserito e alimenta un 78M05 dalla tensione motori, che accetta al massimo 12 V: a 27 V
+si distrugge. Vedi `hardware/bell_driver.md` per il perché e per le conseguenze.
 
 ⚠️ Regola dal progetto originale, ancora valida: le bobine immagazzinano energia.
 Porta IN1=IN2=0 (coast) e togli alimentazione **prima** di scollegare i cavi.

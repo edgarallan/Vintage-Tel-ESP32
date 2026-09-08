@@ -24,71 +24,110 @@ Due bobine in serie attorno a un nucleo ferromagnetico. Quando ci passa corrente
                     AC ~24V @ 22Hz
 ```
 
-## Opzione A — H-bridge DRV8871 + Boost (consigliata: semplice, poche saldature)
+## Opzione A — ponte H L298N + boost (è quella montata)
+
+> **Nota storica.** I primi documenti di questo progetto indicavano il DRV8871, che
+> resta la scelta più elegante: regge 45 V, ha morsetti a vite e la protezione è tutta
+> interna. In pratica l'ordine ha portato un **L298N**, che funziona altrettanto bene ma
+> ha due trappole capaci di bruciarlo al primo collegamento. Sono documentate qui sotto
+> perché non sono deducibili guardando la scheda.
 
 ### Schema
 
 ```
-                                            ┌──────────────────────┐
-                                            │   DRV8871 (breakout)  │
-   +5V ──┬───────────┐                      │                      │   ┌─────────┐
-         │     ┌──────┴─────┐               │ VM  ◄── +24V         │   │ Bobine  │
-         │     │   Boost     │── +24V ──────►│ GND ◄── GND          │   │ campan. │
-         │     │ 5V→~24V     │               │ OUT1 ───[morsetto]───┼──►│ (orig.) │
-         │     │ (modulo)    │               │ OUT2 ───[morsetto]───┼──►│         │
-         │     └─────────────┘               │ IN1  ◄── GPIO 13     │   └─────────┘
-         │                                   │ IN2  ◄── GPIO 14     │
-        GND                                  └──────────────────────┘
+                                          ┌──────────────────────────┐
+                                          │      L298N (modulo)      │
+  +5V ──┬──────────────┐                  │                          │   ┌──────────┐
+        │      ┌───────┴──────┐           │ 12V/VMS ◄── +27V (boost) │   │  Bobine  │
+        │      │    XL6009    │─ +27V ───►│ GND     ◄── GND comune   │   │ campan.  │
+        │      │  boost 5V→   │           │ 5V      ◄── +5V  (!)     │   │ ≈1700 Ω  │
+        │      │   24-30V     │           │ IN1     ◄── GPIO 13      │   │          │
+        │      └──────────────┘           │ IN2     ◄── GPIO 14      │   │          │
+        │                                 │ ENA     ── ponticello 5V │   │          │
+        └─────────────────────────────────┤ OUT1 ───[morsetto]───────┼──►│          │
+                                          │ OUT2 ───[morsetto]───────┼──►│          │
+                                          └──────────────────────────┘   └──────────┘
 ```
 
-Bobina e alimentazione vanno sui **morsetti a vite** del breakout (niente
-saldatura). Solo i 3 pin logici (IN1, IN2, GND) richiedono un mini-header.
+### ⚠️ Le due trappole dell'L298N
+
+**1. Il ponticello del regolatore 5 V va TOLTO.**
+
+Il modulo ha a bordo un regolatore 78M05 che ricava i 5 V della logica dalla tensione dei
+motori. Un ponticello lo abilita, e di fabbrica è **inserito**. Quel regolatore accetta al
+massimo **12 V in ingresso**: alimentandolo coi 27 V del boost si distrugge, e prima di
+morire può mandare tensione fuori specifica sulla linea a 5 V — cioè verso l'ESP32.
+
+Tolto il ponticello, il pin `5V` del modulo **diventa un ingresso**: va alimentato dai
+nostri 5 V, altrimenti la logica del ponte resta morta e non succede niente.
+
+**2. Il ponticello ENA va LASCIATO.**
+
+`ENA` abilita il canale. Il modulo lo tiene alto con un ponticello verso i 5 V, e va bene
+così: nella mappa GPIO non avanza un pin da dedicargli, e non serve — il silenzio si
+ottiene già portando IN1 e IN2 entrambi bassi.
 
 ### Funzionamento
 
 Il software alterna **IN1/IN2** alla frequenza di squillo (~22 Hz):
-- IN1=1, IN2=0 → corrente nella bobina in un senso
-- IN1=0, IN2=1 → corrente nel senso opposto
-- IN1=IN2=0 → **coast**: uscite ad alta impedenza, nessuna corrente → silenzio
 
-Alternando si genera l'onda quadra AC (±24 V) che fa oscillare il martelletto.
-Il **DRV8871 regge fino a 45 V** (i 24-30 V del campanello sono ampiamente nei
-limiti) e ha **protezione interna** (sovracorrente, sovratemperatura, flyback):
-niente inverter, niente diodi/snubber esterni.
+- `IN1=1, IN2=0` → corrente nella bobina in un senso
+- `IN1=0, IN2=1` → corrente nel senso opposto
+- `IN1=IN2=0` → **frenata**: entrambi i lati bassi, bobina cortocircuitata, silenzio
 
-> Il boost resta sempre alimentato dai 5 V; il silenzio si ottiene col coast
-> (IN1=IN2=0), non spegnendo il boost — una logica/GPIO in meno e un cablaggio
-> più semplice. Il consumo a riposo del boost è di pochi mA.
+Alternando si ottiene l'onda quadra che fa oscillare il martelletto.
+
+Quel terzo caso merita una precisazione, perché con il DRV8871 sarebbe stato diverso. Con
+`ENA` tenuto alto l'L298N non va mai in alta impedenza: IN1=IN2=0 accende i due lati bassi
+e **cortocircuita la bobina** invece di lasciarla libera. Non è un problema, anzi — la
+corrente residua si smorza subito e il martelletto si ferma netto invece di vibrare per
+inerzia. Ma è una frenata, non un *coast*, e chi legge il datasheet aspettandosi
+l'alta impedenza non la troverà.
+
+> Il boost resta sempre alimentato: il silenzio si ottiene dai due GPIO, non spegnendo
+> l'XL6009. Un GPIO in meno e un cablaggio più semplice, al prezzo di pochi mA a riposo.
+
+### Regolazione del boost
+
+L'L298N è un ponte a transistor bipolari e **si mangia un po' di tensione**: circa 1,5-2 V
+in totale alla corrente che ci interessa. Le bobine misurano **≈1700 Ω**, quindi a 24 V
+scorrono meno di **15 mA** — una frazione dei 2 A che il modulo regge, e a quella corrente
+la caduta resta bassa e il chip non scalda affatto.
+
+Regola quindi l'XL6009 su **26-28 V** per averne ~24-26 sulle bobine. Con il trimmer:
+misura l'uscita a vuoto col multimetro **prima** di collegare il ponte.
 
 ### Componenti
 
 | Componente | Specifica | Note |
 |-----------|-----------|------|
-| Boost 5V→~24V | modulo pronto (XL6009 col trimmer, o DC-DC fisso 24V) | Regola a ~24-30V; aggiungi ~47-100µF sull'uscita per bufferare i picchi |
-| **DRV8871** (breakout, es. Adafruit 3190) | H-bridge, **fino a 45V**, 3.6A picco, protezione interna | Morsetti a vite per bobina + VM (zero saldature); 2 ingressi logici IN1/IN2 |
+| Boost XL6009 | modulo col trimmer, 5 V → 24-30 V | Regolare **prima** di collegare; ~47-100 µF sull'uscita per i picchi |
+| **L298N** (modulo) | doppio ponte H, 46 V max, 2 A | Si usa **un solo canale**. Morsetti a vite: zero saldature |
 
-> ⚠️ **Non** usare L9110S/DRV8833: reggono solo ~11-12 V e si distruggerebbero a 24 V.
+> ⚠️ **Non** usare L9110S o DRV8833: reggono ~11-12 V e a 24 V si distruggono.
 
 ### Codice
 
-Vedi `firmware/hal/bell_drv8871.c` — alterna IN1 (GPIO 13) / IN2 (GPIO 14) alla
-frequenza di squillo, col pattern italiano (1s on / 4s off, fino a cornetta sollevata
-o timeout). Il toggle usa un `esp_timer`, che è agganciato a un timer hardware e ha
-precisione al microsecondo: a 22 Hz il jitter è comunque irrilevante, perché l'inerzia
-meccanica del martelletto filtra tutto.
+`firmware/phone_hal/hal_bell.c` alterna IN1 (GPIO 13) e IN2 (GPIO 14) con un `esp_timer`
+periodico a mezzo periodo di 22,7 ms, cioè ~22 Hz. Il codice è **identico** a quello
+scritto per il DRV8871: dal lato firmware i due ponti si comandano allo stesso modo, e
+tutta la differenza sta nei ponticelli.
 
-Il pattern di squillo (durate e numero massimo) vive in `firmware/core/ring_pattern.c`,
-senza dipendenze ESP-IDF, ed è quindi coperto dai test che girano sul PC.
+La cadenza di squillo — 1 s acceso, 4 s spento, numero massimo di squilli — **non sta lì**:
+vive in `firmware/core/ring_pattern.c`, senza dipendenze da ESP-IDF, ed è coperta dai test
+che girano sul PC.
 
 ### Pro e contro
 
-✅ Pochissime saldature (morsetti a vite per bobina e alimentazione)  
-✅ Nessun inverter/snubber/diodi esterni (protezione interna al DRV8871)  
-✅ Regge 24-30V senza problemi (margine fino a 45V)  
-✅ Frequenza regolabile da software, silenzio via coast  
+✅ Zero saldature: morsetti a vite per bobine e alimentazione
+✅ Regge 27 V con ampio margine, e a 15 mA non scalda
+✅ Frequenza regolabile da software
+✅ Costa un terzo del DRV8871 e si trova ovunque
 
-⚠️ Onda quadra invece di sinusoidale — il campanello suona leggermente più "secco" dell'originale a 75V sinusoidale, ma rimane gradevolissimo  
-⚠️ Il boost resta alimentato a riposo (pochi mA); per azzerare anche quelli servirebbe un GPIO+MOSFET sull'ingresso boost (più saldatura, non necessario)  
+⚠️ **Due ponticelli da gestire**, ed è l'unico vero rischio del componente
+⚠️ Caduta di tensione da compensare alzando il boost — il DRV8871, a MOSFET, non l'avrebbe
+⚠️ Onda quadra invece che sinusoidale: il campanello suona un filo più secco dell'originale
+a 75 V, ma resta gradevolissimo
 
 ## Opzione B — Trasformatore + Oscillatore (più autentica)
 
