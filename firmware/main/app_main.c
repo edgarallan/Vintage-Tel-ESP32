@@ -91,7 +91,18 @@ void app_main(void)
     pb_init(&s_pb);
 
     const phone_config_t cfg = {
-        .interdigit_ms = 8000,
+        /* Quanto si aspetta dopo l'ultima cifra prima di chiamare. Un telefono
+           a impulsi non ha un tasto "chiama": l'unico segnale che il numero e'
+           finito e' il silenzio.
+
+           Misurato il 09/09/2026 componendo dall'apparecchio vero, ma smontato
+           e senza scocca: intervalli fra due cifre fino a 4,0 secondi, perche'
+           il disco e' scomodo da girare e i fori vanno cercati. Sotto i 6 il
+           telefono comporrebbe un numero troncato mentre il disco sta ancora
+           girando — il guasto peggiore, perche' non te ne accorgi finche' non
+           chiami uno sconosciuto. Da rivedere a telefono rimontato, quando gli
+           intervalli veri saranno di un secondo. */
+        .interdigit_ms = 6000,
         .quickdial_ms  = 1500,
         .busy_ms       = 3000,
     };

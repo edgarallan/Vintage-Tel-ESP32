@@ -25,8 +25,10 @@ void hal_bell_init(void);
 void hal_bell_start(void);
 void hal_bell_stop(void);
 
+void hal_led_init(void);
+void hal_led_set(led_pattern_t pattern);
+
 void hal_out_init(void);
-void hal_out_set_led(led_pattern_t pattern);
 void hal_out_play_tone(tone_t tone);
 void hal_out_display_state(const char *state, const char *extra);
 void hal_out_display_incoming(const char *name, const char *number);

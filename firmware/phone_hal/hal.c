@@ -13,7 +13,7 @@ uint32_t hal_now_ms(void)
 }
 
 static const hw_iface_t s_hw = {
-    .set_led           = hal_out_set_led,
+    .set_led           = hal_led_set,
     .play_tone         = hal_out_play_tone,
     .bell_start        = hal_bell_start,
     .bell_stop         = hal_bell_stop,
@@ -31,6 +31,7 @@ static const hw_iface_t s_hw = {
 const hw_iface_t *phone_hal_init(QueueHandle_t evt_q)
 {
     hal_out_init();
+    hal_led_init();
     hal_bell_init();
     hal_bt_init(evt_q);
     hal_input_init(evt_q);

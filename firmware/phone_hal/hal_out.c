@@ -1,14 +1,12 @@
 /*
- * hal_out.c — LED di stato, display e toni.
+ * hal_out.c — display e toni.
  *
- * STATO: tutti e tre gli attuatori sono ancora segnaposto che scrivono a log.
- * Non e' pigrizia, e' che l'hardware non c'e': WS2812 e OLED sono nell'ordine
- * AliExpress, il codec WM8960 in quello Amazon. Scrivere driver che non si
- * possono provare significa scrivere bug che si scoprono fra tre settimane.
+ * STATO: entrambi sono ancora segnaposto che scrivono a log. Il LED, che stava
+ * qui, ora ha il suo driver in hal_led.c.
  *
  * Il log intanto e' utile davvero: rende visibili le transizioni di stato sul
- * monitor seriale, che e' esattamente cio' che serve per collaudare disco e
- * gancio prima che arrivi il resto.
+ * monitor seriale, ed e' cio' con cui sono stati collaudati disco, gancio e
+ * l'intero controllo chiamata prima che ci fosse qualcosa da guardare.
  */
 
 #include "hal_priv.h"
@@ -17,28 +15,9 @@
 
 static const char *TAG = "hal_out";
 
-static const char *led_name(led_pattern_t p)
-{
-    switch (p) {
-    case LED_IDLE:    return "IDLE (blu, respiro)";
-    case LED_DIALING: return "DIALING (bianco)";
-    case LED_CALLING: return "CALLING (giallo)";
-    case LED_RINGING: return "RINGING (rosso lampeggio)";
-    case LED_IN_CALL: return "IN_CALL (verde)";
-    case LED_ERROR:   return "ERROR (rosso fisso)";
-    }
-    return "?";
-}
-
 void hal_out_init(void)
 {
-    ESP_LOGW(TAG, "LED, display e toni sono segnaposto: hardware non ancora presente");
-}
-
-void hal_out_set_led(led_pattern_t pattern)
-{
-    /* TODO: WS2812 su GPIO 27 via RMT, quando il modulo arriva. */
-    ESP_LOGI(TAG, "LED -> %s", led_name(pattern));
+    ESP_LOGW(TAG, "display e toni sono segnaposto: hardware non ancora presente");
 }
 
 void hal_out_play_tone(tone_t tone)
