@@ -19,6 +19,8 @@
 #define PIN_BELL_IN2     14
 #define PIN_BUTTON       23
 #define PIN_LED_WS2812   27
+#define PIN_I2C_SDA      21
+#define PIN_I2C_SCL      19
 
 void hal_input_init(QueueHandle_t evt_q);
 void hal_bell_init(void);
@@ -28,10 +30,12 @@ void hal_bell_stop(void);
 void hal_led_init(void);
 void hal_led_set(led_pattern_t pattern);
 
+void hal_display_init(void);
+void hal_display_state(const char *state, const char *extra);
+void hal_display_incoming(const char *name, const char *number);
+
 void hal_out_init(void);
 void hal_out_play_tone(tone_t tone);
-void hal_out_display_state(const char *state, const char *extra);
-void hal_out_display_incoming(const char *name, const char *number);
 
 void hal_bt_init(QueueHandle_t evt_q);
 bool hal_bt_place_call(const char *number);

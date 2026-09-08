@@ -17,8 +17,8 @@ static const hw_iface_t s_hw = {
     .play_tone         = hal_out_play_tone,
     .bell_start        = hal_bell_start,
     .bell_stop         = hal_bell_stop,
-    .display_state     = hal_out_display_state,
-    .display_incoming  = hal_out_display_incoming,
+    .display_state     = hal_display_state,
+    .display_incoming  = hal_display_incoming,
     .bt_place_call     = hal_bt_place_call,
     .bt_answer         = hal_bt_answer,
     .bt_reject         = hal_bt_reject,
@@ -32,6 +32,7 @@ const hw_iface_t *phone_hal_init(QueueHandle_t evt_q)
 {
     hal_out_init();
     hal_led_init();
+    hal_display_init();
     hal_bell_init();
     hal_bt_init(evt_q);
     hal_input_init(evt_q);
