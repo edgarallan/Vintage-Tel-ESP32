@@ -63,6 +63,9 @@ static void phone_task(void *arg)
 #ifdef VT_DIAG_INPUT
 void diag_input_run(void);
 #endif
+#ifdef VT_DIAG_BELL
+void diag_bell_run(void);
+#endif
 
 void app_main(void)
 {
@@ -71,6 +74,12 @@ void app_main(void)
        contatti con la marca temporale, e la durata delle raffiche di rimbalzo.
        Si abilita da main/CMakeLists.txt. Vedi diag_input.c. */
     diag_input_run();
+    return;
+#endif
+#ifdef VT_DIAG_BELL
+    /* Taratura del campanello: spazza le frequenze e le annuncia. Vedi
+       main/diag_bell.c. */
+    diag_bell_run();
     return;
 #endif
 

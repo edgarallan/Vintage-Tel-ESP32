@@ -32,11 +32,13 @@
 static const char *TAG = "hal_bell";
 
 /* ~22 Hz: mezzo periodo = 1/(22*2) s ≈ 22,7 ms. La frequenza di risonanza
-   delle bobine sta tra 20 e 25 Hz — vedi hardware/bell_driver.md. */
+   delle bobine sta tra 20 e 25 Hz — vedi hardware/bell_driver.md. Il valore
+   esatto va scelto ascoltando, con main/diag_bell.c. */
 #define BELL_HALF_PERIOD_US 22727
 
 static esp_timer_handle_t s_timer;
 static bool               s_phase;
+static int64_t            s_mezzo_periodo_us = BELL_HALF_PERIOD_US;
 
 static void bell_tick(void *arg)
 {
@@ -74,7 +76,7 @@ void hal_bell_start(void)
         return;
     }
     s_phase = false;
-    ESP_ERROR_CHECK(esp_timer_start_periodic(s_timer, BELL_HALF_PERIOD_US));
+    ESP_ERROR_CHECK(esp_timer_start_periodic(s_timer, s_mezzo_periodo_us));
     ESP_LOGI(TAG, "campanello ON");
 }
 
@@ -88,4 +90,14 @@ void hal_bell_stop(void)
     gpio_set_level(PIN_BELL_IN1, 0);
     gpio_set_level(PIN_BELL_IN2, 0);
     ESP_LOGI(TAG, "campanello OFF");
+}
+
+/* Cambia la frequenza di squillo. Esiste per la taratura (main/diag_bell.c):
+   in esercizio il valore e' quello di BELL_HALF_PERIOD_US e non si tocca. */
+void hal_bell_set_hz(int hz)
+{
+    if (hz < 5 || hz > 60) {
+        return;
+    }
+    s_mezzo_periodo_us = 1000000 / (hz * 2);
 }

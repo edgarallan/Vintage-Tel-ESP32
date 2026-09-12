@@ -294,4 +294,23 @@ void hal_input_init(QueueHandle_t evt_q)
              PIN_HOOK, PIN_BUTTON, PIN_DIAL_PULSE, PIN_DIAL_NSI);
     ESP_LOGI(TAG, "livelli a riposo: IMP=%d NSI=%d GANCIO=%d",
              s_db[DB_PULSE].stable, s_db[DB_NSI].stable, s_db[DB_HOOK].stable);
+
+    /*
+     * Se all'accensione la cornetta e' gia' sollevata, dirlo subito.
+     *
+     * Leggere il livello reale non bastava: la macchina a stati parte da IDLE
+     * comunque, e senza un evento il telefono resterebbe convinto di essere a
+     * riposo con la cornetta in mano — muto, senza tono di libero, e sordo al
+     * disco — finche' qualcuno non la riappoggia. E' lo scenario di ogni
+     * black-out con la cornetta appoggiata male.
+     *
+     * L'evento finisce in coda e verra' consumato dal task del telefono, che
+     * parte dopo phone_init(): al momento in cui viene gestito la macchina a
+     * stati esiste gia'. Il caso opposto non serve: cornetta giu' e' proprio
+     * lo stato da cui la FSM parte.
+     */
+    if (s_db[DB_HOOK].stable == 0) {
+        ESP_LOGI(TAG, "cornetta gia' sollevata all'avvio");
+        send_ev(EV_HOOK_UP, (uint32_t)(esp_timer_get_time() / 1000), 0);
+    }
 }

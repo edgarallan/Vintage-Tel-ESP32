@@ -26,6 +26,7 @@ void hal_input_init(QueueHandle_t evt_q);
 void hal_bell_init(void);
 void hal_bell_start(void);
 void hal_bell_stop(void);
+void hal_bell_set_hz(int hz);   /* solo per la taratura */
 
 void hal_led_init(void);
 void hal_led_set(led_pattern_t pattern);
