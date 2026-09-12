@@ -3,6 +3,8 @@
 #ifndef HAL_PRIV_H
 #define HAL_PRIV_H
 
+#include "driver/i2c_master.h"
+#include "esp_err.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 
@@ -30,6 +32,12 @@ void hal_bell_set_hz(int hz);   /* solo per la taratura */
 
 void hal_led_init(void);
 void hal_led_set(led_pattern_t pattern);
+
+i2c_master_bus_handle_t hal_i2c_bus(void);   /* creato una volta, condiviso */
+
+void      hal_codec_init(void);
+bool      hal_codec_presente(void);
+esp_err_t hal_codec_write(uint8_t reg, uint16_t val);
 
 void hal_display_init(void);
 void hal_display_state(const char *state, const char *extra);

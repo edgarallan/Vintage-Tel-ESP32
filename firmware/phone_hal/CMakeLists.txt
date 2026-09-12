@@ -4,7 +4,7 @@
 # lo sostituisce silenziosamente, e la build muore altrove con un oscuro
 # "hal/efuse_ll.h: No such file or directory" dentro esp_https_ota.
 idf_component_register(
-    SRCS "hal.c" "hal_input.c" "hal_bell.c" "hal_out.c" "hal_led.c" "hal_display.c" "hal_bt.c"
+    SRCS "hal.c" "hal_input.c" "hal_bell.c" "hal_out.c" "hal_led.c" "hal_display.c" "hal_i2c.c" "hal_codec.c" "hal_bt.c"
     INCLUDE_DIRS "."
     REQUIRES core esp_driver_gpio esp_driver_rmt esp_driver_i2c esp_lcd esp_timer bt nvs_flash
 )

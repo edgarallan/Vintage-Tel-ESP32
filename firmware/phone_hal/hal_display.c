@@ -12,9 +12,8 @@
  * le legge nessuno. Ogni schermata ha percio' UN dato grande — il numero, il
  * nome di chi chiama — e al massimo una riga piccola di contorno.
  *
- * Il bus I2C e' condiviso con il codec WM8960 (0x1A): il display sta a 0x3C, e
- * il bus viene creato qui perche' per ora e' l'unico che lo usa. Quando
- * arrivera' il codec la creazione andra' spostata in un posto comune.
+ * Il bus I2C e' condiviso con il codec WM8960 (0x1A): il display sta a 0x3C.
+ * Il bus lo crea hal_i2c.c, una volta sola per entrambi.
  */
 
 #include <ctype.h>
@@ -231,20 +230,11 @@ void hal_display_init(void)
     s_lock = xSemaphoreCreateMutex();
     configASSERT(s_lock);
 
-    i2c_master_bus_config_t bus = {
-        .i2c_port          = I2C_NUM_0,
-        .sda_io_num        = PIN_I2C_SDA,
-        .scl_io_num        = PIN_I2C_SCL,
-        .clk_source        = I2C_CLK_SRC_DEFAULT,
-        .glitch_ignore_cnt = 7,
-        .flags.enable_internal_pullup = true,
-    };
-    i2c_master_bus_handle_t bus_h = NULL;
-    esp_err_t err = i2c_new_master_bus(&bus, &bus_h);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "bus I2C non creato: %s", esp_err_to_name(err));
+    i2c_master_bus_handle_t bus_h = hal_i2c_bus();
+    if (!bus_h) {
         return;
     }
+    esp_err_t err;
 
     esp_lcd_panel_io_i2c_config_t io = {
         .dev_addr            = OLED_ADDR,
@@ -274,17 +264,34 @@ void hal_display_init(void)
         return;
     }
 
-    ESP_ERROR_CHECK(esp_lcd_panel_reset(s_pannello));
-    ESP_ERROR_CHECK(esp_lcd_panel_init(s_pannello));
-    ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(s_pannello, true));
+    /* Niente ESP_ERROR_CHECK da qui in giu'. Il display e' un accessorio: se
+       manca o e' scollegato, il telefono deve continuare a telefonare. Con
+       ESP_ERROR_CHECK un OLED assente faceva andare in panico tutto il sistema
+       e lo lasciava in ciclo di riavvio — misurato il 12/09/2026, ventuno
+       riavvii in dodici secondi — trasformando un accessorio mancante in un
+       guasto totale. */
+    esp_err_t e = esp_lcd_panel_reset(s_pannello);
+    if (e == ESP_OK) {
+        e = esp_lcd_panel_init(s_pannello);
+    }
+    if (e == ESP_OK) {
+        e = esp_lcd_panel_disp_on_off(s_pannello, true);
+    }
+    if (e != ESP_OK) {
+        ESP_LOGW(TAG, "display non risponde (%s): si va avanti senza",
+                 esp_err_to_name(e));
+        s_pannello = NULL;
+        return;
+    }
     s_pronto = true;
 
     const esp_timer_create_args_t targs = {
         .callback = controlla_collegamento,
         .name     = "disp_bt",
     };
-    ESP_ERROR_CHECK(esp_timer_create(&targs, &s_orologio));
-    ESP_ERROR_CHECK(esp_timer_start_periodic(s_orologio, 1000 * 1000));
+    if (esp_timer_create(&targs, &s_orologio) == ESP_OK) {
+        esp_timer_start_periodic(s_orologio, 1000 * 1000);
+    }
 
     ESP_LOGI(TAG, "SSD1306 %dx%d a 0x%02X su SDA%d/SCL%d",
              OLED_W, OLED_H, OLED_ADDR, PIN_I2C_SDA, PIN_I2C_SCL);
