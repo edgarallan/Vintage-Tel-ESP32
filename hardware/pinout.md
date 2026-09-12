@@ -160,6 +160,48 @@ precedente, che assumeva un WROVER, non aveva pin liberi e prevedeva come ripieg
 spostare **gancio** o **NSI** su un pin solo-input (34-39) con una **resistenza di pull-up
 esterna da 10 kΩ** verso 3V3. Con il WROOM quel ripiego non serve piu'.
 
+## MCLK del codec — il pin che manca, e l'unico che può darlo
+
+**Trovato il 12/09/2026, prima di scrivere il driver dell'audio.** La mappa qui sopra
+assegna al codec quattro pin I2S — BCLK, WS, DIN, DOUT — e nessun **MCLK**, il clock di
+sistema che il WM8960 usa per far girare i propri convertitori. Se serve, la mappa è
+incompleta.
+
+E non basta prendere uno dei due pin liberi. Su ESP32 **l'MCLK può uscire solo da
+GPIO 0, 1 o 3**: è un vincolo del silicio, non del driver, ed è scritto nel messaggio
+d'errore di ESP-IDF stesso
+
+```c
+/* components/esp_driver_i2s/i2s_common.c */
+"mclk configure failed, note: only gpio 0/1/3 are supported on esp32"
+```
+
+Tutti e tre erano stati esclusi in cima a questo documento: **1 e 3** sono la console
+seriale, **0** è un pin di strapping.
+
+### L'unico candidato è GPIO 0, e si può fare
+
+GPIO 0 viene **campionato solo all'istante del reset**: basso significa modalità
+programmazione. Dopo l'avvio torna un pin come gli altri, e usarlo come uscita è
+legittimo — è ciò che fanno molte schede audio ESP32 in commercio, che l'MCLK lo mettono
+proprio lì.
+
+Il rischio è circoscritto: se il modulo collegato tenesse GPIO 0 basso durante il reset,
+il telefono si avvierebbe in modalità programmazione invece che nel firmware. L'MCLK è un
+**ingresso** del codec, quindi ad alta impedenza, e la DevKit ha già il suo pull-up: la
+combinazione è sicura. Ma se dopo aver collegato il codec l'ESP32 non parte più, il primo
+sospettato è questo e non il software.
+
+### Prima di dare per scontato che serva
+
+Alcune schede WM8960 montano **un oscillatore proprio**, e in quel caso l'MCLK dall'ESP32
+non serve affatto e il problema sparisce. **Da verificare a occhio sulla scheda**: cercare
+un quarzo o un risuonatore — un contenitore metallico ovale, o un componente squadrato con
+sopra una frequenza tipo `12.288` o `24.576`.
+
+- **se c'è** → nessun collegamento MCLK, la mappa resta com'è
+- **se non c'è** → MCLK su GPIO 0, e questa tabella va aggiornata
+
 ## Collegamenti dei moduli
 
 ### Gancio — misure del commutatore
