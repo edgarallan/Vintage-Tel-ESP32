@@ -3,6 +3,7 @@
 #include "phone_hal.h"
 #include "hal_priv.h"
 
+#include "esp_log.h"
 #include "esp_timer.h"
 
 uint32_t hal_now_ms(void)
@@ -35,7 +36,18 @@ const hw_iface_t *phone_hal_init(QueueHandle_t evt_q)
     hal_display_init();
     hal_codec_init();
     hal_bell_init();
+#ifdef VT_NO_BT
+    /* Radio esclusa: il telefono resta "senza linea" ma tutto il resto — disco,
+       gancio, campanello, LED, display, codec — funziona e si puo' collaudare.
+       Serve quando l'alimentazione non regge il picco di corrente all'accensione
+       della radio e il chip entra in ciclo di riavvio: senza questo interruttore
+       un problema di alimentazione bloccherebbe anche il lavoro che con la radio
+       non c'entra niente. */
+    (void)evt_q;
+    ESP_LOGW("hal", "compilato SENZA Bluetooth (VT_NO_BT)");
+#else
     hal_bt_init(evt_q);
+#endif
     hal_input_init(evt_q);
     return &s_hw;
 }

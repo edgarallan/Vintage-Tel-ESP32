@@ -12,3 +12,8 @@ idf_component_register(
 # Taratura del campanello: spazza da 16 a 28 Hz per trovare la risonanza del
 # martelletto. Scommentare, provare, poi rimettere il commento.
 # target_compile_definitions(${COMPONENT_LIB} PRIVATE VT_DIAG_BELL=1)
+
+# Compila senza Bluetooth. Il telefono resta senza linea, ma disco, gancio,
+# campanello, LED, display e codec restano collaudabili. Scommentare quando
+# l'alimentazione non regge il picco della radio e il chip cicla sul brownout.
+# idf_build_set_property(COMPILE_OPTIONS "-DVT_NO_BT=1" APPEND)

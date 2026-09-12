@@ -39,3 +39,14 @@ CONFIG_BT_PBAC_ENABLED=y
 # serve davvero durante il collaudo.
 CONFIG_BT_LOG_HCI_TRACE_LEVEL_ERROR=y
 CONFIG_BT_LOG_APPL_TRACE_LEVEL_ERROR=y
+
+# --- Potenza radio ----------------------------------------------------------
+# Dopo un reset da brownout, riparti con la radio a potenza ridotta. Opzione
+# di ESP-IDF fatta esattamente per il ciclo in cui questo telefono e' caduto il
+# 12/09/2026: il picco di corrente all'accensione della radio faceva crollare
+# la tensione, il chip si resettava, riprovava allo stesso modo e ricadeva.
+# Cosi' il secondo tentativo chiede meno corrente e il ciclo si rompe.
+#
+# NON e' la soluzione del problema di alimentazione, e' una rete di sicurezza:
+# se scatta, c'e' comunque qualcosa da sistemare a monte.
+CONFIG_ESP_PHY_REDUCE_TX_POWER=y
