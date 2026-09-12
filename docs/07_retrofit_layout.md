@@ -73,6 +73,48 @@ I numeri rimandano ai marker dell'immagine; gli Step a [`04_installation.md`](04
 
 > Collauda **prima** di richiudere il coperchio (04 · Step 10): rilavorare a cassetta aperta costa molto meno.
 
+## La rete analogica prima della rimozione
+
+Fotografata il 12/09/2026, **prima** di smontare qualsiasi cosa: è documentazione che dopo
+non si può più rifare.
+
+| Foto | Cosa mostra |
+|---|---|
+| `s62_rete_analogica_completa.jpeg` | la basetta intera con tutti i componenti in sede |
+| `s62_rete_analogica_dallalto.jpeg` | la stessa dall'alto, con le bobine del campanello sopra |
+| `s62_rete_analogica_di_lato.jpeg` | i condensatori e i morsetti da un'altra angolazione |
+| `s62_morsettiera_dettaglio.jpeg` | le viti dei morsetti e la resistenza, da vicino |
+| `s62_telaio_sotto.jpeg`, `s62_telaio_sigle.jpeg`, `s62_marchio_auso_siemens.jpeg` | il telaio: `AUSO SIEMENS Telecomunicazioni`, `7002`, `Ed. IX`, `PROPRIETÀ SIP` |
+
+### Cosa c'è sulla basetta
+
+- due condensatori **AUSO**: `1 µF 200 V` (marcato `7002`) e `2 µF 125 V` (marcato `3912`)
+- un condensatore assiale azzurro **`0,1 µF 100 V`**
+- una **resistenza** con fasce colorate
+- un cilindro avvolto in carta, la **bobina d'induzione**
+
+Sono tutti lo stesso circuito fonia, che l'ESP32 sostituisce in blocco: si tolgono insieme.
+
+### ⚠️ La basetta NON si rimuove
+
+È **la morsettiera** — si vedono le viti dei morsetti lungo due bordi — ed è rivettata al
+telaio. I componenti ci sono solo appoggiati sopra, con i reofori ai morsetti: liberandoli
+la basetta resta in sede, e **non c'è nessun rivetto da trapanare**.
+
+Tenerla non è solo prudenza da restauro: liberata dai componenti diventa il **nodo di
+distribuzione** di cui il cablaggio nuovo ha bisogno per `3V3`, `GND`, `SDA` e `SCL` —
+linee che vogliono più derivazioni ciascuna. Viti che accettano due o tre fili, già fissate
+al telaio, e il cablaggio nuovo passa dallo stesso nodo di quello vecchio.
+
+### Prima di togliere
+
+1. **Fotografa** i collegamenti, se non l'hai già fatto: i colori dei fili non seguono
+   nessuno standard su un apparecchio di cinquant'anni
+2. **Scarica i condensatori** cortocircuitandone i terminali con un cacciavite
+3. Svita i morsetti; se qualche reoforo è saldato, **taglialo a filo del corpo** invece di
+   dissaldare — il calore su bachelite d'epoca stacca piste e sbriciola l'isolante
+4. **Non buttare i componenti**: in una scatolina, con la foto
+
 ## Materiale di riferimento
 
 - Schema originale Siemens S62, due varianti dello stesso apparecchio:
