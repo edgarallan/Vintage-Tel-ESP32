@@ -20,4 +20,4 @@ idf_component_register(
 
 # Prova della catena audio: suona il tono di libero sul jack cuffia della
 # scheda WM8960. Scommentare, provare, poi rimettere il commento.
-# target_compile_definitions(${COMPONENT_LIB} PRIVATE VT_DIAG_AUDIO=1)
+target_compile_definitions(${COMPONENT_LIB} PRIVATE VT_DIAG_AUDIO=1)

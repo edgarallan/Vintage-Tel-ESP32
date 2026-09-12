@@ -40,69 +40,38 @@ static const char *TAG = "diag_audio";
 #define CAMPIONI  256   /* 16 ms a 16 kHz: abbastanza corti da non far scattare
                            il watchdog, abbastanza lunghi da non sprecare CPU */
 
-/*
- * Genera una spazzata di frequenza invece di un tono fisso.
- *
- * Un tono a 425 Hz e un ronzio si confondono facilmente: sono entrambi un
- * suono continuo, e chi ascolta deve giudicare un timbro. Una frequenza che
- * SALE non si confonde con niente — nessun disturbo di alimentazione o di
- * clock cambia altezza in modo regolare.
- *
- * Se senti una sirena che sale, la catena audio e' sana e il segnale arriva
- * intatto. Se senti sempre lo stesso ronzio, i dati arrivano mangiati e il
- * problema e' nel formato o nel clock, non nel volume.
- */
-static void spazzata(int16_t *buf, uint32_t n, float *fase, float *hz)
-{
-    for (uint32_t i = 0; i < n; i++) {
-        *fase += 2.0f * (float)M_PI * (*hz) / (float)TONE_SAMPLE_RATE;
-        if (*fase > 2.0f * (float)M_PI) {
-            *fase -= 2.0f * (float)M_PI;
-        }
-        /* 0,8 del fondo scala: e' una prova, serve sentire bene. In
-           esercizio i toni restano a TONE_AMPLITUDE, piu' prudente. */
-        buf[i] = (int16_t)(sinf(*fase) * 26000.0f);
-
-        /* Da 200 a 2000 Hz in quattro secondi, poi si ricomincia. */
-        *hz += 1800.0f / (4.0f * (float)TONE_SAMPLE_RATE);
-        if (*hz > 2000.0f) {
-            *hz = 200.0f;
-        }
-    }
-}
-
 void diag_audio_run(void)
 {
     hal_codec_init();
     hal_audio_init();
 
+    tone_gen_t gen;
+    tone_init(&gen);
+
     ESP_LOGW(TAG, "=== PROVA AUDIO ===");
-    ESP_LOGW(TAG, "spazzata da 200 a 2000 Hz in 4 s, poi silenzio 2 s, in ciclo");
-    ESP_LOGW(TAG, "se senti una sirena che SALE, la catena e' sana");
-    ESP_LOGW(TAG, "se senti sempre lo stesso ronzio, i dati arrivano mangiati");
+    ESP_LOGW(TAG, "i toni italiani veri, tre fasi da 3 s, in ciclo");
 
+    static const struct { tone_t tono; const char *nome; } fasi[] = {
+        { TONE_DIAL, "LIBERO   425 Hz continuo" },
+        { TONE_BUSY, "OCCUPATO 425 Hz, 0,5 s si / 0,5 s no" },
+        { TONE_NONE, "SILENZIO" },
+    };
+
+    const uint32_t buffer_per_fase = 3 * TONE_SAMPLE_RATE / CAMPIONI;
     static int16_t buf[CAMPIONI];
-    float fase = 0.0f, hz = 200.0f;
-
-    const uint32_t buf_sirena  = 4 * TONE_SAMPLE_RATE / CAMPIONI;
-    const uint32_t buf_silenzio = 2 * TONE_SAMPLE_RATE / CAMPIONI;
 
     for (;;) {
-        ESP_LOGI(TAG, "SIRENA 200 -> 2000 Hz");
-        hz = 200.0f;
-        for (uint32_t i = 0; i < buf_sirena; i++) {
-            spazzata(buf, CAMPIONI, &fase, &hz);
-            if (!hal_audio_play(buf, CAMPIONI)) {
-                ESP_LOGE(TAG, "l'I2S non accetta dati");
-                vTaskDelay(pdMS_TO_TICKS(1000));
-                break;
+        for (size_t f = 0; f < sizeof(fasi) / sizeof(fasi[0]); f++) {
+            ESP_LOGI(TAG, "%s", fasi[f].nome);
+            tone_set(&gen, fasi[f].tono);
+            for (uint32_t i = 0; i < buffer_per_fase; i++) {
+                tone_fill(&gen, buf, CAMPIONI);
+                if (!hal_audio_play(buf, CAMPIONI)) {
+                    ESP_LOGE(TAG, "l'I2S non accetta dati");
+                    vTaskDelay(pdMS_TO_TICKS(1000));
+                    break;
+                }
             }
-        }
-
-        ESP_LOGI(TAG, "SILENZIO");
-        memset(buf, 0, sizeof(buf));
-        for (uint32_t i = 0; i < buf_silenzio; i++) {
-            hal_audio_play(buf, CAMPIONI);
         }
     }
 }

@@ -38,8 +38,9 @@ Servono **13 segnali**. Margine: **due pin**.
 | LED di stato WS2812 | **27** | OUT | RMT | Un pixel indirizzabile |
 | I2S — BCLK | **26** | OUT | I2S0 | Codec WM8960 |
 | I2S — WS / LRCLK | **25** | OUT | I2S0 | Codec WM8960 |
-| I2S — DIN (dal codec) | **33** | IN | I2S0 | `ADCDAT`: microfono della cornetta |
-| I2S — DOUT (al codec) | **22** | OUT | I2S0 | `DACDAT`: capsula d'ascolto |
+| I2S — DIN (dal codec) | **33** | IN | I2S0 | `ADCDAT`: microfono. Va sul pin **`TXSDA`** |
+| I2S — DOUT (al codec) | **22** | OUT | I2S0 | `DACDAT`: capsula. Va sul pin **`RXSDA`** |
+| I2S — MCLK | **0** | OUT | I2S0/APLL | Clock di sistema del codec. Unico pin possibile |
 | I2C — SDA | **21** | I/O | I2C0 | **Bus condiviso**: WM8960 `0x1A` + SSD1306 `0x3C` |
 | I2C — SCL | **19** | OUT | I2C0 | **Bus condiviso**: WM8960 `0x1A` + SSD1306 `0x3C` |
 
@@ -159,6 +160,25 @@ Questo **cancella l'unica saldatura di riserva prevista dal progetto**. La stesu
 precedente, che assumeva un WROVER, non aveva pin liberi e prevedeva come ripiego di
 spostare **gancio** o **NSI** su un pin solo-input (34-39) con una **resistenza di pull-up
 esterna da 10 kΩ** verso 3V3. Con il WROOM quel ripiego non serve piu'.
+
+## ⚠️ `TX` e `RX` sulla WM8960 sono dal punto di vista DELLA SCHEDA
+
+Il connettore porta `TXSDA` e `RXSDA`, e la tentazione è leggerli dal proprio punto di
+vista: "TX = quello che trasmetto io". **È l'opposto.** È la scheda a ricevere su `RXSDA`.
+
+| Pin della scheda | Cos'è davvero | Va a |
+|---|---|---|
+| **`RXSDA`** | `DACDAT`, **ingresso** del codec | GPIO 22, il nostro DOUT |
+| **`TXSDA`** | `ADCDAT`, **uscita** del codec | GPIO 33, il nostro DIN |
+
+Sbagliarli costa una serata, e in un modo particolarmente insidioso: **si sente qualcosa.**
+Pilotando un'uscita del codec con un'uscita dell'ESP32 il DAC non riceve niente, ma il
+segnale digitale trafila per accoppiamento capacitivo fino all'uscita analogica. Il
+risultato è un suono debole e sporco **che però segue la frequenza** — abbastanza
+verosimile da far sospettare i registri del codec per un'ora.
+
+Se l'audio è debole e distorto ma l'altezza è corretta, **il primo sospetto sono questi due
+fili**, non la configurazione.
 
 ## MCLK del codec — il pin che manca, e l'unico che può darlo
 

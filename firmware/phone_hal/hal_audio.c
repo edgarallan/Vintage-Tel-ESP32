@@ -91,11 +91,12 @@ static bool configura_codec(void)
         { R_RIGHT_OUTMIX, 0x100, "DAC destro -> mixer" },
 
         /* Volume analogico della cuffia, 0 dB. Bit 8 = applica. */
-        /* Volume cuffia al massimo, +6 dB. La capsula della cornetta e' un
-           carico ad alta impedenza e vuole tutto il livello disponibile; se
-           dovesse risultare troppo, si scende da qui. */
-        { R_LOUT1_VOL,    0x17F, "volume cuffia sinistra" },
-        { R_ROUT1_VOL,    0x17F, "volume cuffia destra" },
+        /* Volume cuffia a -12 dB. Con +6 dB il livello e' risultato
+           altissimo in cuffia (misurato all'orecchio il 13/09/2026): la
+           capsula della cornetta e' piu' sensibile di quanto previsto. Questo
+           e' il numero da ritoccare quando l'audio sara' in cornetta. */
+        { R_LOUT1_VOL,    0x16D, "volume cuffia sinistra" },
+        { R_ROUT1_VOL,    0x16D, "volume cuffia destra" },
     };
 
     for (size_t i = 0; i < sizeof(seq) / sizeof(seq[0]); i++) {
