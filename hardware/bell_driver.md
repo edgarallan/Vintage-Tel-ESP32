@@ -87,6 +87,29 @@ l'alta impedenza non la troverà.
 > Il boost resta sempre alimentato: il silenzio si ottiene dai due GPIO, non spegnendo
 > l'XL6009. Un GPIO in meno e un cablaggio più semplice, al prezzo di pochi mA a riposo.
 
+### La frequenza, scelta ascoltando
+
+**11 Hz su questo apparecchio**, misurati il 12/09/2026 e non dedotti. La documentazione
+d'epoca dà la risonanza fra 20 e 25 Hz, e la centrale telefonica italiana suonava a 25: su
+questo esemplare, dopo cinquant'anni, l'ottimo sta molto più in basso.
+
+Trovata con due spazzate di `main/diag_bell.c`:
+
+| Spazzata | Migliore | Cosa dice |
+|---|---|---|
+| 16-28 Hz | il **primo** gradino | l'intervallo era sbagliato, il punto sta più in basso |
+| 10-20 Hz | il **secondo**, cioè 11 Hz | c'è un ottimo vero |
+
+**Perché il "secondo" è il dato che conta.** A frequenza più bassa la bobina oppone meno
+reattanza, quindi passa più corrente e il martelletto picchia più forte a prescindere dalla
+risonanza. Se contasse solo la potenza avrebbe vinto il primo gradino, 10 Hz. Ha vinto
+l'undici — quindi non è una salita monotona guidata dalla corrente, ma un **ottimo
+meccanico reale**.
+
+È il motivo per cui la frequenza si sceglie con l'orecchio e non dal datasheet: dipende
+dalle molle, dalla massa del martelletto e da mezzo secolo di grasso indurito, cioè da
+questo apparecchio e non dal modello.
+
 ### Regolazione del boost
 
 L'L298N è un ponte a transistor bipolari e **si mangia un po' di tensione**: circa 1,5-2 V

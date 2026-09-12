@@ -31,10 +31,23 @@
 
 static const char *TAG = "hal_bell";
 
-/* ~22 Hz: mezzo periodo = 1/(22*2) s ≈ 22,7 ms. La frequenza di risonanza
-   delle bobine sta tra 20 e 25 Hz — vedi hardware/bell_driver.md. Il valore
-   esatto va scelto ascoltando, con main/diag_bell.c. */
-#define BELL_HALF_PERIOD_US 22727
+/*
+ * 11 Hz: mezzo periodo = 1/(11*2) s ≈ 45,5 ms.
+ *
+ * SCELTO ASCOLTANDO, non dal datasheet. La documentazione dava la risonanza
+ * delle bobine fra 20 e 25 Hz — la centrale telefonica italiana suonava a 25 —
+ * ma su QUESTO apparecchio, dopo cinquant'anni, sta molto piu' in basso.
+ *
+ * Trovata con due spazzate di main/diag_bell.c il 12/09/2026. La prima, da 16
+ * a 28 Hz, dava come migliore il gradino piu' basso: intervallo sbagliato. La
+ * seconda, da 10 a 20 Hz, ha dato il SECONDO gradino.
+ *
+ * Quel "secondo" e' il dato che conta, ed e' il motivo per cui il numero non e'
+ * arbitrario. A frequenza piu' bassa la bobina oppone meno reattanza e passa
+ * piu' corrente, quindi se contasse solo la potenza avrebbe vinto il primo
+ * gradino, 10 Hz. Ha vinto l'undici: c'e' un ottimo meccanico vero, e sta li'.
+ */
+#define BELL_HALF_PERIOD_US 45455
 
 static esp_timer_handle_t s_timer;
 static bool               s_phase;

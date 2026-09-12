@@ -30,10 +30,21 @@
 
 static const char *TAG = "diag_bell";
 
-/* Estremi della spazzata, in Hz. Il campanello e' progettato per i 25 Hz della
-   centrale telefonica, ma un apparecchio vecchio puo' essersi spostato. */
-#define HZ_MIN     16
-#define HZ_MAX     28
+/* Estremi della spazzata, in Hz.
+ *
+ * La prima spazzata (16-28 Hz, 12/09/2026) ha dato come migliore il PRIMO
+ * gradino, cioe' l'estremo basso: segno che il punto buono sta li' o sotto, e
+ * che l'intervallo era sbagliato. Questa scende a 10.
+ *
+ * Attenzione a come si legge il risultato. A frequenza piu' bassa la bobina
+ * oppone meno reattanza, quindi passa PIU' corrente e il martelletto picchia
+ * piu' forte a prescindere dalla risonanza. Se anche stavolta il migliore
+ * risulta il primo gradino, non e' risonanza: e' una salita monotona guidata
+ * dalla corrente, e la frequenza va scelta sul CARATTERE del suono — un trillo
+ * invece di colpi staccati — non sulla potenza. La centrale telefonica
+ * italiana suonava a 25 Hz, ed e' quello il timbro d'epoca. */
+#define HZ_MIN     10
+#define HZ_MAX     20
 #define HZ_PASSO   1
 
 /* Quanto suona ogni gradino. Tre secondi bastano a giudicare e non sono cosi'
