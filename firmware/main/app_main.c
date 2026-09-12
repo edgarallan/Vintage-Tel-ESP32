@@ -66,6 +66,9 @@ void diag_input_run(void);
 #ifdef VT_DIAG_BELL
 void diag_bell_run(void);
 #endif
+#ifdef VT_DIAG_AUDIO
+void diag_audio_run(void);
+#endif
 
 void app_main(void)
 {
@@ -80,6 +83,12 @@ void app_main(void)
     /* Taratura del campanello: spazza le frequenze e le annuncia. Vedi
        main/diag_bell.c. */
     diag_bell_run();
+    return;
+#endif
+#ifdef VT_DIAG_AUDIO
+    /* Prova della catena di riproduzione: tono di libero in continuo sul jack
+       cuffia della scheda WM8960. Vedi main/diag_audio.c. */
+    diag_audio_run();
     return;
 #endif
 

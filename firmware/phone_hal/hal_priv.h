@@ -21,6 +21,14 @@
 #define PIN_BELL_IN2     14
 #define PIN_BUTTON       23
 #define PIN_LED_WS2812   27
+#define PIN_I2S_BCLK     26
+#define PIN_I2S_WS       25
+#define PIN_I2S_DIN      33   /* ADCDAT: microfono -> ESP32 */
+#define PIN_I2S_DOUT     22   /* DACDAT: ESP32 -> capsula */
+/* L'MCLK su ESP32 puo' uscire SOLO da GPIO 0, 1 o 3, e 1/3 sono la console.
+   GPIO 0 e' strapping ma viene campionato solo al reset: vedi pinout.md. */
+#define PIN_I2S_MCLK     0
+
 #define PIN_I2C_SDA      21
 #define PIN_I2C_SCL      19
 
@@ -38,6 +46,9 @@ i2c_master_bus_handle_t hal_i2c_bus(void);   /* creato una volta, condiviso */
 void      hal_codec_init(void);
 bool      hal_codec_presente(void);
 esp_err_t hal_codec_write(uint8_t reg, uint16_t val);
+
+void hal_audio_init(void);
+bool hal_audio_play(const int16_t *mono, size_t n);
 
 void hal_display_init(void);
 void hal_display_state(const char *state, const char *extra);
