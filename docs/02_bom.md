@@ -23,11 +23,9 @@ PiMoroni, AliExpress; per i componenti critici (alimentazione) meglio Adafruit/M
 >
 > - **La PSRAM non serve.** Compilando l'esempio `hfp_hf` di ESP-IDF v5.5.5 con percorso
 >   vHCI, Wide Band Speech e PBAC restano **~70 KB di DRAM liberi** con lo stack Bluetooth
->   completo caricato. WiFi e Bluetooth non convivono mai (vincolo #5), quindi i due picchi
->   di memoria non si sommano.
-> - **I 4 MB bastano anche con l'OTA.** Quell'esempio pesa **750 KB**; con WiFi, server HTTP
->   e la logica del telefono la stima è ~1,2 MB, dentro slot OTA da 1,94 MB — vedi
->   `firmware/partitions.csv`.
+>   completo caricato, e il WiFi non si usa (vincolo #5).
+> - **I 4 MB avanzano.** Il firmware con Bluetooth, I2S, OLED e la logica del telefono sta
+>   in **~700 KB**, dentro slot da 1,94 MB — vedi `firmware/partitions.csv`.
 > - **Si guadagnano due GPIO.** Sui WROVER i pin 16 e 17 servono alla PSRAM; qui sono
 >   liberi. Il progetto passa da margine zero a due pin di riserva, e sparisce l'unica
 >   saldatura di ripiego che era prevista. Vedi `hardware/pinout.md`.

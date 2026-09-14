@@ -1,9 +1,13 @@
 # Tabella delle partizioni — flash da 4 MB del modulo WROOM-32E.
 #
-# Due slot OTA perche' l'aggiornamento passa dalla pagina di configurazione.
-# Misura del 26/08/2026: l'esempio HFP di ESP-IDF con vHCI, WBS e PBAC pesa
-# 750 KB; con WiFi, server HTTP, I2S, OLED e la logica del telefono la stima
-# e' ~1,2 MB. In uno slot da 1,94 MB restano circa il 38% di margine.
+# Due slot da 1,94 MB. L'aggiornamento da remoto NON e' implementato: la prima
+# stesura lo prevedeva via WiFi, strada abbandonata perche' la radio e' una sola
+# e il Bluetooth deve restare vivo.
+#
+# Gli slot restano perche' non costano niente — il firmware misurato pesa
+# ~700 KB, il 36% di uno slot — e perche' lasciano aperta la porta a un
+# aggiornamento su un altro trasporto. Se un giorno si decide che non servira'
+# mai, un'unica partizione 'factory' libera 2 MB.
 #
 # Nome,     Tipo, Sottotipo, Offset,   Dimensione
 nvs,        data, nvs,       0x9000,   0x4000

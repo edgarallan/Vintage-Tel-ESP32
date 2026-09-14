@@ -34,8 +34,8 @@ sono già costati indagini e non vanno riscoperti.
 4. **Serve la WM8960 Audio Board, non l'Audio HAT.** L'HAT ha il jack da 3,5 mm in sola
    uscita; la Audio Board ha il jack a 4 segmenti con ingresso microfonico, che è ciò
    che permette di collegare la cornetta a 3 fili senza saldature.
-5. **WiFi e Bluetooth non convivono mai.** Condividono la radio: il WiFi si accende solo
-   in modalità configurazione, mai durante l'esercizio.
+5. **Il WiFi non si usa.** La radio fa solo Bluetooth Classic. Se un giorno servisse,
+   ricordare che le due radio sono la stessa e non possono lavorare insieme.
 6. **Il consumo a riposo non deve scendere sotto ~60 mA.** Il modulo di alimentazione
    scelto disabilita l'uscita sotto ~50 mA: display e LED non vanno mai spenti del tutto.
 
@@ -141,8 +141,17 @@ inservibili per i contatti puliti di disco e gancio).
 ## Configurazione
 
 Tutto in **NVS**: MAC del cellulare accoppiato, contatti, quick-dial, volumi, parametri di
-disco e campanello. Si modifica dalla pagina web in **modalità configurazione**, che si
-attiva tenendo premuto il pulsante rubrica all'accensione. Da lì passa anche l'OTA.
+disco e campanello.
+
+**Come ci si scrive non è ancora deciso, e non esiste.** Oggi in NVS finisce solo il MAC del
+cellulare, salvato in automatico alla prima connessione. Contatti e quick-dial sono
+implementati e testati in `core/phonebook.c`, ma **non c'è modo di caricarli**: la rubrica
+all'avvio è vuota, quindi il nome del chiamante e il quick-dial sono di fatto inattivi.
+
+Una prima stesura prevedeva un access point WiFi con una pagina web, ed è stata abbandonata:
+la radio è una sola e il Bluetooth deve restare vivo. Le strade aperte sono **PBAP** — che
+scarica la rubrica direttamente dal cellulare accoppiato, e per cui `sdkconfig.defaults`
+abilita già `CONFIG_BT_PBAC_ENABLED` — oppure una configurazione via seriale.
 
 Il MAC del cellulare non va mai nei sorgenti né stampato per intero nei log.
 

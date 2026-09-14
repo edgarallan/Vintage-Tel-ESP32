@@ -34,7 +34,7 @@ Servono **13 segnali**. Margine: **due pin**.
 | Gancio (cornetta) | **18** | IN, pull-up | GPIO + ISR | `xQueueSendFromISR` verso il task telefono |
 | Campanello — IN1 | **13** | OUT | esp_timer | L298N, canale A |
 | Campanello — IN2 | **14** | OUT | esp_timer | In **antifase** con IN1, ~22 Hz |
-| Pulsante rubrica | **23** | IN, pull-up | GPIO | All'avvio: config mode. In esercizio: richiama ultimo numero |
+| Pulsante rubrica | **23** | IN, pull-up | GPIO | Richiama l'ultimo numero composto |
 | LED di stato WS2812 | **27** | OUT | RMT | Un pixel indirizzabile |
 | I2S — BCLK | **26** | OUT | I2S0 | Codec WM8960 |
 | I2S — WS / LRCLK | **25** | OUT | I2S0 | Codec WM8960 |
