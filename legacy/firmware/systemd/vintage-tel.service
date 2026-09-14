@@ -1,0 +1,25 @@
+[Unit]
+Description=Vintage Tel BL — telefono vintage come vivavoce Bluetooth HFP
+After=network-online.target bluetooth.service ofono.service sound.target
+Wants=network-online.target bluetooth.service ofono.service
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+SupplementaryGroups=gpio i2c spi audio bluetooth
+
+WorkingDirectory=/home/pi/vintage_tel_bl/firmware
+Environment="PYTHONUNBUFFERED=1"
+Environment="PATH=/home/pi/vintage_tel_bl/firmware/venv/bin:/usr/local/bin:/usr/bin:/bin"
+
+ExecStart=/home/pi/vintage_tel_bl/firmware/venv/bin/python -m src.main
+
+Restart=on-failure
+RestartSec=5
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

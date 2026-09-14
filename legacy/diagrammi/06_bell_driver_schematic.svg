@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 580" role="img" aria-label="Driver del campanello">
+<title>Schema driver campanello</title>
+<desc>Cablaggio dettagliato del driver del campanello con boost XL6009 e H-bridge L9110S</desc>
+<style>
+  text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #2C2C2A; }
+  .t { font-size: 14px; }
+  .ts { font-size: 12px; }
+  .th { font-size: 14px; font-weight: 500; }
+  .c-amber rect { fill: #FAEEDA; stroke: #BA7517; }
+  .c-amber .th, .c-amber .t { fill: #633806; }
+  .c-amber .ts { fill: #854F0B; }
+  .c-blue rect { fill: #E6F1FB; stroke: #185FA5; }
+  .c-blue .th, .c-blue .t { fill: #0C447C; }
+  .c-blue .ts { fill: #185FA5; }
+  .c-red rect { fill: #FCEBEB; stroke: #A32D2D; }
+  .c-red .th, .c-red .t { fill: #791F1F; }
+  .c-red .ts { fill: #A32D2D; }
+  .c-teal rect { fill: #E1F5EE; stroke: #0F6E56; }
+  .c-teal .th, .c-teal .t { fill: #085041; }
+  .c-teal .ts { fill: #0F6E56; }
+  .c-purple rect { fill: #EEEDFE; stroke: #534AB7; }
+  .c-purple .th, .c-purple .t { fill: #3C3489; }
+  .c-purple .ts { fill: #534AB7; }
+  .c-green rect { fill: #EAF3DE; stroke: #3B6D11; }
+  .c-green .th, .c-green .t { fill: #27500A; }
+  .c-green .ts { fill: #3B6D11; }
+  @media (prefers-color-scheme: dark) {
+    text { fill: #D3D1C7; }
+    .c-amber rect { fill: #633806; stroke: #FAC775; }
+    .c-amber .th, .c-amber .t { fill: #FAEEDA; }
+    .c-amber .ts { fill: #FAC775; }
+    .c-blue rect { fill: #0C447C; stroke: #85B7EB; }
+    .c-blue .th, .c-blue .t { fill: #E6F1FB; }
+    .c-blue .ts { fill: #85B7EB; }
+    .c-red rect { fill: #791F1F; stroke: #F09595; }
+    .c-red .th, .c-red .t { fill: #FCEBEB; }
+    .c-red .ts { fill: #F09595; }
+    .c-teal rect { fill: #085041; stroke: #5DCAA5; }
+    .c-teal .th, .c-teal .t { fill: #E1F5EE; }
+    .c-teal .ts { fill: #5DCAA5; }
+    .c-purple rect { fill: #3C3489; stroke: #AFA9EC; }
+    .c-purple .th, .c-purple .t { fill: #EEEDFE; }
+    .c-purple .ts { fill: #AFA9EC; }
+    .c-green rect { fill: #27500A; stroke: #97C459; }
+    .c-green .th, .c-green .t { fill: #EAF3DE; }
+    .c-green .ts { fill: #97C459; }
+  }
+</style>
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+
+<text class="th" x="340" y="30" text-anchor="middle">Step 6 — driver del campanello</text>
+<text class="ts" x="340" y="50" text-anchor="middle">Schema dettagliato: dal 5V alle bobine originali</text>
+
+<g class="c-amber">
+<rect x="30" y="100" width="120" height="70" rx="8" stroke-width="0.5"/>
+<text class="th" x="90" y="125" text-anchor="middle">Batterie 5V</text>
+<text class="ts" x="90" y="145" text-anchor="middle">da MT3608</text>
+<text class="ts" x="90" y="160" text-anchor="middle">via Pi rail</text>
+</g>
+
+<g class="c-blue">
+<rect x="200" y="100" width="140" height="70" rx="8" stroke-width="0.8"/>
+<text class="th" x="270" y="125" text-anchor="middle">XL6009 boost</text>
+<text class="ts" x="270" y="145" text-anchor="middle">5V → 30V DC</text>
+<text class="ts" x="270" y="160" text-anchor="middle">EN da GPIO 22</text>
+</g>
+
+<g class="c-red">
+<rect x="390" y="100" width="140" height="70" rx="8" stroke-width="0.8"/>
+<text class="th" x="460" y="125" text-anchor="middle">L9110S H-bridge</text>
+<text class="ts" x="460" y="145" text-anchor="middle">genera AC</text>
+<text class="ts" x="460" y="160" text-anchor="middle">da DC pulsato</text>
+</g>
+
+<g class="c-teal">
+<rect x="570" y="100" width="90" height="70" rx="8" stroke-width="0.5"/>
+<text class="th" x="615" y="125" text-anchor="middle">Bobine</text>
+<text class="ts" x="615" y="145" text-anchor="middle">campanello</text>
+<text class="ts" x="615" y="160" text-anchor="middle">originali</text>
+</g>
+
+<line x1="150" y1="135" x2="200" y2="135" stroke="#854F0B" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="340" y1="135" x2="390" y2="135" stroke="#185FA5" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="530" y1="135" x2="570" y2="135" stroke="#A32D2D" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<text class="ts" x="175" y="125" text-anchor="middle">5V</text>
+<text class="ts" x="365" y="125" text-anchor="middle">30V DC</text>
+<text class="ts" x="550" y="125" text-anchor="middle">±30V AC</text>
+
+<rect x="40" y="220" width="600" height="200" rx="10" fill="none" stroke="#888780" stroke-width="0.6" stroke-dasharray="6 4"/>
+<text class="ts" x="340" y="240" text-anchor="middle">Dettaglio interconnessioni GPIO</text>
+
+<g class="c-purple">
+<rect x="60" y="260" width="170" height="140" rx="8" stroke-width="0.5"/>
+<text class="th" x="145" y="285" text-anchor="middle">Raspberry Pi</text>
+<text class="ts" x="145" y="310" text-anchor="middle">GPIO 22 → EN boost</text>
+<text class="ts" x="145" y="332" text-anchor="middle">GPIO 23 → IN1</text>
+<text class="ts" x="145" y="352" text-anchor="middle">NOT(GPIO 23) → IN2</text>
+<text class="ts" x="145" y="375" text-anchor="middle">22Hz PWM</text>
+</g>
+
+<g class="c-blue">
+<rect x="265" y="260" width="160" height="140" rx="8" stroke-width="0.5"/>
+<text class="th" x="345" y="285" text-anchor="middle">XL6009</text>
+<text class="ts" x="345" y="310" text-anchor="middle">IN+: 5V</text>
+<text class="ts" x="345" y="332" text-anchor="middle">EN: GPIO 22</text>
+<text class="ts" x="345" y="352" text-anchor="middle">OUT+: ~30V</text>
+<text class="ts" x="345" y="375" text-anchor="middle">trimmer regolabile</text>
+</g>
+
+<g class="c-red">
+<rect x="460" y="260" width="160" height="140" rx="8" stroke-width="0.5"/>
+<text class="th" x="540" y="285" text-anchor="middle">L9110S</text>
+<text class="ts" x="540" y="310" text-anchor="middle">VCC: 30V</text>
+<text class="ts" x="540" y="332" text-anchor="middle">IN1: PWM 22Hz</text>
+<text class="ts" x="540" y="352" text-anchor="middle">IN2: NOT(IN1)</text>
+<text class="ts" x="540" y="375" text-anchor="middle">OUT1/OUT2 → bobine</text>
+</g>
+
+<line x1="230" y1="320" x2="265" y2="320" stroke="#185FA5" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="230" y1="345" x2="460" y2="345" stroke="#A32D2D" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="425" y1="315" x2="460" y2="315" stroke="#854F0B" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<g class="c-green">
+<rect x="40" y="450" width="600" height="110" rx="8" stroke-width="0.5"/>
+<text class="th" x="340" y="475" text-anchor="middle">Pattern italiano: 1s on / 4s off</text>
+<line x1="80" y1="510" x2="600" y2="510" stroke="#3B6D11" stroke-width="0.8"/>
+<rect x="80" y="490" width="60" height="20" fill="#3B6D11" opacity="0.7"/>
+<rect x="320" y="490" width="60" height="20" fill="#3B6D11" opacity="0.7"/>
+<rect x="560" y="490" width="40" height="20" fill="#3B6D11" opacity="0.7"/>
+<text class="ts" x="110" y="535" text-anchor="middle">1s squillo</text>
+<text class="ts" x="230" y="535" text-anchor="middle">4s pausa</text>
+<text class="ts" x="350" y="535" text-anchor="middle">1s squillo</text>
+<text class="ts" x="470" y="535" text-anchor="middle">4s pausa</text>
+<text class="ts" x="340" y="552" text-anchor="middle">ripeti fino a hook up o max_rings</text>
+</g>
+
+</svg>

@@ -7,7 +7,7 @@ campanello elettromeccanico originali.
 Firmware in **C/ESP-IDF** su **ESP32**.
 
 > **Versione 2 del progetto.** La v1 girava su Raspberry Pi Zero 2 W in Python:
-> [Vintage-Tel-with-Bluetooth](https://github.com/edgarallan/Vintage-Tel-with-Bluetooth).
+> Vintage-Tel-with-Bluetooth, conservata in [`legacy/`](legacy/).
 > È stata riscritta da zero perché il Pi Zero 2 W è diventato costoso e difficile da
 > reperire — e perché per un telefono un microcontrollore è semplicemente più adatto:
 > si accende in un secondo, non ha una scheda SD da corrompere quando stacchi la corrente

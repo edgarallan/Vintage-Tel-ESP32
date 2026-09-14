@@ -13,7 +13,7 @@ PSRAM**), firmware in **C/ESP-IDF v5.5.5**.
 Documentazione e commenti del codice sono **in italiano**.
 
 > **Versione 2.** La v1 girava su Raspberry Pi Zero 2 W in Python:
-> [Vintage-Tel-with-Bluetooth](https://github.com/edgarallan/Vintage-Tel-with-Bluetooth),
+> Vintage-Tel-with-Bluetooth, conservata in `legacy/`,
 > ora archiviata. Riscritta perché il Pi Zero 2 W è diventato costoso e poco reperibile.
 
 ## Vincoli non negoziabili

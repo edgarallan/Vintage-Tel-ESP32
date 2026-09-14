@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 600" role="img" aria-label="Schema generale di cablaggio">
+<title>Schema generale di cablaggio</title>
+<desc>Diagramma a blocchi con tutti i collegamenti tra Raspberry Pi e componenti</desc>
+<style>
+  text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #2C2C2A; }
+  .t { font-size: 14px; }
+  .ts { font-size: 12px; }
+  .th { font-size: 14px; font-weight: 500; }
+  .c-purple rect { fill: #EEEDFE; stroke: #534AB7; }
+  .c-purple .th, .c-purple .t { fill: #3C3489; }
+  .c-purple .ts { fill: #534AB7; }
+  .c-amber rect { fill: #FAEEDA; stroke: #BA7517; }
+  .c-amber .th, .c-amber .t { fill: #633806; }
+  .c-amber .ts { fill: #854F0B; }
+  .c-blue rect { fill: #E6F1FB; stroke: #185FA5; }
+  .c-blue .th, .c-blue .t { fill: #0C447C; }
+  .c-blue .ts { fill: #185FA5; }
+  .c-coral rect { fill: #FAECE7; stroke: #993C1D; }
+  .c-coral .th, .c-coral .t { fill: #712B13; }
+  .c-coral .ts { fill: #993C1D; }
+  .c-teal rect { fill: #E1F5EE; stroke: #0F6E56; }
+  .c-teal .th, .c-teal .t { fill: #085041; }
+  .c-teal .ts { fill: #0F6E56; }
+  .c-green rect { fill: #EAF3DE; stroke: #3B6D11; }
+  .c-green .th, .c-green .t { fill: #27500A; }
+  .c-green .ts { fill: #3B6D11; }
+  .c-red rect { fill: #FCEBEB; stroke: #A32D2D; }
+  .c-red .th, .c-red .t { fill: #791F1F; }
+  .c-red .ts { fill: #A32D2D; }
+  @media (prefers-color-scheme: dark) {
+    text { fill: #D3D1C7; }
+    .c-purple rect { fill: #3C3489; stroke: #AFA9EC; }
+    .c-purple .th, .c-purple .t { fill: #EEEDFE; }
+    .c-purple .ts { fill: #AFA9EC; }
+    .c-amber rect { fill: #633806; stroke: #FAC775; }
+    .c-amber .th, .c-amber .t { fill: #FAEEDA; }
+    .c-amber .ts { fill: #FAC775; }
+    .c-blue rect { fill: #0C447C; stroke: #85B7EB; }
+    .c-blue .th, .c-blue .t { fill: #E6F1FB; }
+    .c-blue .ts { fill: #85B7EB; }
+    .c-coral rect { fill: #712B13; stroke: #F0997B; }
+    .c-coral .th, .c-coral .t { fill: #FAECE7; }
+    .c-coral .ts { fill: #F0997B; }
+    .c-teal rect { fill: #085041; stroke: #5DCAA5; }
+    .c-teal .th, .c-teal .t { fill: #E1F5EE; }
+    .c-teal .ts { fill: #5DCAA5; }
+    .c-green rect { fill: #27500A; stroke: #97C459; }
+    .c-green .th, .c-green .t { fill: #EAF3DE; }
+    .c-green .ts { fill: #97C459; }
+    .c-red rect { fill: #791F1F; stroke: #F09595; }
+    .c-red .th, .c-red .t { fill: #FCEBEB; }
+    .c-red .ts { fill: #F09595; }
+  }
+</style>
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+
+<text class="th" x="340" y="30" text-anchor="middle">Step 4 — schema generale di cablaggio</text>
+<text class="ts" x="340" y="50" text-anchor="middle">Tutti i blocchi e le loro connessioni</text>
+
+<g class="c-purple">
+<rect x="240" y="240" width="200" height="100" rx="10" stroke-width="0.8"/>
+<text class="th" x="340" y="270" text-anchor="middle">Raspberry Pi Zero 2W</text>
+<text class="ts" x="340" y="290" text-anchor="middle">GPIO + I2C + I2S</text>
+<text class="ts" x="340" y="308" text-anchor="middle">BT + Wi-Fi</text>
+<text class="ts" x="340" y="326" text-anchor="middle">5V via MT3608</text>
+</g>
+
+<g class="c-amber">
+<rect x="40" y="100" width="170" height="60" rx="8" stroke-width="0.5"/>
+<text class="th" x="125" y="125" text-anchor="middle">Batterie 18650</text>
+<text class="ts" x="125" y="145" text-anchor="middle">2x parallelo + TP4056</text>
+</g>
+
+<g class="c-blue">
+<rect x="40" y="220" width="170" height="60" rx="8" stroke-width="0.5"/>
+<text class="th" x="125" y="245" text-anchor="middle">Disco</text>
+<text class="ts" x="125" y="265" text-anchor="middle">4 fili: 2 NSI + 2 pulse</text>
+</g>
+
+<g class="c-blue">
+<rect x="40" y="310" width="170" height="60" rx="8" stroke-width="0.5"/>
+<text class="th" x="125" y="335" text-anchor="middle">Hook switch</text>
+<text class="ts" x="125" y="355" text-anchor="middle">2 fili: GPIO 27</text>
+</g>
+
+<g class="c-coral">
+<rect x="40" y="400" width="170" height="60" rx="8" stroke-width="0.5"/>
+<text class="th" x="125" y="425" text-anchor="middle">Cornetta</text>
+<text class="ts" x="125" y="445" text-anchor="middle">Speaker + mic</text>
+</g>
+
+<g class="c-coral">
+<rect x="470" y="100" width="170" height="60" rx="8" stroke-width="0.5"/>
+<text class="th" x="555" y="125" text-anchor="middle">DAC PCM5102A</text>
+<text class="ts" x="555" y="145" text-anchor="middle">I2S → speaker</text>
+</g>
+
+<g class="c-coral">
+<rect x="470" y="180" width="170" height="60" rx="8" stroke-width="0.5"/>
+<text class="th" x="555" y="205" text-anchor="middle">ADC INMP441</text>
+<text class="ts" x="555" y="225" text-anchor="middle">mic → I2S</text>
+</g>
+
+<g class="c-teal">
+<rect x="470" y="260" width="170" height="60" rx="8" stroke-width="0.5"/>
+<text class="th" x="555" y="285" text-anchor="middle">Display OLED</text>
+<text class="ts" x="555" y="305" text-anchor="middle">I2C 0x3C</text>
+</g>
+
+<g class="c-green">
+<rect x="470" y="340" width="170" height="60" rx="8" stroke-width="0.5"/>
+<text class="th" x="555" y="365" text-anchor="middle">LED RGB</text>
+<text class="ts" x="555" y="385" text-anchor="middle">PWM 3 canali</text>
+</g>
+
+<g class="c-red">
+<rect x="240" y="450" width="200" height="80" rx="8" stroke-width="0.5"/>
+<text class="th" x="340" y="475" text-anchor="middle">Driver campanello</text>
+<text class="ts" x="340" y="495" text-anchor="middle">XL6009 boost +</text>
+<text class="ts" x="340" y="513" text-anchor="middle">L9110S H-bridge</text>
+</g>
+
+<g class="c-red">
+<rect x="470" y="450" width="170" height="60" rx="8" stroke-width="0.5"/>
+<text class="th" x="555" y="475" text-anchor="middle">Campanello</text>
+<text class="ts" x="555" y="495" text-anchor="middle">2 bobine originali</text>
+</g>
+
+<line x1="210" y1="130" x2="240" y2="265" stroke="#854F0B" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="210" y1="250" x2="240" y2="280" stroke="#185FA5" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="210" y1="340" x2="240" y2="305" stroke="#185FA5" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="210" y1="425" x2="240" y2="320" stroke="#993C1D" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<line x1="440" y1="280" x2="470" y2="130" stroke="#993C1D" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="440" y1="285" x2="470" y2="210" stroke="#993C1D" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="440" y1="290" x2="470" y2="290" stroke="#0F6E56" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="440" y1="300" x2="470" y2="370" stroke="#3B6D11" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<line x1="470" y1="490" x2="440" y2="490" stroke="#A32D2D" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="340" y1="340" x2="340" y2="450" stroke="#A32D2D" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<line x1="190" y1="160" x2="290" y2="240" stroke="#854F0B" stroke-width="0.5" stroke-dasharray="3 3"/>
+<text class="ts" x="265" y="210" text-anchor="end" fill="#854F0B">5V via MT3608</text>
+
+<text class="ts" x="225" y="270" fill="#185FA5">GPIO</text>
+<text class="ts" x="225" y="335" fill="#185FA5">GPIO</text>
+<text class="ts" x="225" y="400" fill="#993C1D">audio</text>
+<text class="ts" x="450" y="180" text-anchor="end" fill="#993C1D">I2S</text>
+<text class="ts" x="450" y="290" text-anchor="end" fill="#0F6E56">I2C</text>
+
+<line x1="40" y1="560" x2="60" y2="560" stroke="#854F0B" stroke-width="1.5"/>
+<text class="ts" x="68" y="564">power</text>
+<line x1="130" y1="560" x2="150" y2="560" stroke="#185FA5" stroke-width="1.5"/>
+<text class="ts" x="158" y="564">GPIO digitale</text>
+<line x1="260" y1="560" x2="280" y2="560" stroke="#993C1D" stroke-width="1.5"/>
+<text class="ts" x="288" y="564">audio I2S</text>
+<line x1="370" y1="560" x2="390" y2="560" stroke="#0F6E56" stroke-width="1.5"/>
+<text class="ts" x="398" y="564">I2C</text>
+<line x1="440" y1="560" x2="460" y2="560" stroke="#A32D2D" stroke-width="1.5"/>
+<text class="ts" x="468" y="564">alta tensione</text>
+
+</svg>

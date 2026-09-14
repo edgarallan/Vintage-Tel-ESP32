@@ -1,0 +1,66 @@
+# Vintage Tel BL — file di configurazione
+# Copia in config.yaml e personalizza
+# Telefono come vivavoce Bluetooth HFP del cellulare.
+
+# ─── Bluetooth ───────────────────────────────────────────────────
+bluetooth:
+  enabled: true
+  device_name: "Vintage SIP 1970"
+  auto_reconnect_mac: "AA:BB:CC:DD:EE:FF"   # MAC del tuo cellulare
+
+# ─── Disco combinatore ───────────────────────────────────────────
+dial:
+  pulse_bouncetime_ms: 50
+  digit_timeout_s: 0.4         # fallback fine-cifra: se gli impulsi si fermano
+                               # per questo tempo, la cifra è finalizzata anche
+                               # senza il rilascio NSI (0 = fallback disattivo)
+  dial_timeout_s: 8             # attesa max tra una cifra e la successiva
+  quick_dial_timeout_s: 1.5     # pausa dopo singola cifra prima del quick-dial
+  zero_pulses: 10              # IT: 10 impulsi = 0
+
+# ─── Hook switch (gancio) ────────────────────────────────────────
+hook:
+  inverted: false
+  debounce_ms: 100
+
+# ─── Campanello elettromeccanico ─────────────────────────────────
+bell:
+  enabled: true
+  frequency_hz: 22
+  pattern_on_ms: 1000
+  pattern_off_ms: 4000
+  max_rings: 30
+
+# ─── Audio ───────────────────────────────────────────────────────
+# I gain pilotano i softvol ALSA (PhoneSoftVol / PhoneCaptureVol in asound.conf)
+# e agiscono su tutto il path cornetta: toni di sistema + audio chiamata BT/SIP.
+audio:
+  sample_rate: 16000
+  mic_gain_db: 20         # boost microfono cornetta (dB, max +30)
+  speaker_gain_db: 0      # livello altoparlante cornetta (dB, max 0)
+
+# ─── Display OLED ────────────────────────────────────────────────
+display:
+  enabled: true
+  i2c_address: 0x3C
+  show_clock_when_idle: true
+  rotation: 0
+
+# ─── LED RGB di stato ────────────────────────────────────────────
+led:
+  enabled: true
+  brightness: 50
+
+# ─── Rubrica ─────────────────────────────────────────────────────
+phonebook:
+  db_path: "/home/pi/vintage_tel_bl/phonebook.db"
+  # Quick-dial: componi singola cifra dopo aver sollevato e attendi 1.5s
+  quick_dial:
+    1: "+393331234567"   # esempio
+    2: "+393339876543"
+    9: "112"             # emergenze
+
+# ─── Logging ─────────────────────────────────────────────────────
+logging:
+  level: INFO            # DEBUG | INFO | WARNING | ERROR
+  log_file: /var/log/vintage-tel.log

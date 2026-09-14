@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 580" role="img" aria-label="Opzioni posizionamento display OLED">
+<title>Opzioni di posizionamento del display</title>
+<desc>Tre opzioni di montaggio del display OLED nascosto: retro, fondo, sotto coperchio</desc>
+<style>
+  text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #2C2C2A; }
+  .t { font-size: 14px; }
+  .ts { font-size: 12px; }
+  .th { font-size: 14px; font-weight: 500; }
+  .c-blue rect { fill: #E6F1FB; stroke: #185FA5; }
+  .c-blue .th, .c-blue .t { fill: #0C447C; }
+  .c-blue .ts { fill: #185FA5; }
+  .c-teal rect { fill: #E1F5EE; stroke: #0F6E56; }
+  .c-teal .th, .c-teal .t { fill: #085041; }
+  .c-teal .ts { fill: #0F6E56; }
+  .c-amber rect { fill: #FAEEDA; stroke: #BA7517; }
+  .c-amber .th, .c-amber .t { fill: #633806; }
+  .c-amber .ts { fill: #854F0B; }
+  @media (prefers-color-scheme: dark) {
+    text { fill: #D3D1C7; }
+    .c-blue rect { fill: #0C447C; stroke: #85B7EB; }
+    .c-blue .th, .c-blue .t { fill: #E6F1FB; }
+    .c-blue .ts { fill: #85B7EB; }
+    .c-teal rect { fill: #085041; stroke: #5DCAA5; }
+    .c-teal .th, .c-teal .t { fill: #E1F5EE; }
+    .c-teal .ts { fill: #5DCAA5; }
+    .c-amber rect { fill: #633806; stroke: #FAC775; }
+    .c-amber .th, .c-amber .t { fill: #FAEEDA; }
+    .c-amber .ts { fill: #FAC775; }
+  }
+</style>
+
+<text class="th" x="340" y="30" text-anchor="middle">Step 8 — posizionamento display OLED</text>
+<text class="ts" x="340" y="50" text-anchor="middle">Tre opzioni per mostrare il display senza rovinare l'estetica</text>
+
+<g transform="translate(40, 90)">
+<polygon points="20,140 20,60 70,30 200,30 250,60 250,140 200,170 70,170" fill="#888780" stroke="#2C2C2A" stroke-width="0.8"/>
+<polygon points="20,60 70,30 200,30 250,60 200,90 70,90" fill="#B4B2A9" stroke="#2C2C2A" stroke-width="0.5"/>
+<rect x="100" y="50" width="50" height="20" rx="2" fill="#1D9E75" stroke="#0F6E56" stroke-width="0.5"/>
+<text class="ts" x="125" y="63" text-anchor="middle" fill="#E1F5EE">12:34</text>
+<line x1="125" y1="50" x2="125" y2="0" stroke="#888780" stroke-width="0.5" stroke-dasharray="3 3"/>
+</g>
+
+<g transform="translate(255, 90)">
+<polygon points="20,140 20,60 70,30 200,30 250,60 250,140 200,170 70,170" fill="#888780" stroke="#2C2C2A" stroke-width="0.8"/>
+<polygon points="20,140 70,170 200,170 250,140 200,110 70,110" fill="#5F5E5A" stroke="#2C2C2A" stroke-width="0.5"/>
+<rect x="100" y="120" width="50" height="20" rx="2" fill="#1D9E75" stroke="#0F6E56" stroke-width="0.5"/>
+<text class="ts" x="125" y="133" text-anchor="middle" fill="#E1F5EE">12:34</text>
+<line x1="125" y1="155" x2="125" y2="220" stroke="#888780" stroke-width="0.5" stroke-dasharray="3 3"/>
+</g>
+
+<g transform="translate(470, 90)">
+<polygon points="20,140 20,60 70,30 200,30 250,60 250,140 200,170 70,170" fill="#888780" stroke="#2C2C2A" stroke-width="0.8"/>
+<polygon points="20,60 70,30 200,30 250,60 200,90 70,90" fill="#B4B2A9" stroke="#2C2C2A" stroke-width="0.5"/>
+<rect x="95" y="40" width="60" height="40" rx="3" fill="#D3D1C7" stroke="#2C2C2A" stroke-width="0.5" stroke-dasharray="3 2"/>
+<rect x="105" y="50" width="40" height="20" rx="2" fill="#1D9E75" stroke="#0F6E56" stroke-width="0.5"/>
+<text class="ts" x="125" y="63" text-anchor="middle" fill="#E1F5EE">12:34</text>
+<line x1="155" y1="60" x2="220" y2="20" stroke="#888780" stroke-width="0.5" stroke-dasharray="3 3"/>
+</g>
+
+<g class="c-blue">
+<rect x="20" y="320" width="210" height="220" rx="8" stroke-width="0.5"/>
+<text class="th" x="125" y="345" text-anchor="middle">Opzione A — sul retro</text>
+<text class="ts" x="35" y="370">Praticabile un foro 25x15mm</text>
+<text class="ts" x="35" y="388">dietro al telefono</text>
+<text class="ts" x="35" y="412">Vantaggi:</text>
+<text class="ts" x="35" y="430">+ ben visibile da seduti</text>
+<text class="ts" x="35" y="448">+ accesso facile per manut.</text>
+<text class="ts" x="35" y="478">Svantaggi:</text>
+<text class="ts" x="35" y="496">− altera la superficie</text>
+<text class="ts" x="35" y="514">− va finito con plexiglass</text>
+</g>
+
+<g class="c-teal">
+<rect x="240" y="320" width="200" height="220" rx="8" stroke-width="0.5"/>
+<text class="th" x="340" y="345" text-anchor="middle">Opzione B — sul fondo</text>
+<text class="ts" x="255" y="370">Display rivolto verso il basso</text>
+<text class="ts" x="255" y="388">capovolgi per vederlo</text>
+<text class="ts" x="255" y="412">Vantaggi:</text>
+<text class="ts" x="255" y="430">+ invisibile in posa normale</text>
+<text class="ts" x="255" y="448">+ stile easter egg</text>
+<text class="ts" x="255" y="478">Svantaggi:</text>
+<text class="ts" x="255" y="496">− scomodo per uso frequente</text>
+<text class="ts" x="255" y="514">− richiede sollevare</text>
+</g>
+
+<g class="c-amber">
+<rect x="450" y="320" width="210" height="220" rx="8" stroke-width="0.5"/>
+<text class="th" x="555" y="345" text-anchor="middle">Opzione C — coperchio</text>
+<text class="ts" x="465" y="370">Piccolo sportello rimovibile</text>
+<text class="ts" x="465" y="388">sopra il piano</text>
+<text class="ts" x="465" y="412">Vantaggi:</text>
+<text class="ts" x="465" y="430">+ totalmente reversibile</text>
+<text class="ts" x="465" y="448">+ telefono resta originale</text>
+<text class="ts" x="465" y="478">Svantaggi:</text>
+<text class="ts" x="465" y="496">− richiede stampa 3D</text>
+<text class="ts" x="465" y="514">− visibile da vicino</text>
+</g>
+
+<text class="ts" x="165" y="290" text-anchor="middle">retro</text>
+<text class="ts" x="380" y="290" text-anchor="middle">fondo</text>
+<text class="ts" x="595" y="290" text-anchor="middle">coperchio</text>
+
+</svg>

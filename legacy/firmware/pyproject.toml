@@ -1,0 +1,8 @@
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+# test_hardware.py è uno script di bring-up manuale (richiede il Pi reale),
+# non logica testabile off-Pi.
+omit = ["src/test_hardware.py"]

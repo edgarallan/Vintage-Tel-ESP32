@@ -1,0 +1,12 @@
+# Vintage Tel BL — dipendenze di sviluppo/test
+# Sufficienti per eseguire la suite off-Pi (i driver hardware sono protetti da
+# try/except ImportError, quindi gpiozero/dbus/luma non servono).
+#
+#   python3 -m venv .venv-test
+#   .venv-test/bin/pip install -r requirements-dev.txt
+#   .venv-test/bin/python -m pytest
+
+pytest>=8.0
+pytest-asyncio>=0.23
+pytest-cov>=5.0
+PyYAML>=6.0

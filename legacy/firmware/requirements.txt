@@ -1,0 +1,23 @@
+# Vintage Tel BL — Python dependencies
+
+# GPIO & hardware
+gpiozero>=2.0
+RPi.GPIO>=0.7.1
+
+# Configurazione
+PyYAML>=6.0
+
+# Display OLED
+luma.oled>=3.13
+Pillow>=10.0
+
+# Audio (toni di sistema)
+numpy>=1.24
+sounddevice>=0.4.6
+
+# DBus / oFono (Bluetooth HFP)
+dbus-python>=1.3.2
+PyGObject>=3.46
+
+# Utility
+python-dateutil>=2.8
