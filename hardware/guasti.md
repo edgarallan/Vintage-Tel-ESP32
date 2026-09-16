@@ -107,6 +107,44 @@ entra in modalità programmazione e l'applicazione non parte affatto.
 
 ---
 
+## Il microfono che non si trova
+
+**Sintomo.** Il percorso ADC del codec e' configurato, l'I2S legge, ma i numeri non hanno
+senso: livelli di 1-3 su 32767, poi centinaia, e rapporti voce/silenzio che passano da 2,48
+a 0,88 sullo stesso ingresso a distanza di minuti.
+
+**Prima causa, trovata: mancava il filo dei dati.** `GPIO 33` non era mai stato collegato a
+`TXSDA`, perche' costruendo la sola riproduzione era stato dichiarato rimandabile — e poi
+dimenticato quando i due fili dati sono stati scambiati. Senza linea dati in ingresso l'ADC
+converte benissimo e quello che produce non arriva da nessuna parte. Leggere **esattamente
+1-3** e' la firma: un ingresso I2S senza filo, non un microfono debole.
+
+**Seconda causa: il microfono di bordo non e' sul percorso analogico.** Con un colpetto
+d'unghia **direttamente sopra** il microfono della scheda — un transitorio circa 40 dB sopra
+una voce, impossibile da confondere col rumore — nessuno dei tre ingressi reagisce:
+
+| | Fondo | Colpetti |
+|---|---|---|
+| INPUT1 (preamp +40 dB) | 20075, cioe' **61% del fondo scala** | 29255 |
+| INPUT2 (boost diretto) | 1299 | 1212 |
+| INPUT3 (boost diretto) | **32768, saturo** | 7013 |
+
+Il MEMS a bordo e' probabilmente **digitale**, con un'uscita che non passa dall'ADC.
+
+**Terza cosa imparata, sul metodo.** Il guadagno digitale dell'ADC non serve a tirare fuori
+un segnale debole: sta **dopo** il convertitore e amplifica segnale e rumore nella stessa
+misura. Misurato: portandolo a +30 dB il rumore e' salito da 286 a 9198 — esattamente 32
+volte — e la voce non e' emersa. L'unico guadagno che migliora il rapporto e' quello
+**analogico**, prima dell'ADC.
+
+> **Non si tara un percorso microfonico senza un microfono noto collegato.** Senza una
+> sorgente di riferimento si insegue il rumore, e le misure non sono nemmeno riproducibili.
+> Con la capsula della cornetta attaccata la taratura diventa banale: si parla e si guarda
+> il livello.
+
+I guadagni sono stati riportati a 0 dB, che e' un punto di partenza prudente e non un valore
+scelto: +40 dB mandava l'ingresso a saturazione da solo, senza nessuna sorgente.
+
 ## La seriale sputa megabyte che non possono esistere
 
 **Sintomo.** Catture da 9 MB in 25 secondi, con righe ripetute decine di volte a parità di

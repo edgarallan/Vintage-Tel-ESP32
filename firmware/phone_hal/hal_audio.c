@@ -1,10 +1,12 @@
 /*
  * hal_audio.c — I2S e configurazione del codec WM8960.
  *
- * STATO: solo RIPRODUZIONE. Il percorso del microfono arrivera' dopo, quando
- * questo sara' verificato. E' voluto: sono meno di venti registri invece di
- * quaranta, e soprattutto l'esito e' netto — o si sente il tono o non si sente.
- * Con entrambi i versi insieme, un silenzio non direbbe da che parte guardare.
+ * Riproduzione e registrazione, in full duplex su un solo peripheral I2S.
+ *
+ * La riproduzione e' stata costruita e verificata per prima, da sola: sono meno
+ * registri, e l'esito e' netto — o si sente il tono o non si sente. Con
+ * entrambi i versi insieme fin dall'inizio, un silenzio non avrebbe detto da
+ * che parte guardare.
  *
  * IL CODEC NON SI PUO' RILEGGERE (vedi hal_codec.c): i registri sono di sola
  * scrittura e non esiste modo di verificare che una configurazione sia stata
@@ -31,6 +33,8 @@ static const char *TAG = "hal_audio";
 #define SAMPLE_RATE   16000     /* come i toni e come mSBC a banda larga */
 
 /* --- Registri del WM8960 usati qui ---------------------------------------- */
+#define R_LIN_VOL       0x00
+#define R_RIN_VOL       0x01
 #define R_LOUT1_VOL     0x02
 #define R_ROUT1_VOL     0x03
 #define R_CLOCKING1     0x04
@@ -40,19 +44,28 @@ static const char *TAG = "hal_audio";
 #define R_RDAC_VOL      0x0B
 #define R_PWR_MGMT1     0x19
 #define R_PWR_MGMT2     0x1A
+#define R_LADC_VOL      0x15
+#define R_RADC_VOL      0x16
+#define R_ADCL_PATH     0x20
+#define R_ADCR_PATH     0x21
 #define R_LEFT_OUTMIX   0x22
 #define R_RIGHT_OUTMIX  0x25
 #define R_PWR_MGMT3     0x2F
 
 static i2s_chan_handle_t s_tx;
+static i2s_chan_handle_t s_rx;
 static bool              s_pronto;
 
 static bool configura_codec(void)
 {
     struct { uint8_t reg; uint16_t val; const char *cosa; } seq[] = {
-        /* Riferimento di tensione e VMID a 50 kOhm: senza, il codec resta
-           spento qualunque altra cosa gli si scriva. */
-        { R_PWR_MGMT1,    0x0C0, "VREF + VMID" },
+        /* Riferimento di tensione e VMID a 50 kOhm — senza, il codec resta
+           spento qualunque altra cosa gli si scriva — piu' i due ADC, i mixer
+           d'ingresso, e MICBIAS.
+           MICBIAS non e' opzionale qui: la capsula che andra' nella cornetta e'
+           un ELECTRET, e un electret senza tensione di polarizzazione non e'
+           un microfono debole, e' un microfono muto. */
+        { R_PWR_MGMT1,    0x0FE, "VREF + VMID + ADC + ingressi + MICBIAS" },
 
         /* Accende i due DAC e le due uscite cuffia. La capsula della cornetta
            andra' sull'uscita CUFFIA e non su quella speaker, che e' a ponte e
@@ -65,8 +78,38 @@ static bool configura_codec(void)
          * sintomo osservato il 13/09/2026. */
         { R_PWR_MGMT2,    0x1E2, "DAC L/R + cuffia + massa virtuale OUT3" },
 
-        /* Mixer d'uscita alimentati: sono lo stadio fra DAC e cuffia. */
-        { R_PWR_MGMT3,    0x00C, "mixer d'uscita" },
+        /* Mixer d'uscita e preamplificatori d'ingresso. */
+        { R_PWR_MGMT3,    0x03C, "mixer d'uscita + preamplificatori mic" },
+
+        /* Collega INPUT1 all'ingresso invertente del preamplificatore, e il
+           preamplificatore al mixer di boost. Sono due passaggi distinti: senza
+           il secondo il segnale entra e non arriva da nessuna parte.
+           INPUT1 e' dove andra' il filo bianco della cornetta.
+
+           Il boost del microfono e' a 0 dB (bit 5:4 = 00).
+
+           GUADAGNO DA TARARE CON LA CAPSULA VERA. Il 16/09/2026, provando con
+           +20 dB di preamplificatore piu' +20 dB di boost, l'ingresso andava a
+           saturazione da solo: fondo a 20075 su 32767 con nessuna sorgente
+           collegata, cioe' il 61% del fondo scala occupato dal nulla. Sopra non
+           resta spazio per un segnale. */
+        { R_ADCL_PATH,    0x108, "INPUT1 -> preamp -> boost 0 dB, sinistra" },
+        { R_ADCR_PATH,    0x108, "INPUT1 -> preamp -> boost 0 dB, destra" },
+
+        /* Preamplificatore a 0 dB e ingresso non muto. Dopo il reset gli
+           ingressi sono MUTI, quindi il bit 7 a zero non e' ridondante.
+
+           Zero dB e' un PUNTO DI PARTENZA PRUDENTE, non un valore scelto: si
+           alzera' parlando nella cornetta e guardando il livello salire. Con
+           una sorgente vera la taratura e' immediata; senza, si insegue il
+           rumore — ed e' quello che e' successo per un'ora il 16/09/2026,
+           tarando un percorso microfonico senza nessun microfono collegato. */
+        { R_LIN_VOL,      0x117, "preamp sinistro, 0 dB, non muto" },
+        { R_RIN_VOL,      0x117, "preamp destro, 0 dB, non muto" },
+
+        /* Volume digitale degli ADC a 0 dB. */
+        { R_LADC_VOL,     0x1C3, "volume ADC sinistro" },
+        { R_RADC_VOL,     0x1C3, "volume ADC destro" },
 
         /* SYSCLK preso direttamente da MCLK, nessun PLL, nessuna divisione.
            Con MCLK = 256 x 16 kHz = 4,096 MHz i conti tornano esatti e non
@@ -132,7 +175,7 @@ void hal_audio_init(void)
     }
 
     i2s_chan_config_t ch = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_0, I2S_ROLE_MASTER);
-    ESP_ERROR_CHECK(i2s_new_channel(&ch, &s_tx, NULL));
+    ESP_ERROR_CHECK(i2s_new_channel(&ch, &s_tx, &s_rx));
 
     i2s_std_config_t std = {
         .clk_cfg = {
@@ -156,17 +199,21 @@ void hal_audio_init(void)
             .bclk = PIN_I2S_BCLK,
             .ws   = PIN_I2S_WS,
             .dout = PIN_I2S_DOUT,
-            .din  = I2S_GPIO_UNUSED,
+            .din  = PIN_I2S_DIN,
         },
     };
+    /* Le due direzioni condividono peripheral, pin di clock e configurazione:
+       e' un solo bus I2S percorso nei due versi. */
     ESP_ERROR_CHECK(i2s_channel_init_std_mode(s_tx, &std));
+    ESP_ERROR_CHECK(i2s_channel_init_std_mode(s_rx, &std));
     ESP_ERROR_CHECK(i2s_channel_enable(s_tx));
+    ESP_ERROR_CHECK(i2s_channel_enable(s_rx));
 
     /* Un momento perche' i clock si assestino prima di mandare campioni. */
     vTaskDelay(pdMS_TO_TICKS(50));
 
     s_pronto = true;
-    ESP_LOGI(TAG, "I2S a %d Hz, MCLK su GPIO%d, codec configurato in uscita",
+    ESP_LOGI(TAG, "I2S full duplex a %d Hz, MCLK su GPIO%d, codec configurato",
              SAMPLE_RATE, PIN_I2S_MCLK);
 }
 
@@ -192,6 +239,40 @@ bool hal_audio_play(const int16_t *mono, size_t n)
         }
         mono += blocco;
         n    -= blocco;
+    }
+    return true;
+}
+
+/* Legge `n` campioni mono dal microfono. Il codec manda stereo: si tiene il
+   canale sinistro, che e' quello dove arriva LINPUT1 — il filo bianco della
+   cornetta. */
+bool hal_audio_record(int16_t *mono, size_t n)
+{
+    if (!s_pronto || !mono || n == 0) {
+        return false;
+    }
+
+    int16_t stereo[128 * 2];
+    while (n > 0) {
+        const size_t blocco = n > 128 ? 128 : n;
+        size_t letti = 0;
+        const esp_err_t err = i2s_channel_read(s_rx, stereo,
+                                               blocco * 2 * sizeof(int16_t),
+                                               &letti, 200);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "lettura I2S fallita: %s", esp_err_to_name(err));
+            return false;
+        }
+        if (letti == 0) {
+            ESP_LOGE(TAG, "lettura I2S vuota: nessun campione dal codec");
+            return false;
+        }
+        const size_t campioni = letti / (2 * sizeof(int16_t));
+        for (size_t i = 0; i < campioni; i++) {
+            mono[i] = stereo[i * 2];
+        }
+        mono += campioni;
+        n    -= campioni;
     }
     return true;
 }

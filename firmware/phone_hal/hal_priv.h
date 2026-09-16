@@ -53,6 +53,7 @@ esp_err_t hal_codec_write(uint8_t reg, uint16_t val);
 
 void hal_audio_init(void);
 bool hal_audio_play(const int16_t *mono, size_t n);
+bool hal_audio_record(int16_t *mono, size_t n);
 
 void hal_display_init(void);
 void hal_display_state(const char *state, const char *extra);
