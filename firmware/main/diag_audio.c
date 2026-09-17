@@ -155,9 +155,27 @@ static int32_t picco_su(int16_t *buf, int secondi)
  * sequenza dei numeri mostra da sola dove c'era voce. Nessun segnale acustico,
  * quindi nessun eco da misurare.
  */
-#define R_LIN_VOL   0x00
-#define R_RIN_VOL   0x01
-#define GUADAGNO    0x13F   /* +30 dB sul preamplificatore */
+#define R_LIN_VOL     0x00
+#define R_RIN_VOL     0x01
+#define R_ADCL_PATH   0x20
+#define R_ADCR_PATH   0x21
+
+/*
+ * Monitor continuo con il BOOST del microfono a +13 dB.
+ *
+ * Il preamplificatore resta a +20 dB, dove e' stato misurato buono. Il
+ * guadagno che manca si prende dal boost, che e' uno stadio DIVERSO e sempre
+ * prima dell'ADC: a +30 dB il preamplificatore amplificava soprattutto il
+ * proprio rumore — fondo da 70 a 1800 — mentre la voce restava ferma.
+ *
+ * Termine di paragone, misurato il 17/09 con preamp +20 e boost 0:
+ *
+ *     fondo 70    voce 4248 (13% del fondo scala)
+ *
+ * Il bersaglio per una voce telefonica e' il 30-40%. Se il boost porta la voce
+ * li' senza alzare il fondo in proporzione, e' la strada giusta.
+ */
+#define BOOST_13DB    0x118   /* LMN1 + LMIC2B + boost 01 = +13 dB */
 
 void diag_audio_run(void)
 {
@@ -165,28 +183,27 @@ void diag_audio_run(void)
     hal_audio_init();
     scegli_ingresso(1);
 
-    hal_codec_write(R_LIN_VOL, GUADAGNO);
-    hal_codec_write(R_RIN_VOL, GUADAGNO);
+    hal_codec_write(R_LIN_VOL, 0x132);        /* preamp +20 dB, invariato */
+    hal_codec_write(R_RIN_VOL, 0x132);
+    hal_codec_write(R_ADCL_PATH, BOOST_13DB);
+    hal_codec_write(R_ADCR_PATH, BOOST_13DB);
 
-    ESP_LOGW(TAG, "=== MONITOR CONTINUO, INPUT1 a +30 dB ===");
-    ESP_LOGW(TAG, "picco ogni mezzo secondo. Parla e taci quando vuoi.");
-    ESP_LOGW(TAG, "nessun bip: cosi' il microfono non sente l'eco della capsula");
+    ESP_LOGW(TAG, "=== MONITOR: preamp +20 dB, boost +13 dB ===");
+    ESP_LOGW(TAG, "parla e taci quando vuoi. Riferimento: fondo 70, voce 4248");
 
     static int16_t buf[CAMPIONI];
 
     for (;;) {
-        const int32_t p = picco_su(buf, 1);   /* ~1 s di finestra */
+        const int32_t p = picco_su(buf, 1);
         if (p < 0) {
             ESP_LOGE(TAG, "il microfono non manda dati");
             vTaskDelay(pdMS_TO_TICKS(500));
             continue;
         }
-        /* Una barra oltre al numero: la forma si legge a colpo d'occhio nella
-           colonna dei log, e una voce si riconosce dal profilo. */
         char barra[41];
         int n = (int)(p * 40 / 32767);
         if (n > 40) { n = 40; }
-        for (int i = 0; i < n; i++)  { barra[i] = '#'; }
+        for (int i = 0; i < n; i++) { barra[i] = '#'; }
         barra[n] = '\0';
         ESP_LOGI(TAG, "%5ld |%s", (long)p, barra);
     }
