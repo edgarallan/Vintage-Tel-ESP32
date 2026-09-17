@@ -45,6 +45,10 @@ void hal_bell_set_hz(int hz);   /* solo per la taratura */
 void hal_led_init(void);
 void hal_led_set(led_pattern_t pattern);
 
+/* Il LED come indicatore di livello, per i diagnostici. */
+void hal_led_vu(uint32_t livello, uint32_t fondo_scala);
+void hal_led_vu_off(void);
+
 i2c_master_bus_handle_t hal_i2c_bus(void);   /* creato una volta, condiviso */
 
 void      hal_codec_init(void);

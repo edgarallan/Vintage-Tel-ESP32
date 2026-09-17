@@ -199,3 +199,55 @@ duplicava i buffer parziali, e la coda della sessione di programmazione — il b
 parla a 460800 e la ROM d'avvio a 74880, che letti a 115200 sembrano un guasto.
 
 Lo strumento buono è `firmware/tools/cattura.py`, con le trappole documentate in testa.
+
+## Un fondo di rumore troppo bello per essere vero
+
+**Sintomo.** Misurando il silenzio con la capsula collegata, il livello di fondo risulta
+**4**, contro i 70 di tutte le misure precedenti. Con la voce a 22690 il rapporto sarebbe
+di 75 dB, un risultato da studio di registrazione.
+
+**Perché era falso.** Quaranta letture consecutive davano 4, 4, 5, 4, 4, 5. **Il rumore
+fluttua; quello no.** Non era un fondo basso: era il convertitore che consegnava silenzio.
+E se attenuava il silenzio attenuava anche la voce, quindi la misura di livello presa
+nella stessa sessione — 600 di mediana, presa per "livello a distanza naturale" — era
+sbagliata dello stesso fattore, e ha portato a sovrastimare di 8 dB il guadagno da
+aggiungere.
+
+> **Un valore costante non è una misura di rumore. Prima di rallegrarsi di un fondo basso,
+> guardare se oscilla.**
+
+## L'I2S resta in stallo dopo lo stacca-e-riattacca dell'USB
+
+**Sintomo.** Dopo aver scollegato e ricollegato il cavo USB, il diagnostico ripete
+all'infinito `il microfono non manda dati`: `i2s_channel_read` non restituisce campioni.
+Il chip è vivo, il codice gira, il microfono è integro.
+
+**Rimedio.** Un riavvio vero sulla linea seriale (`cattura.py` senza `NORESET=1`, che
+pilota DTR/RTS) rimette a posto tutto. Lo stacco dell'USB da solo non basta.
+
+**Perché conta.** In questo stato il codec non si limita a tacere: nelle sessioni in cui è
+capitato ha restituito livelli fino a cinque volte più bassi del vero, e tutte le misure
+di guadagno fatte sopra sono da buttare. Se i numeri di oggi non tornano con quelli di
+ieri, **prima di cercare la causa acustica, riavviare e rimisurare.**
+
+## La voce si interrompe a scatti: "cr cr cr"
+
+**Sintomo.** Chi ascolta dall'altro capo sente la voce metallica e discontinua, con
+microinterruzioni regolari. In ricezione invece è tutto pulito.
+
+**La distinzione che orienta.** La saturazione **sporca** i picchi forti; un buco
+**interrompe**. "Si ferma per un attimo" è un buco, e i buchi si cercano nelle code, non
+nei guadagni.
+
+**Causa.** Il percorso in ricezione aveva una scorta di 30 ms, quello in trasmissione no:
+asimmetria rimasta da quando i due sono stati scritti in momenti diversi. A dettare il
+ritmo in trasmissione è il quarzo del codec, a consumare è la radio Bluetooth col proprio
+orologio; i due derivano, e senza cuscinetto la coda si trova vuota a intervalli regolari.
+`hal_audio_tx_pop` restituiva zero e quel frame spariva.
+
+**Rimedio.** `TX_SCORTA` da 960 byte, gemella di `RX_SCORTA`, più il silenzio al posto del
+frame mancante per non mandare fuori sincrono il flusso. Contatori `s_tx_buchi` e
+`s_tx_scarti` per distinguere le due derive opposte senza tirare a indovinare.
+
+> **Quando due percorsi speculari si comportano in modo diverso, confrontarli riga per riga
+> prima di cercare la causa altrove.**

@@ -175,7 +175,9 @@ static int32_t picco_su(int16_t *buf, int secondi)
  * Il bersaglio per una voce telefonica e' il 30-40%. Se il boost porta la voce
  * li' senza alzare il fondo in proporzione, e' la strada giusta.
  */
-#define BOOST_13DB    0x118   /* LMN1 + LMIC2B + boost 01 = +13 dB */
+/* Guadagni di produzione: preamp +20 dB, boost 0 dB. Sono i valori migliori
+   misurati, e usarli qui rende i numeri confrontabili col riferimento. */
+#define BOOST_0DB     0x108   /* LMN1 + LMIC2B, boost 00 */
 
 void diag_audio_run(void)
 {
@@ -185,11 +187,13 @@ void diag_audio_run(void)
 
     hal_codec_write(R_LIN_VOL, 0x132);        /* preamp +20 dB, invariato */
     hal_codec_write(R_RIN_VOL, 0x132);
-    hal_codec_write(R_ADCL_PATH, BOOST_13DB);
-    hal_codec_write(R_ADCR_PATH, BOOST_13DB);
+    hal_codec_write(R_ADCL_PATH, BOOST_0DB);
+    hal_codec_write(R_ADCR_PATH, BOOST_0DB);
 
-    ESP_LOGW(TAG, "=== MONITOR: preamp +20 dB, boost +13 dB ===");
+    ESP_LOGW(TAG, "=== MONITOR: preamp +20 dB, boost 0 dB ===");
     ESP_LOGW(TAG, "parla e taci quando vuoi. Riferimento: fondo 70, voce 4248");
+    ESP_LOGW(TAG, "IL LED SEGUE IL LIVELLO: blu=silenzio verde=debole giallo=buono rosso=forte");
+    hal_led_init();
 
     static int16_t buf[CAMPIONI];
 
@@ -200,6 +204,10 @@ void diag_audio_run(void)
             vTaskDelay(pdMS_TO_TICKS(500));
             continue;
         }
+        /* Anche sul LED, per poter regolare la capsula guardando il telefono
+           invece del terminale. */
+        hal_led_vu((uint32_t)p, 8000);
+
         char barra[41];
         int n = (int)(p * 40 / 32767);
         if (n > 40) { n = 40; }

@@ -77,6 +77,12 @@ static esp_timer_handle_t   s_timer;
 static volatile led_pattern_t s_pattern = LED_IDLE;
 static volatile uint32_t      s_inizio_ms;
 
+/* Modalita' indicatore di livello, usata solo dai diagnostici: il LED smette
+   di rappresentare lo stato e diventa uno strumento di misura da guardare
+   mentre si regola qualcosa con le mani. */
+static volatile bool    s_vu;
+static volatile uint8_t s_vu_r, s_vu_g, s_vu_b;
+
 /* Onda triangolare 0..255 sul periodo dato. */
 static uint8_t triangolo(uint32_t t_ms, uint32_t periodo_ms)
 {
@@ -116,18 +122,24 @@ static void disegna(void *arg)
 {
     (void)arg;
 
-    const led_pattern_t p = s_pattern;
-    const aspetto_t    *a = &s_aspetto[p];
-    const uint32_t   t_ms = (uint32_t)(esp_timer_get_time() / 1000) - s_inizio_ms;
+    uint8_t px[3];
 
-    const uint16_t scala = (uint16_t)luminosita(a, t_ms) * LUCE_MAX / 255;
+    if (s_vu) {
+        /* Verde, rosso, blu: l'ordine che vuole il WS2812. */
+        px[0] = s_vu_g;
+        px[1] = s_vu_r;
+        px[2] = s_vu_b;
+    } else {
+        const led_pattern_t p = s_pattern;
+        const aspetto_t    *a = &s_aspetto[p];
+        const uint32_t   t_ms = (uint32_t)(esp_timer_get_time() / 1000) - s_inizio_ms;
 
-    /* Il WS2812 vuole i byte in ordine verde, rosso, blu. */
-    const uint8_t px[3] = {
-        (uint8_t)(a->g * scala / 255),
-        (uint8_t)(a->r * scala / 255),
-        (uint8_t)(a->b * scala / 255),
-    };
+        const uint16_t scala = (uint16_t)luminosita(a, t_ms) * LUCE_MAX / 255;
+
+        px[0] = (uint8_t)(a->g * scala / 255);
+        px[1] = (uint8_t)(a->r * scala / 255);
+        px[2] = (uint8_t)(a->b * scala / 255);
+    }
 
     const rmt_transmit_config_t cfg = { .loop_count = 0 };
     rmt_transmit(s_canale, s_encoder, px, sizeof(px), &cfg);
@@ -183,4 +195,51 @@ void hal_led_set(led_pattern_t pattern)
     s_inizio_ms = (uint32_t)(esp_timer_get_time() / 1000);
     s_pattern   = pattern;
     ESP_LOGI(TAG, "LED -> %s", s_aspetto[pattern].nome);
+}
+
+/*
+ * Indicatore di livello: il LED diventa uno strumento di misura.
+ *
+ * Serve quando si regola qualcosa con le mani — la posizione di una capsula
+ * microfonica dentro una cornetta — e guardare i numeri su un terminale
+ * significa un giro di prova ogni due minuti. Con il livello sul LED la
+ * regolazione diventa immediata: si muove e si guarda.
+ *
+ * Il colore dice la fascia, la luminosita' l'intensita' dentro la fascia:
+ *
+ *   blu fioco   silenzio
+ *   verde       segnale debole
+ *   giallo      buono
+ *   rosso       forte, vicino alla saturazione
+ */
+void hal_led_vu(uint32_t livello, uint32_t fondo_scala)
+{
+    if (fondo_scala == 0) {
+        return;
+    }
+    uint32_t pct = livello * 100 / fondo_scala;
+    if (pct > 100) {
+        pct = 100;
+    }
+
+    uint8_t r = 0, g = 0, b = 0;
+    if (pct < 2) {
+        b = 8;                                  /* silenzio: un fioco blu */
+    } else if (pct < 10) {
+        g = (uint8_t)(20 + pct * 6);            /* verde crescente */
+    } else if (pct < 35) {
+        g = LUCE_MAX; r = (uint8_t)((pct - 10) * 2);   /* verso il giallo */
+    } else {
+        r = LUCE_MAX; g = (uint8_t)(LUCE_MAX > (pct - 35) ? LUCE_MAX - (pct - 35) : 0);
+    }
+
+    s_vu_r = r;
+    s_vu_g = g;
+    s_vu_b = b;
+    s_vu   = true;
+}
+
+void hal_led_vu_off(void)
+{
+    s_vu = false;
 }

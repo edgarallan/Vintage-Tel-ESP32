@@ -25,6 +25,7 @@
 #include "hal_priv.h"
 
 #include "driver/i2s_std.h"
+#include <inttypes.h>
 #include "esp_log.h"
 #include "freertos/ringbuf.h"
 #include "freertos/task.h"
@@ -52,6 +53,15 @@ static const char *TAG = "hal_audio";
    Trenta millisecondi si pagano in latenza ed e' un prezzo onesto: in una
    conversazione non si percepiscono, mentre i buchi si sentono tutti. */
 #define RX_SCORTA     960
+
+/* Scorta SIMMETRICA sul percorso in trasmissione, e per la stessa ragione.
+
+   Qui il ritmo lo detta il codec (16 kHz dal suo quarzo) mentre a consumare e'
+   la radio Bluetooth, che ha il PROPRIO orologio. I due non sono agganciati e
+   derivano lentamente l'uno rispetto all'altro: senza cuscinetto la coda si
+   trova vuota a intervalli regolari e chi ascolta sente la voce interrompersi
+   a scatti — "cr cr cr", segnalato durante le prove del 17/09/2026. */
+#define TX_SCORTA     960
 
 /* --- Registri del WM8960 usati qui ---------------------------------------- */
 #define R_LIN_VOL       0x00
@@ -90,6 +100,14 @@ static volatile bool   s_in_chiamata;
 
 /* Falso finche' la coda in ricezione non ha accumulato la scorta. */
 static bool s_rx_avviato;
+
+/* Idem per la trasmissione, piu' i contatori delle due patologie opposte:
+   coda vuota quando la radio chiede (buco) e coda piena quando il microfono
+   consegna (campioni buttati). Servono per distinguerle nel log invece di
+   tirare a indovinare. */
+static bool     s_tx_avviato;
+static uint32_t s_tx_buchi;
+static uint32_t s_tx_scarti;
 
 /* Generatore dei toni di sistema. Suona solo FUORI dalla chiamata: durante la
    conversazione l'uscita appartiene alla voce. */
@@ -147,15 +165,32 @@ static bool configura_codec(void)
 
            A +30 dB il fondo sale di venticinque volte mentre la voce resta
            ferma: il preamplificatore amplifica soprattutto il proprio rumore,
-           e sui picchi tosa. E' la stessa lezione del guadagno digitale, in
-           forma diversa — oltre un certo punto aggiungere guadagno PEGGIORA il
-           rapporto segnale/rumore invece di migliorarlo. */
+           e sui picchi tosa. Riprovato la sera dello stesso giorno con +30 dB
+           qui e +8 dB sull'ADC: fondo 312, cioe' la stessa conclusione.
+
+           Il guadagno che mancava sta quindi TUTTO sul volume digitale
+           dell'ADC (registri sotto), che moltiplica segnale e rumore nella
+           stessa misura e non aggiunge rumore proprio. */
         { R_LIN_VOL,      0x132, "preamp sinistro, +20 dB, non muto" },
         { R_RIN_VOL,      0x132, "preamp destro, +20 dB, non muto" },
 
-        /* Volume digitale degli ADC a 0 dB. */
-        { R_LADC_VOL,     0x1C3, "volume ADC sinistro" },
-        { R_RADC_VOL,     0x1C3, "volume ADC destro" },
+        /* Volume digitale degli ADC a +10 dB (0 dB = 0x1C3, passo 0,5 dB).
+
+           +10 dB SCELTO MISURANDO la sera del 17/09/2026, dopo il preamp:
+
+                        fondo   voce (mediana / picco)
+              0 dB         70    --      /  4248
+            +10 dB    170-320    2184    /  4196     <-- scelto
+            +18 dB        272    32768   /  32768    tosatura piena
+
+           Attenzione leggendo questa tabella: fra una cattura e l'altra il
+           livello della voce cambia anche di venti decibel a seconda di quanto
+           la bocca sta vicina alla capsula. Le righe non sono confrontabili fra
+           loro sulla voce — lo sono sul fondo. +10 dB e' il compromesso: alza
+           il parlato oltre il doppio e lascia 8 dB di margine prima di tosare
+           quando si alza il tono. */
+        { R_LADC_VOL,     0x1D7, "volume ADC sinistro, +10 dB" },
+        { R_RADC_VOL,     0x1D7, "volume ADC destro, +10 dB" },
 
         /* SYSCLK preso direttamente da MCLK, nessun PLL, nessuna divisione.
            Con MCLK = 256 x 16 kHz = 4,096 MHz i conti tornano esatti e non
@@ -366,11 +401,29 @@ size_t hal_audio_tx_pop(uint8_t *pcm, size_t n)
     if (!s_rb_tx) {
         return 0;
     }
-    /* Lo stack vuole esattamente n byte o niente: un frame parziale lo
-       manderebbe fuori sincrono. Ma "parziale" deve significare che i dati non
-       c'erano, non che erano a cavallo della fine dell'anello. */
+
+    /* Prima di cominciare a consumare si aspetta la scorta, e si ricomincia ad
+       aspettarla ogni volta che la coda si prosciuga. Nel frattempo si manda
+       SILENZIO invece di niente: il flusso verso il cellulare deve restare
+       continuo, un frame mancante lo manderebbe fuori sincrono. */
+    if (!s_tx_avviato) {
+        const size_t in_coda = RB_BYTES - xRingbufferGetCurFreeSize(s_rb_tx);
+        if (in_coda < TX_SCORTA) {
+            memset(pcm, 0, n);
+            return n;
+        }
+        s_tx_avviato = true;
+    }
+
+    /* "Parziale" deve significare che i dati non c'erano, non che erano a
+       cavallo della fine dell'anello: per quello c'e' estrai(). */
     const size_t presi = estrai(s_rb_tx, pcm, n);
-    return (presi == n) ? presi : 0;
+    if (presi < n) {
+        memset(pcm + presi, 0, n - presi);
+        s_tx_buchi++;
+        s_tx_avviato = false;
+    }
+    return n;
 }
 
 void hal_audio_set_chiamata(bool attiva)
@@ -378,6 +431,9 @@ void hal_audio_set_chiamata(bool attiva)
     /* Ogni chiamata riparte con la coda da riempire: quella precedente ha
        lasciato residui che non c'entrano niente con questa conversazione. */
     s_rx_avviato = false;
+    s_tx_avviato = false;
+    s_tx_buchi   = 0;
+    s_tx_scarti  = 0;
     s_in_chiamata = attiva;
     ESP_LOGI(TAG, "audio %s", attiva ? "in chiamata" : "a riposo");
 }
@@ -400,6 +456,7 @@ static void audio_task(void *arg)
     (void)arg;
     static int16_t mic[FRAME];
     static int16_t capsula[FRAME];
+    unsigned giri = 0;
 
     for (;;) {
         if (!hal_audio_record(mic, FRAME)) {
@@ -408,9 +465,23 @@ static void audio_task(void *arg)
         }
 
         if (s_in_chiamata) {
-            /* Verso il cellulare. */
-            xRingbufferSend(s_rb_tx, mic, sizeof(mic), 0);
+            /* Verso il cellulare. Timeout zero: se la coda e' piena si scarta,
+               ma lo si conta — e' la deriva opposta al buco. */
+            if (xRingbufferSend(s_rb_tx, mic, sizeof(mic), 0) != pdTRUE) {
+                s_tx_scarti++;
+            }
             hal_bt_audio_pronto();
+
+            /* Una riga al secondo, solo se c'e' qualcosa da dire. */
+            if (++giri >= 125) {
+                giri = 0;
+                if (s_tx_buchi || s_tx_scarti) {
+                    ESP_LOGW(TAG, "tx: %" PRIu32 " buchi, %" PRIu32 " scarti",
+                             s_tx_buchi, s_tx_scarti);
+                    s_tx_buchi  = 0;
+                    s_tx_scarti = 0;
+                }
+            }
 
             /* Dal cellulare, con scorta.
                Finche' non c'e' abbastanza materiale accumulato si manda
