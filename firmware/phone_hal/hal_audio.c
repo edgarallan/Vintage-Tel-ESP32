@@ -40,10 +40,18 @@ static const char *TAG = "hal_audio";
    sprecare la CPU in commutazioni. */
 #define FRAME         128
 
-/* Circa 50 ms di scorta per verso. Serve ad assorbire il fatto che il
-   Bluetooth consegna a pacchetti e l'I2S consuma a flusso costante: senza,
-   ogni piccolo ritardo diventa un buco udibile. */
-#define RB_BYTES      1600
+/* Circa 100 ms di capienza per verso. Serve ad assorbire il fatto che il
+   Bluetooth consegna a pacchetti e l'I2S consuma a flusso costante. */
+#define RB_BYTES      3200
+
+/* Quanta scorta accumulare prima di cominciare a suonare, e a cui tornare dopo
+   ogni svuotamento: 30 ms.
+   Senza, il task attacca a consumare appena arriva il primo pacchetto e resta
+   perennemente sul filo: al primo ritardo la coda si svuota, entra silenzio, e
+   si sente un gracchio. Con la scorta il ritardo viene assorbito.
+   Trenta millisecondi si pagano in latenza ed e' un prezzo onesto: in una
+   conversazione non si percepiscono, mentre i buchi si sentono tutti. */
+#define RX_SCORTA     960
 
 /* --- Registri del WM8960 usati qui ---------------------------------------- */
 #define R_LIN_VOL       0x00
@@ -79,6 +87,9 @@ static bool              s_pronto;
 static RingbufHandle_t s_rb_rx;   /* dal cellulare -> capsula d'ascolto */
 static RingbufHandle_t s_rb_tx;   /* microfono -> al cellulare */
 static volatile bool   s_in_chiamata;
+
+/* Falso finche' la coda in ricezione non ha accumulato la scorta. */
+static bool s_rx_avviato;
 
 /* Generatore dei toni di sistema. Suona solo FUORI dalla chiamata: durante la
    conversazione l'uscita appartiene alla voce. */
@@ -346,6 +357,9 @@ size_t hal_audio_tx_pop(uint8_t *pcm, size_t n)
 
 void hal_audio_set_chiamata(bool attiva)
 {
+    /* Ogni chiamata riparte con la coda da riempire: quella precedente ha
+       lasciato residui che non c'entrano niente con questa conversazione. */
+    s_rx_avviato = false;
     s_in_chiamata = attiva;
     ESP_LOGI(TAG, "audio %s", attiva ? "in chiamata" : "a riposo");
 }
@@ -380,14 +394,29 @@ static void audio_task(void *arg)
             xRingbufferSend(s_rb_tx, mic, sizeof(mic), 0);
             hal_bt_audio_pronto();
 
-            /* Dal cellulare. Se manca roba si riempie di silenzio invece di
-               ripetere il buffer precedente: un buco e' meno fastidioso di un
-               frammento che si ripete. */
+            /* Dal cellulare, con scorta.
+               Finche' non c'e' abbastanza materiale accumulato si manda
+               silenzio invece di consumare: e' il riempimento iniziale, e si
+               rifa' ogni volta che la coda si svuota. */
             size_t n = 0;
-            uint8_t *d = xRingbufferReceiveUpTo(s_rb_rx, &n, 0, sizeof(capsula));
-            if (d) {
-                memcpy(capsula, d, n);
-                vRingbufferReturnItem(s_rb_rx, d);
+            const size_t in_coda = RB_BYTES - xRingbufferGetCurFreeSize(s_rb_rx);
+
+            if (!s_rx_avviato) {
+                if (in_coda >= RX_SCORTA) {
+                    s_rx_avviato = true;
+                }
+            } else if (in_coda < sizeof(capsula)) {
+                /* Svuotata: si torna ad accumulare invece di procedere a
+                   singhiozzo. */
+                s_rx_avviato = false;
+            }
+
+            if (s_rx_avviato) {
+                uint8_t *d = xRingbufferReceiveUpTo(s_rb_rx, &n, 0, sizeof(capsula));
+                if (d) {
+                    memcpy(capsula, d, n);
+                    vRingbufferReturnItem(s_rb_rx, d);
+                }
             }
             if (n < sizeof(capsula)) {
                 memset((uint8_t *)capsula + n, 0, sizeof(capsula) - n);
