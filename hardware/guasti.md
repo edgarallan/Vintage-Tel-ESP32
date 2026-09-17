@@ -251,3 +251,23 @@ frame mancante per non mandare fuori sincrono il flusso. Contatori `s_tx_buchi` 
 
 > **Quando due percorsi speculari si comportano in modo diverso, confrontarli riga per riga
 > prima di cercare la causa altrove.**
+
+## La voce arriva "da una stanza grande e vuota"
+
+**Sintomo.** Livello giusto, nessuna interruzione, ma chi ascolta descrive la voce come se
+venisse da un ambiente ampio e riverberante. Dal lato del telefono non si sente niente di
+strano, e **nessuna misura lo mostra**: il livello e il rapporto segnale/rumore sono quelli
+buoni.
+
+**Causa.** La capsula electret appoggiata dentro il bocchino senza sigillo. Non sente la
+bocca in diretta: sente la cavita' del bocchino che risuona e la stanza che rientra dai
+lati. Con il guadagno finalmente corretto la coloratura e' emersa, perche' prima era
+sepolta sotto il livello troppo basso.
+
+**Rimedio.** Capsula premuta contro la griglia del bocchino, anello di spugna intorno a
+chiudere la cavita'. Verificato il 18/09/2026: la coloratura sparisce del tutto.
+
+> **Un difetto di timbro non si vede nei livelli.** Alcuni collaudi si fanno solo con una
+> telefonata vera e una domanda precisa a chi sta dall'altro capo — "sembra una stanza
+> vuota?", "senti la tua voce tornare indietro?" — perche' sono le uniche domande a cui i
+> contatori non sanno rispondere.

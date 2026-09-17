@@ -65,13 +65,33 @@ I numeri rimandano ai marker dell'immagine; gli Step a [`04_installation.md`](04
 |--------|-------|-------|----------|
 | 1 | **⑦ ESP32 su basetta a morsetti** nello spazio centrale | alimentazione 5V | `idf.py monitor` mostra il boot |
 | 2 | segnali a bassa tensione | ① gancio→GPIO18, ⑥ impulsi→GPIO4, NSI→GPIO32 — **direttamente sui morsetti**, senza optoaccoppiatori né rete RC | bring-up: gancio a log e ogni cifra 0-9 corretta (10 impulsi → `0`) |
-| 3 | **⑩ capsula electret** in cornetta + **⑧ codec WM8960** nella base | 3 fili del cordone: massa, mic, ascolto | test audio loopback: si parla e ci si sente |
+| 3 | **⑩ capsula electret** in cornetta (vedi sotto: **va sigillata**) + **⑧ codec WM8960** nella base | 3 fili del cordone: massa, mic, ascolto | test audio loopback: si parla e ci si sente |
 | 4 | **⑨ boost + H-bridge** | bobina **⑤ campanello** | test campanello (3 squilli, 1 s on / 4 s off) |
 | 5 | alimentazione (rete + tampone) + display/WS2812 | — | LED stato, OLED |
 | 6 | — | — | **bring-up completa**, tutti i sottosistemi in sequenza |
 | 7 | chiusura | fascette; verifica che i cavi non tocchino il martelletto | il disco gira libero |
 
 > Collauda **prima** di richiudere il coperchio (04 · Step 10): rilavorare a cassetta aperta costa molto meno.
+
+### La capsula del microfono va premuta contro la griglia, con la spugna
+
+Il punto meno ovvio di tutto il montaggio, e quello che ha richiesto piu' prove.
+
+La capsula electret **non va appoggiata dentro il bocchino**: va tenuta a contatto con la
+griglia, con un anello di spugna intorno che chiuda la cavita'. Senza sigillo il
+microfono non sente la bocca in diretta — sente la cavita' del bocchino che risuona e la
+stanza che rientra da tutti i lati, e chi ascolta descrive la voce come se arrivasse **da
+una stanza grande e vuota**.
+
+Non e' un difetto che si vede nei numeri: il livello resta quello giusto, cambia solo il
+timbro. Lo sente **soltanto chi sta dall'altro capo**, quindi e' una verifica che si fa
+per forza con una telefonata vera e una domanda diretta.
+
+Verificato il 18/09/2026: montata la spugna, la coloratura sparisce del tutto.
+
+Se nonostante il sigillo chi ascolta sente **la propria voce tornare indietro**, quello e'
+un problema diverso — eco vera, la voce che esce dalla capsula dell'orecchio e rientra nel
+microfono — e si cura abbassando il volume dell'auricolare, non con la spugna.
 
 ## La rete analogica prima della rimozione
 
