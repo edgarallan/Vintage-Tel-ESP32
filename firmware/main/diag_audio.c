@@ -78,52 +78,6 @@ static void scegli_ingresso(int quale)
     }
 }
 
-/*
- * I segnali acustici che scandiscono la prova.
- *
- * NON due altezze diverse: due RITMI. Il primo tentativo usava il tono di
- * conferma tasto per dire "taci" e quello di libero per dire "parla", ma il
- * primo dura 50 millisecondi e passa per un clic, non per un segnale. Il ritmo
- * invece si riconosce anche distrattamente, ed e' quello che serve a chi ha le
- * mani sul telefono e non guarda lo schermo.
- *
- *   TRE bip corti  ->  stai zitto
- *   UN bip lungo   ->  parla
- */
-static void suona(tone_gen_t *gen, int ms)
-{
-    static int16_t b[CAMPIONI];
-    tone_set(gen, TONE_DIAL);
-    for (uint32_t i = 0; i < (uint32_t)ms * TONE_SAMPLE_RATE / 1000 / CAMPIONI; i++) {
-        tone_fill(gen, b, CAMPIONI);
-        hal_audio_play(b, CAMPIONI);
-    }
-}
-
-static void pausa(int ms)
-{
-    static int16_t z[CAMPIONI];
-    memset(z, 0, sizeof(z));
-    for (uint32_t i = 0; i < (uint32_t)ms * TONE_SAMPLE_RATE / 1000 / CAMPIONI; i++) {
-        hal_audio_play(z, CAMPIONI);
-    }
-}
-
-static void segnale_taci(tone_gen_t *gen)
-{
-    for (int i = 0; i < 3; i++) {
-        suona(gen, 120);
-        pausa(120);
-    }
-    pausa(300);
-}
-
-static void segnale_parla(tone_gen_t *gen)
-{
-    suona(gen, 900);
-    pausa(300);
-}
-
 /* Media del valore assoluto su `secondi` di registrazione.
  *
  * NON rimanda niente in cuffia. La versione precedente lo faceva, e con +40 dB

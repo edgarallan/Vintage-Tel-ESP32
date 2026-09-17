@@ -54,13 +54,21 @@ esp_err_t hal_codec_write(uint8_t reg, uint16_t val);
 void hal_audio_init(void);
 bool hal_audio_play(const int16_t *mono, size_t n);
 bool hal_audio_record(int16_t *mono, size_t n);
+void hal_audio_start(void);
+
+/* Il ponte con l'HFP: hal_bt.c ci travasa dentro l'audio della chiamata. */
+void   hal_audio_rx_push(const uint8_t *pcm, size_t n);
+size_t hal_audio_tx_pop(uint8_t *pcm, size_t n);
+void   hal_audio_set_chiamata(bool attiva);
+
+/* Implementata in hal_bt.c: avvisa lo stack che c'e' roba da mandare. */
+void hal_bt_audio_pronto(void);
 
 void hal_display_init(void);
 void hal_display_state(const char *state, const char *extra);
 void hal_display_incoming(const char *name, const char *number);
 
-void hal_out_init(void);
-void hal_out_play_tone(tone_t tone);
+void hal_out_play_tone(tone_t tone);   /* i toni escono dal task audio */
 
 void hal_bt_init(QueueHandle_t evt_q);
 bool hal_bt_place_call(const char *number);

@@ -26,11 +26,24 @@
 
 #include "driver/i2s_std.h"
 #include "esp_log.h"
+#include "freertos/ringbuf.h"
 #include "freertos/task.h"
+
+#include "tones.h"
 
 static const char *TAG = "hal_audio";
 
 #define SAMPLE_RATE   16000     /* come i toni e come mSBC a banda larga */
+
+/* Campioni per giro del task audio: 8 ms a 16 kHz. Corto abbastanza da non
+   aggiungere latenza percepibile a una conversazione, lungo abbastanza da non
+   sprecare la CPU in commutazioni. */
+#define FRAME         128
+
+/* Circa 50 ms di scorta per verso. Serve ad assorbire il fatto che il
+   Bluetooth consegna a pacchetti e l'I2S consuma a flusso costante: senza,
+   ogni piccolo ritardo diventa un buco udibile. */
+#define RB_BYTES      1600
 
 /* --- Registri del WM8960 usati qui ---------------------------------------- */
 #define R_LIN_VOL       0x00
@@ -55,6 +68,21 @@ static const char *TAG = "hal_audio";
 static i2s_chan_handle_t s_tx;
 static i2s_chan_handle_t s_rx;
 static bool              s_pronto;
+
+/*
+ * Le due code fra Bluetooth e cornetta.
+ *
+ * Non si puo' scrivere sull'I2S direttamente dai callback dello stack: girano
+ * nel task di Bluedroid, che non deve mai bloccarsi. Le code disaccoppiano i
+ * due mondi, e il task audio qui sotto fa da pompa.
+ */
+static RingbufHandle_t s_rb_rx;   /* dal cellulare -> capsula d'ascolto */
+static RingbufHandle_t s_rb_tx;   /* microfono -> al cellulare */
+static volatile bool   s_in_chiamata;
+
+/* Generatore dei toni di sistema. Suona solo FUORI dalla chiamata: durante la
+   conversazione l'uscita appartiene alla voce. */
+static tone_gen_t s_toni;
 
 static bool configura_codec(void)
 {
@@ -282,4 +310,109 @@ bool hal_audio_record(int16_t *mono, size_t n)
         n    -= campioni;
     }
     return true;
+}
+
+/* --- il ponte fra Bluetooth e cornetta ------------------------------------ */
+
+void hal_audio_rx_push(const uint8_t *pcm, size_t n)
+{
+    if (s_rb_rx) {
+        /* Timeout zero: se la coda e' piena si scarta. Meglio perdere 8 ms di
+           audio che bloccare il task dello stack Bluetooth. */
+        xRingbufferSend(s_rb_rx, pcm, n, 0);
+    }
+}
+
+size_t hal_audio_tx_pop(uint8_t *pcm, size_t n)
+{
+    if (!s_rb_tx) {
+        return 0;
+    }
+    size_t disponibili = 0;
+    uint8_t *d = xRingbufferReceiveUpTo(s_rb_tx, &disponibili, 0, n);
+    if (!d) {
+        return 0;
+    }
+    /* Lo stack vuole esattamente n byte o niente: consegnare un frame parziale
+       lo manderebbe fuori sincrono. */
+    if (disponibili < n) {
+        vRingbufferReturnItem(s_rb_tx, d);
+        return 0;
+    }
+    memcpy(pcm, d, disponibili);
+    vRingbufferReturnItem(s_rb_tx, d);
+    return disponibili;
+}
+
+void hal_audio_set_chiamata(bool attiva)
+{
+    s_in_chiamata = attiva;
+    ESP_LOGI(TAG, "audio %s", attiva ? "in chiamata" : "a riposo");
+}
+
+void hal_out_play_tone(tone_t tone)
+{
+    tone_set(&s_toni, tone);
+}
+
+/*
+ * Il task audio, e l'unico punto in cui si tocca l'I2S.
+ *
+ * Il ritmo lo detta la LETTURA dal microfono: l'I2S consegna i campioni a
+ * 16 kHz esatti, quindi il ciclo gira da solo alla velocita' giusta senza
+ * bisogno di temporizzatori. E' anche il motivo per cui si legge sempre, anche
+ * fuori dalla chiamata.
+ */
+static void audio_task(void *arg)
+{
+    (void)arg;
+    static int16_t mic[FRAME];
+    static int16_t capsula[FRAME];
+
+    for (;;) {
+        if (!hal_audio_record(mic, FRAME)) {
+            vTaskDelay(pdMS_TO_TICKS(10));
+            continue;
+        }
+
+        if (s_in_chiamata) {
+            /* Verso il cellulare. */
+            xRingbufferSend(s_rb_tx, mic, sizeof(mic), 0);
+            hal_bt_audio_pronto();
+
+            /* Dal cellulare. Se manca roba si riempie di silenzio invece di
+               ripetere il buffer precedente: un buco e' meno fastidioso di un
+               frammento che si ripete. */
+            size_t n = 0;
+            uint8_t *d = xRingbufferReceiveUpTo(s_rb_rx, &n, 0, sizeof(capsula));
+            if (d) {
+                memcpy(capsula, d, n);
+                vRingbufferReturnItem(s_rb_rx, d);
+            }
+            if (n < sizeof(capsula)) {
+                memset((uint8_t *)capsula + n, 0, sizeof(capsula) - n);
+            }
+        } else {
+            /* Fuori dalla chiamata l'uscita e' dei toni di sistema. */
+            tone_fill(&s_toni, capsula, FRAME);
+        }
+
+        hal_audio_play(capsula, FRAME);
+    }
+}
+
+void hal_audio_start(void)
+{
+    if (!s_pronto) {
+        return;
+    }
+    s_rb_rx = xRingbufferCreate(RB_BYTES, RINGBUF_TYPE_BYTEBUF);
+    s_rb_tx = xRingbufferCreate(RB_BYTES, RINGBUF_TYPE_BYTEBUF);
+    if (!s_rb_rx || !s_rb_tx) {
+        ESP_LOGE(TAG, "code audio non create");
+        return;
+    }
+    tone_init(&s_toni);
+    xTaskCreate(audio_task, "audio", 4096, NULL, 7, NULL);
+    ESP_LOGI(TAG, "pompa audio avviata, %d campioni per giro", FRAME);
 }

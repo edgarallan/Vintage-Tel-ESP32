@@ -5,12 +5,14 @@
  * ruolo di un vivavoce da auto, ed e' il motivo per cui il cellulare accetta
  * di girargli le chiamate.
  *
- * QUESTO MODULO NON PORTA ANCORA L'AUDIO. Fa il controllo chiamata —
- * connessione, squillo, numero del chiamante, risposta, rifiuto, riaggancio,
- * DTMF — mentre la voce arrivera' col codec, in un passo successivo. La
- * separazione e' voluta: il controllo chiamata non dipende da nessun
- * componente hardware, quindi si puo' verificare subito, e quando l'audio si
- * aggiungera' i suoi difetti non si confonderanno con quelli del controllo.
+ * L'AUDIO PASSA DA QUI, ma non lo tocca: due callback dello stack travasano
+ * PCM da e per le code di hal_audio.c, che e' l'unico a parlare con l'I2S.
+ *
+ * Il PCM arriva gia' decodificato perche' sdkconfig lascia il codec INTERNO a
+ * Bluedroid (CONFIG_BT_HFP_USE_EXTERNAL_CODEC non impostato). Col codec
+ * esterno riceveremmo frame mSBC codificati e ci toccherebbe scrivere un
+ * decoder — cosa che l'esempio ufficiale di ESP-IDF fa, ed e' il motivo per cui
+ * il suo codice non somiglia a questo.
  *
  * ISOLA DI THREAD. I callback di Bluedroid girano nel suo task, non nel task
  * del telefono. Qui dentro non si tocca mai lo stato della macchina a stati:
@@ -32,6 +34,7 @@
 #include "esp_bt_main.h"
 #include "esp_gap_bt_api.h"
 #include "esp_hf_client_api.h"
+#include "esp_hf_client_legacy_api.h"
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "nvs.h"
@@ -205,6 +208,26 @@ static void riprova_connessione(void *arg)
     }
 }
 
+/*
+ * I due versi dell'audio. Girano nel task di Bluedroid, quindi non fanno altro
+ * che spostare byte: qualunque attesa qui dentro rallenta lo stack Bluetooth.
+ */
+static void audio_in_cb(const uint8_t *buf, uint32_t len)
+{
+    hal_audio_rx_push(buf, len);
+}
+
+static uint32_t audio_out_cb(uint8_t *buf, uint32_t len)
+{
+    return (uint32_t)hal_audio_tx_pop(buf, len);
+}
+
+/* Chiamata dal task audio quando ha un frame pronto da mandare. */
+void hal_bt_audio_pronto(void)
+{
+    esp_hf_client_outgoing_data_ready();
+}
+
 static void hf_cb(esp_hf_client_cb_event_t event, esp_hf_client_cb_param_t *param)
 {
     switch (event) {
@@ -222,6 +245,7 @@ static void hf_cb(esp_hf_client_cb_event_t event, esp_hf_client_cb_param_t *para
             }
             s_slc  = false;
             s_call = false;
+            hal_audio_set_chiamata(false);
             s_setup = ESP_HF_CALL_SETUP_STATUS_IDLE;
             /* Una chiamata in corso quando cade il collegamento e' finita
                comunque: senza questo la macchina a stati resterebbe in
@@ -271,14 +295,32 @@ static void hf_cb(esp_hf_client_cb_event_t event, esp_hf_client_cb_param_t *para
         annuncia_se_pronto();
         break;
 
-    case ESP_HF_CLIENT_AUDIO_STATE_EVT:
-        /* Il canale voce non e' ancora collegato a niente: qui si vede solo se
-           l'AG ha negoziato mSBC a 16 kHz o e' ricaduto su CVSD a 8 kHz, che
-           e' l'informazione che servira' quando arrivera' il codec. */
-        ESP_LOGI(TAG, "audio SCO: stato %d%s", param->audio_stat.state,
-                 param->audio_stat.state == ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC
-                     ? " (mSBC 16 kHz)" : "");
+    case ESP_HF_CLIENT_AUDIO_STATE_EVT: {
+        const esp_hf_client_audio_state_t st = param->audio_stat.state;
+        const bool su = (st == ESP_HF_CLIENT_AUDIO_STATE_CONNECTED ||
+                         st == ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC);
+
+        if (su) {
+            ESP_LOGI(TAG, "canale voce aperto%s",
+                     st == ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC
+                         ? " (mSBC 16 kHz)" : " (CVSD 8 kHz)");
+
+            /* La cornetta e l'I2S girano a 16 kHz fissi. Con mSBC coincidono;
+               con CVSD il cellulare parla a 8 kHz e la voce uscirebbe al
+               doppio della velocita'. Non e' ancora gestito, e vale la pena
+               dirlo invece di lasciare indovinare. */
+            if (st != ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC) {
+                ESP_LOGW(TAG, "CVSD a 8 kHz: manca la conversione, la voce sara' sbagliata");
+            }
+
+            esp_hf_client_register_data_callback(audio_in_cb, audio_out_cb);
+            hal_audio_set_chiamata(true);
+        } else if (st == ESP_HF_CLIENT_AUDIO_STATE_DISCONNECTED) {
+            ESP_LOGI(TAG, "canale voce chiuso");
+            hal_audio_set_chiamata(false);
+        }
         break;
+    }
 
     case ESP_HF_CLIENT_PROF_STATE_EVT:
         ESP_LOGI(TAG, "profilo HFP pronto");

@@ -31,11 +31,11 @@ static const hw_iface_t s_hw = {
 
 const hw_iface_t *phone_hal_init(QueueHandle_t evt_q)
 {
-    hal_out_init();
     hal_led_init();
     hal_display_init();
     hal_codec_init();
     hal_audio_init();
+    hal_audio_start();
     hal_bell_init();
 #ifdef VT_NO_BT
     /* Radio esclusa: il telefono resta "senza linea" ma tutto il resto — disco,
