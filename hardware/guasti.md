@@ -142,6 +142,44 @@ volte — e la voce non e' emersa. L'unico guadagno che migliora il rapporto e' 
 > Con la capsula della cornetta attaccata la taratura diventa banale: si parla e si guarda
 > il livello.
 
+**Confermato il 17/09/2026**, con la capsula collegata: fondo 70, voce 4248, rapporto oltre
+60. La stessa misura che il giorno prima era impossibile.
+
+### E il diagnostico misurava il proprio eco
+
+Le prime versioni della prova scandivano le fasi con dei bip: tre corti per "taci", uno
+lungo per "parla". Davano risultati **invertiti** — fondo sistematicamente più alto della
+voce — e nessun numero poteva rivelare il perché, perché l'errore era nella struttura della
+misura.
+
+**I bip escono dalla capsula d'ascolto della cornetta, a pochi centimetri dal microfono
+della stessa cornetta.** Il diagnostico registrava la coda del proprio segnale e la
+attribuiva al silenzio.
+
+> Quando lo strumento di misura **agisce** sul sistema che misura, i suoi segnali di
+> servizio fanno parte del segnale. Su un telefono, altoparlante e microfono sono a dieci
+> centimetri: qualunque cosa esca da uno rientra nell'altro.
+
+La versione che funziona non ha fasi né segnali: **stampa il picco ogni secondo, per
+sempre**. Si parla quando si vuole, e il profilo dei numeri mostra da solo dove c'era voce —
+comprese le pause fra le frasi.
+
+### Più guadagno non vuol dire più segnale
+
+Due volte, in due punti diversi della catena:
+
+| | Effetto |
+|---|---|
+| Guadagno **digitale** dell'ADC, +30 dB | rumore ×32, voce invariata |
+| Preamplificatore da +20 a +30 dB | fondo 70 → 1800, voce ferma a ~4500, e satura |
+
+Il primo caso è strutturale: il guadagno digitale sta **dopo** il convertitore e non può
+cambiare il rapporto fra segnale e rumore. Il secondo è il preamplificatore che, oltre un
+certo punto, amplifica soprattutto il proprio rumore.
+
+**Il guadagno giusto è il più alto che non satura, scelto guardando il rapporto e non il
+livello.**
+
 I guadagni sono stati riportati a 0 dB, che e' un punto di partenza prudente e non un valore
 scelto: +40 dB mandava l'ingresso a saturazione da solo, senza nessuna sorgente.
 

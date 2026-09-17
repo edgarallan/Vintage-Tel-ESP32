@@ -96,16 +96,23 @@ static bool configura_codec(void)
         { R_ADCL_PATH,    0x108, "INPUT1 -> preamp -> boost 0 dB, sinistra" },
         { R_ADCR_PATH,    0x108, "INPUT1 -> preamp -> boost 0 dB, destra" },
 
-        /* Preamplificatore a 0 dB e ingresso non muto. Dopo il reset gli
+        /* Preamplificatore a +20 dB e ingresso non muto. Dopo il reset gli
            ingressi sono MUTI, quindi il bit 7 a zero non e' ridondante.
 
-           Zero dB e' un PUNTO DI PARTENZA PRUDENTE, non un valore scelto: si
-           alzera' parlando nella cornetta e guardando il livello salire. Con
-           una sorgente vera la taratura e' immediata; senza, si insegue il
-           rumore — ed e' quello che e' successo per un'ora il 16/09/2026,
-           tarando un percorso microfonico senza nessun microfono collegato. */
-        { R_LIN_VOL,      0x117, "preamp sinistro, 0 dB, non muto" },
-        { R_RIN_VOL,      0x117, "preamp destro, 0 dB, non muto" },
+           +20 dB SCELTO MISURANDO, con la capsula della cornetta collegata, il
+           17/09/2026. Il confronto con +30 dB non lascia dubbi:
+
+                        fondo   voce   rapporto   satura
+             +20 dB        70   4248       60x    mai
+             +30 dB      1800   4500      2,5x    si', due volte
+
+           A +30 dB il fondo sale di venticinque volte mentre la voce resta
+           ferma: il preamplificatore amplifica soprattutto il proprio rumore,
+           e sui picchi tosa. E' la stessa lezione del guadagno digitale, in
+           forma diversa — oltre un certo punto aggiungere guadagno PEGGIORA il
+           rapporto segnale/rumore invece di migliorarlo. */
+        { R_LIN_VOL,      0x132, "preamp sinistro, +20 dB, non muto" },
+        { R_RIN_VOL,      0x132, "preamp destro, +20 dB, non muto" },
 
         /* Volume digitale degli ADC a 0 dB. */
         { R_LADC_VOL,     0x1C3, "volume ADC sinistro" },

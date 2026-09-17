@@ -171,51 +171,69 @@ static int32_t picco_su(int16_t *buf, int secondi)
     return picco;
 }
 
+/*
+ * Spazzata del guadagno del preamplificatore, su INPUT1.
+ *
+ * Che il jack arrivi su INPUT1 lo dicono le misure: INPUT2 e INPUT3 leggono 4
+ * su 32767, cioe' silenzio digitale, mentre INPUT1 mostra un fondo vivo. E che
+ * il microfono sia sano lo dice il multimetro: 1,09 kOhm fra i due morsetti e
+ * 2,1 V di polarizzazione contro i ~2,5 a vuoto, cioe' una capsula che assorbe
+ * corrente.
+ *
+ * Restava il guadagno, e i due estremi erano gia' noti: a 0 dB il segnale resta
+ * sepolto, a +40 dB l'ingresso satura da solo (fondo a 20075 su 32767). La
+ * risposta sta in mezzo, e si trova spazzando invece di indovinare — la stessa
+ * cosa fatta per la frequenza del campanello.
+ *
+ * LINVOL: 0x17 e' 0 dB, ogni passo vale 0,75 dB.
+ */
+/*
+ * Monitor continuo: nessuna fase, nessun segnale da seguire.
+ *
+ * Tutte le versioni precedenti chiedevano di alternare silenzio e parlato a
+ * comando, e tutte hanno prodotto numeri incoerenti — una volta per un errore
+ * di tempismo, un'altra perche' i bip escono dalla CAPSULA D'ASCOLTO DELLA
+ * CORNETTA, a pochi centimetri dal microfono, e il diagnostico finiva per
+ * misurare il proprio eco invece del silenzio.
+ *
+ * Qui non c'e' niente da sincronizzare: stampa il picco ogni mezzo secondo,
+ * per sempre. Si parla quando si vuole e si tace quando si vuole, e la
+ * sequenza dei numeri mostra da sola dove c'era voce. Nessun segnale acustico,
+ * quindi nessun eco da misurare.
+ */
+#define R_LIN_VOL   0x00
+#define R_RIN_VOL   0x01
+#define GUADAGNO    0x13F   /* +30 dB sul preamplificatore */
+
 void diag_audio_run(void)
 {
     hal_codec_init();
     hal_audio_init();
+    scegli_ingresso(1);
 
-    tone_gen_t gen;
-    tone_init(&gen);
+    hal_codec_write(R_LIN_VOL, GUADAGNO);
+    hal_codec_write(R_RIN_VOL, GUADAGNO);
 
-    /* Guadagno digitale di nuovo a 0 dB.
-     *
-     * Portarlo a +30 dB e' stato un errore di ragionamento: sta DOPO il
-     * convertitore, quindi amplifica segnale e rumore nella stessa misura e non
-     * puo' migliorare il rapporto fra i due. Misurato: il rumore e' salito da
-     * 286 a 9198, esattamente 32 volte, e la voce non e' emersa. L'unico
-     * guadagno che aiuta e' quello analogico, prima dell'ADC. */
-    hal_codec_write(R_LADC_VOL, 0x1C3);
-    hal_codec_write(R_RADC_VOL, 0x1C3);
-
-    ESP_LOGW(TAG, "=== COLPETTI SUL MICROFONO ===");
-    ESP_LOGW(TAG, "al bip lungo, PICCHIETTA con l'unghia sul microfono");
-    ESP_LOGW(TAG, "un colpetto e' 40 dB sopra una voce: non si confonde col rumore");
+    ESP_LOGW(TAG, "=== MONITOR CONTINUO, INPUT1 a +30 dB ===");
+    ESP_LOGW(TAG, "picco ogni mezzo secondo. Parla e taci quando vuoi.");
+    ESP_LOGW(TAG, "nessun bip: cosi' il microfono non sente l'eco della capsula");
 
     static int16_t buf[CAMPIONI];
 
     for (;;) {
-        for (int ing = 1; ing <= 3; ing++) {
-            scegli_ingresso(ing);
-            vTaskDelay(pdMS_TO_TICKS(100));
-
-            segnale_taci(&gen);
-            const int32_t fondo = picco_su(buf, 3);
-
-            segnale_parla(&gen);
-            const int32_t colpi = picco_su(buf, 4);
-
-            if (fondo < 0 || colpi < 0) {
-                ESP_LOGE(TAG, "il microfono non manda dati");
-                continue;
-            }
-            ESP_LOGE(TAG, "INPUT%d  fondo %ld   colpi %ld (%ld%%)   x%ld.%02ld",
-                     ing, (long)fondo, (long)colpi, (long)(colpi * 100 / 32767),
-                     (long)(fondo ? colpi / fondo : 0),
-                     (long)(fondo ? (colpi * 100 / fondo) % 100 : 0));
+        const int32_t p = picco_su(buf, 1);   /* ~1 s di finestra */
+        if (p < 0) {
+            ESP_LOGE(TAG, "il microfono non manda dati");
+            vTaskDelay(pdMS_TO_TICKS(500));
+            continue;
         }
-        ESP_LOGW(TAG, "=== giro finito ===");
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        /* Una barra oltre al numero: la forma si legge a colpo d'occhio nella
+           colonna dei log, e una voce si riconosce dal profilo. */
+        char barra[41];
+        int n = (int)(p * 40 / 32767);
+        if (n > 40) { n = 40; }
+        for (int i = 0; i < n; i++)  { barra[i] = '#'; }
+        barra[n] = '\0';
+        ESP_LOGI(TAG, "%5ld |%s", (long)p, barra);
     }
 }
