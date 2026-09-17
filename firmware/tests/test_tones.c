@@ -6,7 +6,9 @@
 #include <stdlib.h>
 
 static tone_gen_t g;
-static int16_t    buf[TONE_SAMPLE_RATE];   /* un secondo */
+/* Quattro secondi: la cadenza del tono di centrale dura due secondi, e per
+   verificare che si ripeta ne servono due periodi. */
+static int16_t    buf[4 * TONE_SAMPLE_RATE];
 
 void setUp(void)    { tone_init(&g); }
 void tearDown(void) { }
@@ -53,22 +55,57 @@ void test_senza_tono_esce_silenzio(void)
     TEST_ASSERT_EQUAL_UINT32(0, non_zero_samples(buf, 1000));
 }
 
-void test_tono_di_libero_e_425_hz(void)
+void test_tono_di_centrale_e_425_hz(void)
 {
-    /* 425 Hz per un secondo = 425 cicli = 850 attraversamenti dello zero. */
+    /* La frequenza si misura DENTRO un tratto acceso: su un secondo intero
+       ricadrebbero anche le pause della cadenza, e il conto degli
+       attraversamenti risulterebbe piu' basso senza che la frequenza sia
+       sbagliata. Si usa il tratto lungo, 0,6 s, che da' il campione piu' ampio. */
+    const uint32_t a_on  = TONE_SAMPLE_RATE * TONE_DIAL_A_ON_MS  / 1000;
+    const uint32_t a_off = TONE_SAMPLE_RATE * TONE_DIAL_A_OFF_MS / 1000;
+    const uint32_t b_on  = TONE_SAMPLE_RATE * TONE_DIAL_B_ON_MS  / 1000;
+
     tone_set(&g, TONE_DIAL);
     tone_fill(&g, buf, TONE_SAMPLE_RATE);
 
-    uint32_t crossings = zero_crossings(buf, TONE_SAMPLE_RATE);
-    TEST_ASSERT_UINT32_WITHIN(2, 2 * TONE_DIAL_HZ, crossings);
+    const uint32_t attesi = 2 * TONE_DIAL_HZ * TONE_DIAL_B_ON_MS / 1000;
+    uint32_t crossings = zero_crossings(buf + a_on + a_off, b_on);
+    TEST_ASSERT_UINT32_WITHIN(2, attesi, crossings);
 }
 
-void test_tono_di_libero_e_continuo(void)
+void test_tono_di_centrale_segue_la_cadenza_italiana(void)
 {
+    /* Tabella ITU-T E.180, riga Italia: 0,2 on / 0,2 off / 0,6 on / 1,0 off.
+       Il periodo dura due secondi esatti. */
+    const uint32_t a_on   = TONE_SAMPLE_RATE * TONE_DIAL_A_ON_MS   / 1000;
+    const uint32_t a_off  = TONE_SAMPLE_RATE * TONE_DIAL_A_OFF_MS  / 1000;
+    const uint32_t b_on   = TONE_SAMPLE_RATE * TONE_DIAL_B_ON_MS   / 1000;
+    const uint32_t b_off  = TONE_SAMPLE_RATE * TONE_DIAL_B_OFF_MS  / 1000;
+
     tone_set(&g, TONE_DIAL);
-    tone_fill(&g, buf, TONE_SAMPLE_RATE);
-    /* Nessuna pausa: il tono di libero non si interrompe mai. */
-    TEST_ASSERT_TRUE(non_zero_samples(buf, TONE_SAMPLE_RATE) > TONE_SAMPLE_RATE * 9 / 10);
+    tone_fill(&g, buf, 2 * TONE_SAMPLE_RATE);
+
+    uint32_t p = 0;
+    TEST_ASSERT_TRUE(non_zero_samples(buf + p, a_on) > a_on * 9 / 10);
+    p += a_on;
+    TEST_ASSERT_EQUAL_UINT32(0, non_zero_samples(buf + p, a_off));
+    p += a_off;
+    TEST_ASSERT_TRUE(non_zero_samples(buf + p, b_on) > b_on * 9 / 10);
+    p += b_on;
+    TEST_ASSERT_EQUAL_UINT32(0, non_zero_samples(buf + p, b_off));
+}
+
+void test_tono_di_centrale_si_ripete(void)
+{
+    /* Il secondo periodo deve essere identico al primo: e' un invito a
+       comporre, non un annuncio che finisce. */
+    const uint32_t periodo = 2 * TONE_SAMPLE_RATE;
+    const uint32_t a_on = TONE_SAMPLE_RATE * TONE_DIAL_A_ON_MS / 1000;
+
+    tone_set(&g, TONE_DIAL);
+    tone_fill(&g, buf, 2 * periodo);
+
+    TEST_ASSERT_TRUE(non_zero_samples(buf + periodo, a_on) > a_on * 9 / 10);
 }
 
 void test_ampiezza_entro_il_fondo_scala(void)
@@ -162,8 +199,9 @@ int main(void)
 {
     UNITY_BEGIN();
     RUN_TEST(test_senza_tono_esce_silenzio);
-    RUN_TEST(test_tono_di_libero_e_425_hz);
-    RUN_TEST(test_tono_di_libero_e_continuo);
+    RUN_TEST(test_tono_di_centrale_e_425_hz);
+    RUN_TEST(test_tono_di_centrale_segue_la_cadenza_italiana);
+    RUN_TEST(test_tono_di_centrale_si_ripete);
     RUN_TEST(test_ampiezza_entro_il_fondo_scala);
     RUN_TEST(test_fase_continua_tra_due_buffer);
     RUN_TEST(test_occupato_alterna_mezzo_secondo);

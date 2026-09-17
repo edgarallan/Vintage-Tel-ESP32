@@ -334,25 +334,43 @@ void hal_audio_rx_push(const uint8_t *pcm, size_t n)
     }
 }
 
+/*
+ * Estrae fino a `n` byte da una coda, ANCHE SE SI AVVOLGONO.
+ *
+ * Una coda circolare tiene i dati in un anello, e quando la richiesta cade a
+ * cavallo della fine xRingbufferReceiveUpTo restituisce solo il primo tratto
+ * contiguo. Serve percio' una seconda estrazione per il resto.
+ *
+ * La prima stesura non la faceva e in quel caso BUTTAVA VIA il frammento
+ * restituendo zero. Succedeva a ogni giro dell'anello, cioe' regolarmente, e
+ * si sentiva come un gracchio periodico all'altro capo della conversazione.
+ */
+static size_t estrai(RingbufHandle_t rb, uint8_t *dst, size_t n)
+{
+    size_t presi = 0;
+    while (presi < n) {
+        size_t tratto = 0;
+        uint8_t *d = xRingbufferReceiveUpTo(rb, &tratto, 0, n - presi);
+        if (!d || tratto == 0) {
+            break;
+        }
+        memcpy(dst + presi, d, tratto);
+        vRingbufferReturnItem(rb, d);
+        presi += tratto;
+    }
+    return presi;
+}
+
 size_t hal_audio_tx_pop(uint8_t *pcm, size_t n)
 {
     if (!s_rb_tx) {
         return 0;
     }
-    size_t disponibili = 0;
-    uint8_t *d = xRingbufferReceiveUpTo(s_rb_tx, &disponibili, 0, n);
-    if (!d) {
-        return 0;
-    }
-    /* Lo stack vuole esattamente n byte o niente: consegnare un frame parziale
-       lo manderebbe fuori sincrono. */
-    if (disponibili < n) {
-        vRingbufferReturnItem(s_rb_tx, d);
-        return 0;
-    }
-    memcpy(pcm, d, disponibili);
-    vRingbufferReturnItem(s_rb_tx, d);
-    return disponibili;
+    /* Lo stack vuole esattamente n byte o niente: un frame parziale lo
+       manderebbe fuori sincrono. Ma "parziale" deve significare che i dati non
+       c'erano, non che erano a cavallo della fine dell'anello. */
+    const size_t presi = estrai(s_rb_tx, pcm, n);
+    return (presi == n) ? presi : 0;
 }
 
 void hal_audio_set_chiamata(bool attiva)
@@ -412,11 +430,7 @@ static void audio_task(void *arg)
             }
 
             if (s_rx_avviato) {
-                uint8_t *d = xRingbufferReceiveUpTo(s_rb_rx, &n, 0, sizeof(capsula));
-                if (d) {
-                    memcpy(capsula, d, n);
-                    vRingbufferReturnItem(s_rb_rx, d);
-                }
+                n = estrai(s_rb_rx, (uint8_t *)capsula, sizeof(capsula));
             }
             if (n < sizeof(capsula)) {
                 memset((uint8_t *)capsula + n, 0, sizeof(capsula) - n);

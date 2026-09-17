@@ -62,8 +62,23 @@ tone_t tone_current(const tone_gen_t *t)
 static bool tone_is_audible(tone_gen_t *t)
 {
     switch (t->current) {
-    case TONE_DIAL:
-        return true;   /* continuo */
+    case TONE_DIAL: {
+        /* Cadenza italiana, tabella ITU-T E.180: 0,2 on / 0,2 off / 0,6 on /
+           1,0 off, e da capo. Non e' continuo — il continuo nella stessa
+           tabella e' il "special dial tone", che segnala servizi attivi.
+           E' il "tu-tuuu ... tu-tuuu" degli apparecchi d'epoca. */
+        const uint32_t a_on  = ms_to_samples(TONE_DIAL_A_ON_MS);
+        const uint32_t a_off = ms_to_samples(TONE_DIAL_A_OFF_MS);
+        const uint32_t b_on  = ms_to_samples(TONE_DIAL_B_ON_MS);
+        const uint32_t b_off = ms_to_samples(TONE_DIAL_B_OFF_MS);
+        const uint32_t periodo = a_on + a_off + b_on + b_off;
+        const uint32_t t_ms = t->elapsed % periodo;
+
+        if (t_ms < a_on)                 return true;
+        if (t_ms < a_on + a_off)         return false;
+        if (t_ms < a_on + a_off + b_on)  return true;
+        return false;
+    }
 
     case TONE_BUSY: {
         uint32_t on     = ms_to_samples(TONE_BUSY_ON_MS);
