@@ -271,3 +271,27 @@ chiudere la cavita'. Verificato il 18/09/2026: la coloratura sparisce del tutto.
 > telefonata vera e una domanda precisa a chi sta dall'altro capo — "sembra una stanza
 > vuota?", "senti la tua voce tornare indietro?" — perche' sono le uniche domande a cui i
 > contatori non sanno rispondere.
+
+## Dopo aver cablato l'alimentazione, il microfono non va piu'
+
+**Sintomo.** Passato il telefono al modulo a batteria, il microfono smette di funzionare.
+Il livello resta inchiodato sul fondo (~95) e non reagisce ne' alla voce ne' ai colpetti
+sulla capsula; a tratti compare anche `il microfono non manda dati`.
+
+**Il dato che restringe il campo.** All'avvio il log dice `WM8960 presente a 0x1A e
+resettato`: il codec **risponde sull'I2C**. Quindi ha alimentazione e massa, e il modulo a
+batteria e' innocente. Restano solo i fili dell'audio.
+
+**Causa.** Un morsetto dell'I2S allentato mentre si lavorava intorno all'alimentazione.
+I cinque candidati, in ordine di sospetto: `GPIO 33 → TXSDA` (il filo del microfono),
+`GPIO 0 → MCLK` (senza clock il codec non converte e non da' nessun errore all'avvio),
+poi BCLK, LRCK e `GPIO 22 → RXSDA`.
+
+**Rimedio.** Rinfilati i morsetti, il livello e' tornato a 2608 di mediana con zero stalli.
+
+> **Se il codec risponde sull'I2C ma i campioni non arrivano, il guasto e' nei quattro fili
+> dell'I2S, non nell'alimentazione e non nel software.** E' la prima domanda da farsi,
+> perche' costa una riga di log e taglia fuori meta' delle ipotesi.
+
+Da non confondere con lo stallo dell'I2S dopo lo stacco dell'USB (capitolo sopra): quello
+si cura con un riavvio da seriale e il livello torna subito, questo no.

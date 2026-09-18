@@ -79,6 +79,25 @@ display, avendo indirizzi diversi (codec `0x1A`, OLED `0x3C`).
 > solo 2×: basta spegnere il display per rischiare che il modulo stacchi da solo e tu perda
 > le chiamate, in silenzio. Se accetti quel rischio è un ripiego valido a 1/5 del prezzo.
 
+> **Il modulo JL-1P vuole un interruttore, o non eroga dalla batteria.** Montato e cablato
+> il 18/09/2026: con l'USB collegato da' regolarmente 5 V in uscita, ma **appena si toglie
+> l'alimentazione di rete l'uscita va a zero** e tutto si spegne — cioe' esattamente il
+> contrario di un gruppo di continuita'. Non e' un difetto. Al centro della scheda, subito
+> a destra della bobina quadrata marcata `220`, ci sono **due fori passanti** sotto la
+> serigrafia `UPS输出开关` ("interruttore uscita UPS") con una freccia che li indica:
+> finche' restano aperti l'uscita a batteria resta spenta. Chiusi quei due fori, il
+> passaggio rete→batteria e' immediato e senza cali.
+>
+> Quei due fori sono il posto giusto per l'**interruttore vintage** (voce 8): danno al
+> telefono un vero spegnimento. Un ponticello di stagno funziona ma se lo mangia, e lascia
+> l'apparecchio senza modo di spegnersi se non sfilando la cella.
+>
+> Attenzione a non confondersi con i **due pad quadrati con la X** subito sotto: sono
+> un'altra cosa. La foto annotata sta in `assets/retrofit/`.
+>
+> I tre LED della scheda sono, nell'ordine: `UPS`, `充电` (in carica), `满电` (carica
+> completa). Il rosso acceso con l'USB collegato e' la carica in corso, non un errore.
+
 > **Budget di corrente**: ESP32 con BT connesso ~80 mA, OLED ~15 mA, picco del campanello
 > ~400 mA dal boost. Il PowerBoost eroga 1 A: ci sta, ma tieni i 100 µF sull'ingresso **e**
 > sull'uscita dell'XL6009 per assorbire i picchi degli squilli.
