@@ -98,6 +98,12 @@ display, avendo indirizzi diversi (codec `0x1A`, OLED `0x3C`).
 > I tre LED della scheda sono, nell'ordine: `UPS`, `充电` (in carica), `满电` (carica
 > completa). Il rosso acceso con l'USB collegato e' la carica in corso, non un errore.
 
+> **Collaudo a batteria, 18/09/2026.** Con la sola 18650 nel portacelle e il micro-USB
+> sfilato: telefono acceso e Bluetooth agganciato, **chiamata uscente composta col disco**
+> con voce giudicata buona dall'altro capo, e **squillo del campanello originale** senza
+> riavvii. Il picco del martelletto e' il carico piu' duro dell'apparecchio e il modulo lo
+> regge. Il passaggio rete→batteria non produce cali percepibili.
+
 > **Budget di corrente**: ESP32 con BT connesso ~80 mA, OLED ~15 mA, picco del campanello
 > ~400 mA dal boost. Il PowerBoost eroga 1 A: ci sta, ma tieni i 100 µF sull'ingresso **e**
 > sull'uscita dell'XL6009 per assorbire i picchi degli squilli.
