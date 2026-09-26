@@ -265,6 +265,30 @@ static esp_err_t accendi_pannello(void)
 }
 
 /*
+ * Chiede al display se c'e' ancora.
+ *
+ * Serve perche' accorgersi della perdita solo quando una scrittura fallisce
+ * NON BASTA: a telefono fermo non si disegna niente per minuti, quindi
+ * nessuna scrittura fallisce e un display staccato resta nero senza che
+ * nessuno se ne accorga — misurato il 26/09/2026, venticinque secondi di log
+ * completamente muti con il display scollegato. Il rilevamento passivo
+ * funziona solo se il display muore mentre cambia qualcosa a schermo.
+ *
+ * Il comando e' il piu' corto che esista, "accenditi", un byte: mandarlo a un
+ * display gia' acceso non cambia niente, e a 400 kHz costa qualche decina di
+ * microsecondi al secondo.
+ */
+static bool risponde(void)
+{
+    esp_log_level_set("lcd_panel.io.i2c", ESP_LOG_NONE);
+    esp_log_level_set("lcd_panel.ssd1306", ESP_LOG_NONE);
+    const esp_err_t e = esp_lcd_panel_disp_on_off(s_pannello, true);
+    esp_log_level_set("lcd_panel.io.i2c", ESP_LOG_WARN);
+    esp_log_level_set("lcd_panel.ssd1306", ESP_LOG_WARN);
+    return e == ESP_OK;
+}
+
+/*
  * L'esito del disegno NON si butta via.
  *
  * Il display sta sui morsetti insieme al codec, e un contatto che si apre per
@@ -281,7 +305,7 @@ static void mostra(void)
     const esp_err_t e = esp_lcd_panel_draw_bitmap(s_pannello, 0, 0,
                                                   OLED_W, OLED_H, s_fb);
     if (e != ESP_OK) {
-        ESP_LOGW(TAG, "display perso (%s): riprovo ogni %d s",
+        ESP_LOGW(TAG, "display perso scrivendo (%s): riprovo ogni %d s",
                  esp_err_to_name(e), RIPESCA_S);
         s_pronto = false;
         s_attesa = 0;
@@ -430,16 +454,22 @@ void hal_display_state(const char *state, const char *extra)
 static void battito(void *arg)
 {
     (void)arg;
+    xSemaphoreTake(s_lock, portMAX_DELAY);
 
-    /* Display perso: si ritenta di riaccenderlo, e se torna si rimette a
-       schermo quello che c'era. Finche' non risponde non si tocca altro —
-       il telefono continua a telefonare al buio. */
-    if (!s_pronto) {
-        if (++s_attesa < RIPESCA_S) {
-            return;
+    if (s_pronto) {
+        if (!risponde()) {
+            ESP_LOGW(TAG, "display perso: non risponde, riprovo ogni %d s",
+                     RIPESCA_S);
+            s_pronto = false;
+            s_attesa = 0;
+        } else if (s_schermata_stato && strcmp(s_stato, "IDLE") == 0
+                   && hal_bt_is_connected() != s_bt_mostrato) {
+            disegna_stato();
         }
+    } else if (++s_attesa >= RIPESCA_S) {
+        /* Finche' non risponde non si tocca altro: il telefono continua a
+           telefonare al buio. */
         s_attesa = 0;
-        xSemaphoreTake(s_lock, portMAX_DELAY);
         if (accendi_pannello() == ESP_OK) {
             ESP_LOGI(TAG, "display tornato: ridisegno");
             if (s_schermata_stato) {
@@ -448,19 +478,8 @@ static void battito(void *arg)
                 disegna_chiamata();
             }
         }
-        xSemaphoreGive(s_lock);
-        return;
     }
-    s_attesa = 0;
 
-    if (!s_schermata_stato || strcmp(s_stato, "IDLE") != 0) {
-        return;
-    }
-    if (hal_bt_is_connected() == s_bt_mostrato) {
-        return;
-    }
-    xSemaphoreTake(s_lock, portMAX_DELAY);
-    disegna_stato();
     xSemaphoreGive(s_lock);
 }
 
