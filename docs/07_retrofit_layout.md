@@ -73,6 +73,39 @@ I numeri rimandano ai marker dell'immagine; gli Step a [`04_installation.md`](04
 
 > Collauda **prima** di richiudere il coperchio (04 · Step 10): rilavorare a cassetta aperta costa molto meno.
 
+### Il display va nella finestrella del numero, sopra il disco
+
+L'S62 ha **una sola apertura gia' fatta per mostrare un'informazione**: la finestrella
+sopra il disco dove stava la cartina col numero dell'abbonato. E' li' che va il display —
+niente da tagliare sulla scocca del 1970, nessuna meccanica dietro (la parete e' libera,
+a differenza del centro del disco), e resta leggibile da seduti con la cornetta appoggiata,
+che e' il momento in cui serve: quando squilla e vuoi sapere chi e' prima di rispondere.
+
+**Misure, prese col calibro il 26/09/2026:**
+
+| | |
+|---|---|
+| Finestrella della cartina | **25 x 11,2 mm** |
+| Area attiva OLED 0.96" 128x64 | **21,70 x 11,20 mm** |
+| Basetta del modulo | 27 x 27 x 4,1 mm |
+
+L'altezza coincide **esattamente**. Non serve limare, ma non c'e' nemmeno margine: un
+decimo di disallineamento verticale lascia una striscia nera su un bordo. Si monta **a
+display acceso**, con qualcosa a schermo pieno, centrando prima di fissare il biadesivo.
+In larghezza restano 1,5 mm per parte, regolabili a occhio.
+
+La basetta e' piu' larga del foro e sta dietro il pannello: si affaccia solo il vetro.
+I 4,1 mm di spessore scendono a circa 3 dissaldando lo strip a 4 pin e uscendo con i fili
+diretti, se dietro lo spazio e' poco.
+
+**Perche' non il 0.91" 128x32**, che a forma sembrerebbe piu' adatto a un foro allungato:
+la sua area attiva e' 22,4 x 5,6 mm, cioe' un rapporto 4:1 contro il 2,5:1 della finestra.
+Lascerebbe 4,4 mm di vetro spento. Il 128x64, a 1,94:1, e' molto piu' vicino. In piu' e'
+lo stesso modulo gia' in uso: nessuna modifica al codice (`OLED_H` resta 64).
+
+Prenderlo **bianco** e non blu-giallo: quest'ultimo ha la fascia superiore di colore
+diverso e taglierebbe in due il dato grande al centro del layout.
+
 ### La capsula del microfono va premuta contro la griglia, con la spugna
 
 Il punto meno ovvio di tutto il montaggio, e quello che ha richiesto piu' prove.
