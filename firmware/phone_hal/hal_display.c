@@ -40,6 +40,11 @@ static const char *TAG = "hal_disp";
 #define OLED_PAGINE    (OLED_H / 8)
 #define I2C_HZ         400000
 
+/* Ogni quanti secondi si ritenta di riaccendere un display che non risponde.
+   Uno al secondo terrebbe occupato il bus per niente quando il display non
+   c'e' proprio; cinque bastano perche' il ritorno sia percepito immediato. */
+#define RIPESCA_S      5
+
 /* Font 5x7: cinque colonne per carattere, un bit per pixel, il bit 0 in alto.
    Copre da spazio (32) a 'Z' (90); le minuscole si convertono in maiuscole,
    e tutto il resto diventa uno spazio. E' l'insieme che serve a un telefono:
@@ -99,13 +104,22 @@ static bool s_pronto;
 static SemaphoreHandle_t  s_lock;
 static esp_timer_handle_t s_orologio;
 
-/* Cosa c'e' scritto adesso, per poterlo ridisegnare da solo. */
+/* Cosa c'e' scritto adesso, per poterlo ridisegnare da solo. Serve a due
+   cose: aggiornare l'indicatore del collegamento senza ricostruire la
+   schermata dall'esterno, e ripristinare lo schermo dopo che il display e'
+   stato perso e recuperato. */
 static char s_stato[16];
 static char s_extra[24];
+static char s_chi[24];           /* chiamante: nome... */
+static char s_num[24];           /* ...e numero */
 static bool s_schermata_stato;   /* falsa mentre mostra una chiamata in arrivo */
 static bool s_bt_mostrato;
 
-static void controlla_collegamento(void *arg);
+/* Secondi trascorsi dall'ultimo tentativo di riaccensione. */
+static int s_attesa;
+
+static void battito(void *arg);
+static void disegna_chiamata(void);
 
 static void pulisci(void)
 {
@@ -217,12 +231,61 @@ static void protagonista(int y_banda, int h_banda, const char *s)
     testo_centrato(y + ALTEZZA_2 + INTERLINEA, riga2, 2);
 }
 
+/*
+ * Riaccende il pannello: reset, sequenza di inizializzazione, accensione.
+ * E' ritentabile — e' proprio questo il ripescaggio — perche' non alloca
+ * niente e si limita a rimandare i comandi all'SSD1306.
+ */
+static esp_err_t accendi_pannello(void)
+{
+    if (!s_pannello) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    /* Il driver esp_lcd non sa di essere dentro un ciclo di recupero e stampa
+       due righe di errore per ogni tentativo fallito: con un display
+       scollegato sono trenta righe al minuto, per sempre, e un log cosi' non
+       serve piu' a cercare i guasti veri. Durante il tentativo lo si zittisce
+       e subito dopo gli si ridanno le sue impostazioni. */
+    esp_log_level_set("lcd_panel.io.i2c", ESP_LOG_NONE);
+    esp_log_level_set("lcd_panel.ssd1306", ESP_LOG_NONE);
+
+    esp_err_t e = esp_lcd_panel_reset(s_pannello);
+    if (e == ESP_OK) {
+        e = esp_lcd_panel_init(s_pannello);
+    }
+    if (e == ESP_OK) {
+        e = esp_lcd_panel_disp_on_off(s_pannello, true);
+    }
+    esp_log_level_set("lcd_panel.io.i2c", ESP_LOG_WARN);
+    esp_log_level_set("lcd_panel.ssd1306", ESP_LOG_WARN);
+
+    s_pronto = (e == ESP_OK);
+    return e;
+}
+
+/*
+ * L'esito del disegno NON si butta via.
+ *
+ * Il display sta sui morsetti insieme al codec, e un contatto che si apre per
+ * un istante fa fallire la scrittura. Prima l'errore veniva ignorato: lo
+ * schermo restava nero fino al riavvio del telefono, perche' nessuno ci
+ * riprovava piu'. Ora il fallimento marca il display come perso e il battito
+ * lo ripesca da solo.
+ */
 static void mostra(void)
 {
     if (!s_pronto) {
         return;
     }
-    esp_lcd_panel_draw_bitmap(s_pannello, 0, 0, OLED_W, OLED_H, s_fb);
+    const esp_err_t e = esp_lcd_panel_draw_bitmap(s_pannello, 0, 0,
+                                                  OLED_W, OLED_H, s_fb);
+    if (e != ESP_OK) {
+        ESP_LOGW(TAG, "display perso (%s): riprovo ogni %d s",
+                 esp_err_to_name(e), RIPESCA_S);
+        s_pronto = false;
+        s_attesa = 0;
+    }
 }
 
 void hal_display_init(void)
@@ -264,33 +327,34 @@ void hal_display_init(void)
         return;
     }
 
+    /* Il battito parte PRIMA di sapere se il display risponde, ed e' il
+       motivo per cui un display assente all'accensione non e' piu' una
+       condanna definitiva: lo ripesca lui appena compare. Prima il timer
+       nasceva solo in caso di successo, cioe' mancava proprio nel caso in cui
+       sarebbe servito. */
+    const esp_timer_create_args_t targs = {
+        .callback = battito,
+        .name     = "disp",
+    };
+    if (esp_timer_create(&targs, &s_orologio) == ESP_OK) {
+        esp_timer_start_periodic(s_orologio, 1000 * 1000);
+    }
+
     /* Niente ESP_ERROR_CHECK da qui in giu'. Il display e' un accessorio: se
        manca o e' scollegato, il telefono deve continuare a telefonare. Con
        ESP_ERROR_CHECK un OLED assente faceva andare in panico tutto il sistema
        e lo lasciava in ciclo di riavvio — misurato il 12/09/2026, ventuno
        riavvii in dodici secondi — trasformando un accessorio mancante in un
-       guasto totale. */
-    esp_err_t e = esp_lcd_panel_reset(s_pannello);
-    if (e == ESP_OK) {
-        e = esp_lcd_panel_init(s_pannello);
-    }
-    if (e == ESP_OK) {
-        e = esp_lcd_panel_disp_on_off(s_pannello, true);
-    }
-    if (e != ESP_OK) {
-        ESP_LOGW(TAG, "display non risponde (%s): si va avanti senza",
-                 esp_err_to_name(e));
-        s_pannello = NULL;
-        return;
-    }
-    s_pronto = true;
+       guasto totale.
 
-    const esp_timer_create_args_t targs = {
-        .callback = controlla_collegamento,
-        .name     = "disp_bt",
-    };
-    if (esp_timer_create(&targs, &s_orologio) == ESP_OK) {
-        esp_timer_start_periodic(s_orologio, 1000 * 1000);
+       s_pannello NON si azzera sul fallimento: l'oggetto pannello resta
+       valido anche se il dispositivo non ha risposto, ed e' cio' che permette
+       al battito di ritentare. A proteggere i disegni basta s_pronto. */
+    const esp_err_t e = accendi_pannello();
+    if (e != ESP_OK) {
+        ESP_LOGW(TAG, "display non risponde (%s): si va avanti senza, "
+                      "riprovo ogni %d s", esp_err_to_name(e), RIPESCA_S);
+        return;
     }
 
     ESP_LOGI(TAG, "SSD1306 %dx%d a 0x%02X su SDA%d/SCL%d",
@@ -363,9 +427,32 @@ void hal_display_state(const char *state, const char *extra)
  * Si ridisegna solo quando il collegamento cambia davvero: riscrivere mille
  * volte lo stesso schermo terrebbe occupato il bus per niente.
  */
-static void controlla_collegamento(void *arg)
+static void battito(void *arg)
 {
     (void)arg;
+
+    /* Display perso: si ritenta di riaccenderlo, e se torna si rimette a
+       schermo quello che c'era. Finche' non risponde non si tocca altro —
+       il telefono continua a telefonare al buio. */
+    if (!s_pronto) {
+        if (++s_attesa < RIPESCA_S) {
+            return;
+        }
+        s_attesa = 0;
+        xSemaphoreTake(s_lock, portMAX_DELAY);
+        if (accendi_pannello() == ESP_OK) {
+            ESP_LOGI(TAG, "display tornato: ridisegno");
+            if (s_schermata_stato) {
+                disegna_stato();
+            } else {
+                disegna_chiamata();
+            }
+        }
+        xSemaphoreGive(s_lock);
+        return;
+    }
+    s_attesa = 0;
+
     if (!s_schermata_stato || strcmp(s_stato, "IDLE") != 0) {
         return;
     }
@@ -377,25 +464,34 @@ static void controlla_collegamento(void *arg)
     xSemaphoreGive(s_lock);
 }
 
-void hal_display_incoming(const char *name, const char *number)
+/* Disegna la schermata della chiamata in arrivo da cio' che e' memorizzato,
+   cosi' che il battito possa rimetterla a schermo dopo un recupero. Chi la
+   chiama deve gia' avere il lock. */
+static void disegna_chiamata(void)
 {
-    xSemaphoreTake(s_lock, portMAX_DELAY);
-    s_schermata_stato = false;
     pulisci();
     testo_centrato(0, "CHIAMATA DA", 1);
 
-    const char *chi = (name && *name) ? name : NULL;
-    if (chi) {
+    if (s_chi[0] != '\0') {
         /* Se la rubrica conosce il nome, il nome e' il protagonista e il
            numero resta sotto come conferma. */
-        protagonista(10, 44, chi);
-        if (number && *number) {
-            testo_centrato(56, number, 1);
+        protagonista(10, 44, s_chi);
+        if (s_num[0] != '\0') {
+            testo_centrato(56, s_num, 1);
         }
     } else {
-        protagonista(12, OLED_H - 12, (number && *number) ? number
-                                                            : "SCONOSCIUTO");
+        protagonista(12, OLED_H - 12, s_num[0] != '\0' ? s_num
+                                                        : "SCONOSCIUTO");
     }
     mostra();
+}
+
+void hal_display_incoming(const char *name, const char *number)
+{
+    xSemaphoreTake(s_lock, portMAX_DELAY);
+    snprintf(s_chi, sizeof(s_chi), "%s", name ? name : "");
+    snprintf(s_num, sizeof(s_num), "%s", number ? number : "");
+    s_schermata_stato = false;
+    disegna_chiamata();
     xSemaphoreGive(s_lock);
 }
