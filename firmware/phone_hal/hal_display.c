@@ -23,6 +23,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+#include "freertos/task.h"
 
 #include "driver/i2c_master.h"
 #include "esp_lcd_io_i2c.h"
@@ -30,7 +31,6 @@
 #include "esp_lcd_panel_ssd1306.h"
 #include "esp_lcd_panel_vendor.h"
 #include "esp_log.h"
-#include "esp_timer.h"
 
 static const char *TAG = "hal_disp";
 
@@ -101,8 +101,7 @@ static bool s_pronto;
  * va protetto. Qui si tratta di due task che condividono un bus fisico e un
  * buffer di pixel, che e' esattamente il caso per cui i mutex esistono.
  */
-static SemaphoreHandle_t  s_lock;
-static esp_timer_handle_t s_orologio;
+static SemaphoreHandle_t s_lock;
 
 /* Cosa c'e' scritto adesso, per poterlo ridisegnare da solo. Serve a due
    cose: aggiornare l'indicatore del collegamento senza ricostruire la
@@ -118,7 +117,7 @@ static bool s_bt_mostrato;
 /* Secondi trascorsi dall'ultimo tentativo di riaccensione. */
 static int s_attesa;
 
-static void battito(void *arg);
+static void task_display(void *arg);
 static void disegna_chiamata(void);
 
 static void pulisci(void)
@@ -353,16 +352,13 @@ void hal_display_init(void)
 
     /* Il battito parte PRIMA di sapere se il display risponde, ed e' il
        motivo per cui un display assente all'accensione non e' piu' una
-       condanna definitiva: lo ripesca lui appena compare. Prima il timer
-       nasceva solo in caso di successo, cioe' mancava proprio nel caso in cui
-       sarebbe servito. */
-    const esp_timer_create_args_t targs = {
-        .callback = battito,
-        .name     = "disp",
-    };
-    if (esp_timer_create(&targs, &s_orologio) == ESP_OK) {
-        esp_timer_start_periodic(s_orologio, 1000 * 1000);
-    }
+       condanna definitiva: lo ripesca lui appena compare. Prima nasceva solo
+       in caso di successo, cioe' mancava proprio nel caso in cui sarebbe
+       servito.
+
+       Priorita' bassa: non ha nessun vincolo di tempo, e deve cedere il passo
+       all'audio e al campanello. */
+    xTaskCreate(task_display, "display", 3072, NULL, 3, NULL);
 
     /* Niente ESP_ERROR_CHECK da qui in giu'. Il display e' un accessorio: se
        manca o e' scollegato, il telefono deve continuare a telefonare. Con
@@ -451,36 +447,57 @@ void hal_display_state(const char *state, const char *extra)
  * Si ridisegna solo quando il collegamento cambia davvero: riscrivere mille
  * volte lo stesso schermo terrebbe occupato il bus per niente.
  */
-static void battito(void *arg)
+/*
+ * Il lavoro periodico del display vive in un task SUO, non nel task di
+ * esp_timer, e la ragione e' il campanello.
+ *
+ * Il campanello genera la sua onda a 11 Hz con un esp_timer il cui callback
+ * tocca due GPIO e nient'altro: puo' permetterselo solo finche' nessun altro
+ * occupa quel task. Mettendoci dentro una transazione I2C al secondo — la
+ * sonda del display, piu' l'attesa sul mutex — il callback del campanello
+ * saltava il suo turno e il martelletto perdeva un colpo una volta al secondo:
+ * un "doppio drin" invece di uno squillo pieno, sentito il 02/10/2026.
+ *
+ * Il difetto c'era gia' prima della sonda, perche' anche ridisegnare lo
+ * schermo e' un kilobyte su I2C nello stesso task; si manifestava solo ai
+ * cambi di collegamento, cioe' quasi mai.
+ *
+ * Regola: nel task di esp_timer ci va solo cio' che non blocca. Il display fa
+ * I/O e non ha vincoli di tempo reale — sta qui.
+ */
+static void task_display(void *arg)
 {
     (void)arg;
-    xSemaphoreTake(s_lock, portMAX_DELAY);
+    for (;;) {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        xSemaphoreTake(s_lock, portMAX_DELAY);
 
-    if (s_pronto) {
-        if (!risponde()) {
-            ESP_LOGW(TAG, "display perso: non risponde, riprovo ogni %d s",
-                     RIPESCA_S);
-            s_pronto = false;
-            s_attesa = 0;
-        } else if (s_schermata_stato && strcmp(s_stato, "IDLE") == 0
-                   && hal_bt_is_connected() != s_bt_mostrato) {
-            disegna_stato();
-        }
-    } else if (++s_attesa >= RIPESCA_S) {
-        /* Finche' non risponde non si tocca altro: il telefono continua a
-           telefonare al buio. */
-        s_attesa = 0;
-        if (accendi_pannello() == ESP_OK) {
-            ESP_LOGI(TAG, "display tornato: ridisegno");
-            if (s_schermata_stato) {
+        if (s_pronto) {
+            if (!risponde()) {
+                ESP_LOGW(TAG, "display perso: non risponde, riprovo ogni %d s",
+                         RIPESCA_S);
+                s_pronto = false;
+                s_attesa = 0;
+            } else if (s_schermata_stato && strcmp(s_stato, "IDLE") == 0
+                       && hal_bt_is_connected() != s_bt_mostrato) {
                 disegna_stato();
-            } else {
-                disegna_chiamata();
+            }
+        } else if (++s_attesa >= RIPESCA_S) {
+            /* Finche' non risponde non si tocca altro: il telefono continua a
+               telefonare al buio. */
+            s_attesa = 0;
+            if (accendi_pannello() == ESP_OK) {
+                ESP_LOGI(TAG, "display tornato: ridisegno");
+                if (s_schermata_stato) {
+                    disegna_stato();
+                } else {
+                    disegna_chiamata();
+                }
             }
         }
-    }
 
-    xSemaphoreGive(s_lock);
+        xSemaphoreGive(s_lock);
+    }
 }
 
 /* Disegna la schermata della chiamata in arrivo da cio' che e' memorizzato,

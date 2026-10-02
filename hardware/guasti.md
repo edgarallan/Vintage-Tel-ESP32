@@ -295,3 +295,27 @@ poi BCLK, LRCK e `GPIO 22 → RXSDA`.
 
 Da non confondere con lo stallo dell'I2S dopo lo stacco dell'USB (capitolo sopra): quello
 si cura con un riavvio da seriale e il livello torna subito, questo no.
+
+## Il campanello fa un "doppio drin" invece di uno squillo pieno
+
+**Sintomo.** Lo squillo perde un colpo circa una volta al secondo: invece di un *drin*
+lungo e pieno si sente un doppio battito smorzato. Niente nel log, nessun errore.
+
+**Causa.** Il campanello genera l'onda a 11 Hz con un `esp_timer`, e il suo callback puo'
+permettersi di stare nel task del timer **solo perche' tocca due GPIO e nient'altro**: un
+turno ogni 45 ms, puntuale. Nello stesso task era finito il lavoro periodico del display,
+che fa I2C — la sonda di presenza una volta al secondo, piu' l'attesa sul mutex. Qualche
+millisecondo di blocco e il callback del campanello salta il turno: il martelletto perde
+un colpo, una volta al secondo.
+
+Il difetto esisteva gia' prima della sonda — anche ridisegnare lo schermo e' un kilobyte
+su I2C nello stesso task — ma si manifestava solo ai cambi di collegamento Bluetooth,
+cioe' quasi mai. La sonda lo ha reso continuo e quindi udibile.
+
+**Rimedio.** Il display e' passato a un task FreeRTOS proprio, a priorita' 3. Nel task di
+`esp_timer` resta solo il campanello.
+
+> **Nel task di esp_timer ci va solo cio' che non blocca.** Un callback che fa I/O —
+> I2C, SPI, attese su mutex — ruba il turno a tutti gli altri timer, e se uno di quelli
+> genera una forma d'onda il difetto si sente invece di leggersi. Il sintomo non compare
+> nel log: compare nelle orecchie.
