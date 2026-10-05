@@ -332,7 +332,11 @@ no. Le prime prove erano state fatte a scheda spenta e non valevano nulla.
 
 **Rimedio.** Invece di inseguire il guasto sul pad, l'NSI e' stato spostato sul **GPIO 16**,
 uno dei due pin di riserva con pull-up interno: si sposta il filo blu e si cambia
-`PIN_DIAL_NSI` in `phone_hal/hal_priv.h`. Il GPIO 32 resta fuori uso.
+`PIN_DIAL_NSI` in `phone_hal/hal_priv.h`. Il GPIO 32 resta fuori uso. Sulla basetta il
+16 e' serigrafato **`RX2`** (il 17 e' `TX2`), subito accanto al morsetto `4`.
+
+Verificato il 05/10/2026: cifre 2-3-5-6-4, tre `0` di fila e un `9` tutti decodificati
+giusti, e la chiamata parte.
 
 > **Un pad che ha preso calore per una dissaldatura e' sospetto per sempre.** Se il
 > progetto ha un pin di riserva, spostare il segnale costa un filo e una costante;
