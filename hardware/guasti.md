@@ -341,3 +341,22 @@ giusti, e la chiamata parte.
 > **Un pad che ha preso calore per una dissaldatura e' sospetto per sempre.** Se il
 > progetto ha un pin di riserva, spostare il segnale costa un filo e una costante;
 > diagnosticare il pad costa una serata e non lo ripara.
+
+## Dopo lo spostamento dell'NSI non mi sentono piu' (05/10/2026)
+
+**Sintomo.** Io sento chi chiama, chi chiama non sente me. Stesso comportamento col
+firmware di prima della rubrica: il software e' innocente.
+
+**Il dato che restringe il campo.** Col monitor di `diag_audio` il picco resta **fisso a 1**
+anche battendo sulla capsula: non il fondo vivo (~70) che il codec manda anche a microfono
+staccato, ma campioni tutti a -1, cioe' una linea dati ferma in alto. Capsula e cordone
+sono esclusi; restano il filo `TXSDA` e l'uscita del codec. E siccome sento chi chiama,
+MCLK, BCLK, LRCLK e il codec stesso funzionano: l'unica linea morta e' l'`ADCDAT`.
+
+**Rimedio.** Il DIN dell'I2S e' passato dal GPIO 33 al **GPIO 35**, un pin solo-ingresso:
+va bene perche' la linea la pilota il codec e il pull-up non serve, e il GPIO 17 resta di
+scorta. Poi il cablaggio e' stato rifatto e la scocca richiusa: in chiamata vera mi sentono.
+
+> **Un livello fisso a 1 non e' silenzio, e' un filo.** Un ingresso analogico muto da' comunque
+> un fondo di rumore; un valore inchiodato dice che i dati digitali non arrivano affatto, e
+> sposta la ricerca dalla cornetta ai fili fra codec ed ESP32.

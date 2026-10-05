@@ -27,7 +27,7 @@
    punto di vista DELLA SCHEDA, non del nostro: e' lei che riceve su RXSDA.
    Leggerle al contrario costa una serata — il DAC non riceve niente e si sente
    solo un fruscio, perche' si sta pilotando un'uscita del codec. */
-#define PIN_I2S_DIN      33   /* al pin TXSDA: il codec trasmette, il mic */
+#define PIN_I2S_DIN      35   /* al pin TXSDA: il codec trasmette, il mic. Era 33, guasto */
 #define PIN_I2S_DOUT     22   /* al pin RXSDA: il codec riceve, la capsula */
 /* L'MCLK su ESP32 puo' uscire SOLO da GPIO 0, 1 o 3, e 1/3 sono la console.
    GPIO 0 e' strapping ma viene campionato solo al reset: vedi pinout.md. */

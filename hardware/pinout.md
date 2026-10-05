@@ -38,7 +38,7 @@ Servono **13 segnali**. Margine: **due pin**.
 | LED di stato WS2812 | **27** | OUT | RMT | Un pixel indirizzabile |
 | I2S — BCLK | **26** | OUT | I2S0 | Codec WM8960 |
 | I2S — WS / LRCLK | **25** | OUT | I2S0 | Codec WM8960 |
-| I2S — DIN (dal codec) | **33** | IN | I2S0 | `ADCDAT`: microfono. Va sul pin **`TXSDA`** |
+| I2S — DIN (dal codec) | **35** | IN | I2S0 | `ADCDAT`: microfono. Va sul pin **`TXSDA`**. Pin solo-ingresso: va bene perché il codec pilota la linea, il pull-up non serve. **Era il 33**, guasto: vedi `guasti.md` |
 | I2S — DOUT (al codec) | **22** | OUT | I2S0 | `DACDAT`: capsula. Va sul pin **`RXSDA`** |
 | I2S — MCLK | **0** | OUT | I2S0/APLL | Clock di sistema del codec. Unico pin possibile |
 | I2C — SDA | **21** | I/O | I2C0 | **Bus condiviso**: WM8960 `0x1A` + SSD1306 `0x3C` |
@@ -171,7 +171,7 @@ vista: "TX = quello che trasmetto io". **È l'opposto.** È la scheda a ricevere
 | Pin della scheda | Cos'è davvero | Va a |
 |---|---|---|
 | **`RXSDA`** | `DACDAT`, **ingresso** del codec | GPIO 22, il nostro DOUT |
-| **`TXSDA`** | `ADCDAT`, **uscita** del codec | GPIO 33, il nostro DIN |
+| **`TXSDA`** | `ADCDAT`, **uscita** del codec | GPIO 35, il nostro DIN |
 
 Sbagliarli costa una serata, e in un modo particolarmente insidioso: **si sente qualcosa.**
 Pilotando un'uscita del codec con un'uscita dell'ESP32 il DAC non riceve niente, ma il
@@ -361,7 +361,7 @@ una capsula da orecchio.
 | GND | GND |
 | BCLK | GPIO 26 |
 | LRCLK / DACLRC | GPIO 25 |
-| ADCDAT | GPIO 33 |
+| ADCDAT | GPIO 35 |
 | DACDAT | GPIO 22 |
 | SDA / SCL | GPIO 21 / 19 (in parallelo all'OLED) |
 

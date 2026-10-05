@@ -129,7 +129,7 @@ si aggiorna `pinout.md` nello stesso commit.
 | Campanello IN1 / IN2 | 13 / 14 |
 | Pulsante | 23 |
 | LED WS2812 | 27 |
-| I2S BCLK / WS / DIN / DOUT | 26 / 25 / 33 / 22 |
+| I2S BCLK / WS / DIN / DOUT | 26 / 25 / 35 / 22 |
 | I2C SDA / SCL | 21 / 19 |
 
 **Resta un solo pin libero: il GPIO 17.** I GPIO 16-17, che sui moduli WROVER servono alla
