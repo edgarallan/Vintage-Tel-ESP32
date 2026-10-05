@@ -32,7 +32,7 @@ dei contatti col multimetro: vedi [`../hardware/retrofit_layout.md`](../hardware
 | # | Tieni / Rimuovi / Aggiungi | Componente | GPIO |
 |---|----------------------------|-----------|------|
 | 1 | Tieni | Commutatore a gancio | GPIO 18 |
-| 6 | Tieni | Disco combinatore (impulsi + NSI) | GPIO 4 / GPIO 32 |
+| 6 | Tieni | Disco combinatore (impulsi + NSI) | GPIO 4 / GPIO 16 |
 | 5 | Tieni | Campanello (bobina ≈ 1700 Ω) | GPIO 13 / GPIO 14 |
 | 4 | Tieni | Morsettiera (nodo di cablaggio) | — |
 | 2 | Rimuovi | Bobina d'induzione / trasformatore | — |
@@ -64,7 +64,7 @@ I numeri rimandano ai marker dell'immagine; gli Step a [`04_installation.md`](04
 | Ordine | Monta | Cabla | Verifica |
 |--------|-------|-------|----------|
 | 1 | **⑦ ESP32 su basetta a morsetti** nello spazio centrale | alimentazione 5V | `idf.py monitor` mostra il boot |
-| 2 | segnali a bassa tensione | ① gancio→GPIO18, ⑥ impulsi→GPIO4, NSI→GPIO32 — **direttamente sui morsetti**, senza optoaccoppiatori né rete RC | bring-up: gancio a log e ogni cifra 0-9 corretta (10 impulsi → `0`) |
+| 2 | segnali a bassa tensione | ① gancio→GPIO18, ⑥ impulsi→GPIO4, NSI→GPIO16 — **direttamente sui morsetti**, senza optoaccoppiatori né rete RC | bring-up: gancio a log e ogni cifra 0-9 corretta (10 impulsi → `0`) |
 | 3 | **⑩ capsula electret** in cornetta (vedi sotto: **va sigillata**) + **⑧ codec WM8960** nella base | 3 fili del cordone: massa, mic, ascolto | test audio loopback: si parla e ci si sente |
 | 4 | **⑨ boost + H-bridge** | bobina **⑤ campanello** | test campanello (3 squilli, 1 s on / 4 s off) |
 | 5 | alimentazione (rete + tampone) + display/WS2812 | — | LED stato, OLED |

@@ -319,3 +319,21 @@ cioe' quasi mai. La sonda lo ha reso continuo e quindi udibile.
 > I2C, SPI, attese su mutex — ruba il turno a tutti gli altri timer, e se uno di quelli
 > genera una forma d'onda il difetto si sente invece di leggersi. Il sintomo non compare
 > nel log: compare nelle orecchie.
+
+## Il disco non compone piu' dopo aver tolto un ponte di stagno tra GPIO 32 e 33
+
+**Sintomo.** Squillo, risposta e conversazione funzionano, ma il disco non compone:
+nessuna cifra arriva al firmware. Con il diagnostico degli ingressi il GPIO 32 (NSI) non
+registra fronti quando il disco ruota.
+
+**Contesto.** Fra il GPIO 32 (NSI) e il GPIO 33 (`ADCDAT`, il microfono dal codec) c'era
+un ponte di stagno, rimosso col saldatore. Dopo la rimozione il microfono andava, il disco
+no. Le prime prove erano state fatte a scheda spenta e non valevano nulla.
+
+**Rimedio.** Invece di inseguire il guasto sul pad, l'NSI e' stato spostato sul **GPIO 16**,
+uno dei due pin di riserva con pull-up interno: si sposta il filo blu e si cambia
+`PIN_DIAL_NSI` in `phone_hal/hal_priv.h`. Il GPIO 32 resta fuori uso.
+
+> **Un pad che ha preso calore per una dissaldatura e' sospetto per sempre.** Se il
+> progetto ha un pin di riserva, spostare il segnale costa un filo e una costante;
+> diagnosticare il pad costa una serata e non lo ripara.

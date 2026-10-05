@@ -15,7 +15,7 @@
  * documento e' un bug, e va corretto uno dei due nello stesso commit.
  */
 #define PIN_DIAL_PULSE   4
-#define PIN_DIAL_NSI     32
+#define PIN_DIAL_NSI     16   /* era 32: pin danneggiato, vedi guasti.md */
 #define PIN_HOOK         18
 #define PIN_BELL_IN1     13
 #define PIN_BELL_IN2     14

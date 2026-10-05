@@ -30,7 +30,7 @@ Servono **13 segnali**. Margine: **due pin**.
 | Funzione | GPIO | Direzione | Peripheral | Note |
 |---|---|---|---|---|
 | Disco — impulsi | **4** | IN, pull-up | GPIO + ISR | Antirimbalzo software: assestamento 3 ms nel HAL + finestra cieca 8 ms in `core/`. **Niente PCNT**, vedi sotto |
-| Disco — NSI (fuori-normale) | **32** | IN, pull-up | GPIO | Abilita il conteggio mentre il disco ruota |
+| Disco — NSI (fuori-normale) | **16** | IN, pull-up | GPIO | Abilita il conteggio mentre il disco ruota. **Era il 32**, guasto: vedi `guasti.md` |
 | Gancio (cornetta) | **18** | IN, pull-up | GPIO + ISR | `xQueueSendFromISR` verso il task telefono |
 | Campanello — IN1 | **13** | OUT | esp_timer | L298N, canale A |
 | Campanello — IN2 | **14** | OUT | esp_timer | In **antifase** con IN1, ~22 Hz |
@@ -148,13 +148,15 @@ La polarità non conta, sono contatti puliti:
 
 ```
 bianco  → GPIO 4     rosso    → GND
-blu     → GPIO 32    marrone  → GND
+blu     → GPIO 16    marrone  → GND
 ```
 
 ## Riserva
 
-Restano **due pin liberi: GPIO 16 e 17**, entrambi bidirezionali e con pull-up interno,
-quindi utilizzabili senza alcun componente aggiuntivo.
+Resta **un pin libero: GPIO 17**, bidirezionale e con pull-up interno, quindi
+utilizzabile senza alcun componente aggiuntivo. Il GPIO 16 e' stato speso il 05/10/2026
+per l'NSI, al posto del **GPIO 32, da non riusare**: dopo la rimozione di un ponte di
+stagno verso il 33 il segnale del disco non lo raggiungeva piu' (vedi `guasti.md`).
 
 Questo **cancella l'unica saldatura di riserva prevista dal progetto**. La stesura
 precedente, che assumeva un WROVER, non aveva pin liberi e prevedeva come ripiego di
