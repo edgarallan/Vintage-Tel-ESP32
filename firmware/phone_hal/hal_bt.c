@@ -36,8 +36,11 @@
 #include "esp_hf_client_api.h"
 #include "esp_hf_client_legacy_api.h"
 #include "esp_log.h"
+#include "esp_pbac_api.h"
 #include "esp_timer.h"
 #include "nvs.h"
+
+#include "vcard.h"
 
 static const char *TAG = "hal_bt";
 
@@ -84,6 +87,31 @@ static bool    s_annunciata;  /* l'evento e' gia' stato mandato */
 static uint8_t s_ring;        /* RING ricevuti per questa chiamata */
 static char    s_clip[PB_NUMBER_LEN];
 
+/*
+ * Rubrica via PBAP: si scaricano SOLO I PREFERITI del cellulare, e di ognuno
+ * solo nome e numeri. Con 1200 contatti in rubrica la scelta di cosa tenere
+ * deve farla chi usa il telefono, e i preferiti sono una scelta che ha gia'
+ * fatto — e che cambia dal cellulare, senza toccare questo apparecchio.
+ *
+ * Lo scaricamento riparte a ogni collegamento del cellulare e la rubrica vive
+ * solo in RAM: senza cellulare collegato non arrivano chiamate, quindi non
+ * servirebbe a nessuno ricordarla fra un riavvio e l'altro.
+ */
+#define PBAP_RUBRICA      "telecom/fav.vcf"
+#define PBAP_REPO_PREFERITI  0x08   /* bit "favorites" in peer_supported_repo */
+
+/* Proprieta' richieste: VERSION, FN, N, TEL. Le foto restano sul cellulare. */
+#define PBAP_PROPRIETA    ((1ULL << 0) | (1ULL << 1) | (1ULL << 2) | (1ULL << 7))
+
+/* Quanto il task di Bluedroid puo' aspettare che la coda del telefono si
+   liberi. Una rubrica sono decine di eventi di fila, e la coda ne tiene 16:
+   buttarli come si fa col battito vorrebbe dire perdere contatti. */
+#define PBAP_ATTESA_CODA  pdMS_TO_TICKS(200)
+
+static vcard_t  s_vcard;
+static bool     s_pb_primo;   /* il prossimo pacchetto e' il primo della risposta */
+static uint16_t s_pb_voci;
+
 /* Ultimi due byte del MAC: identifica l'apparecchio senza esporlo. */
 static const char *mac_corto(const uint8_t *bda)
 {
@@ -102,6 +130,115 @@ static void send_ev(phone_ev_type_t type, const char *caller)
         snprintf(ev.caller, sizeof(ev.caller), "%s", caller);
     }
     xQueueSend(s_evt_q, &ev, 0);
+}
+
+static void metti_in_coda(const phone_ev_t *ev)
+{
+    if (xQueueSend(s_evt_q, ev, PBAP_ATTESA_CODA) != pdTRUE) {
+        ESP_LOGW(TAG, "rubrica: coda piena, voce persa");
+        return;
+    }
+    if (ev->type == EV_PB_ADD) {
+        s_pb_voci++;
+    }
+}
+
+static void voce_rubrica(const char *nome, const char *numero, void *ctx)
+{
+    (void)ctx;
+    phone_ev_t ev = {
+        .type   = EV_PB_ADD,
+        .now_ms = (uint32_t)(esp_timer_get_time() / 1000),
+    };
+    snprintf(ev.name, sizeof(ev.name), "%s", nome);
+    snprintf(ev.caller, sizeof(ev.caller), "%s", numero);
+    metti_in_coda(&ev);
+}
+
+/* I codici di errore che si vedranno davvero, tradotti in cosa fare. */
+static const char *spiega_errore_pbap(esp_pbac_status_t r)
+{
+    switch (r) {
+    case ESP_PBAC_UNAUTHORIZED:
+    case ESP_PBAC_FORBIDDEN:
+        return "accesso ai contatti negato: attivalo sul cellulare, "
+               "Bluetooth > Vintage Tel > Contatti";
+    case ESP_PBAC_NOT_FOUND:
+    case ESP_PBAC_NOT_IMPLEMENTED:
+    case ESP_PBAC_BAD_REQUEST:
+        return "il cellulare non espone i preferiti";
+    default:
+        return "errore";
+    }
+}
+
+static void avvia_scaricamento(esp_pbac_conn_hdl_t h)
+{
+    esp_pbac_pull_phone_book_app_param_t par = {
+        .include_property_selector = 1,
+        .include_format            = 1,
+        .include_max_list_count    = 1,
+        .format                    = 0x01,              /* vCard 3.0 */
+        .max_list_count            = PB_MAX_CONTACTS,
+        .property_selector         = PBAP_PROPRIETA,
+    };
+    vcard_init(&s_vcard, voce_rubrica, NULL);
+    s_pb_primo = true;
+    s_pb_voci  = 0;
+
+    const esp_err_t err = esp_pbac_pull_phone_book(h, PBAP_RUBRICA, &par);
+    if (err != ESP_OK) {
+        ESP_LOGW(TAG, "rubrica: richiesta rifiutata dallo stack: %s",
+                 esp_err_to_name(err));
+        esp_pbac_disconnect(h);
+    }
+}
+
+static void pbac_cb(esp_pbac_event_t event, esp_pbac_param_t *param)
+{
+    switch (event) {
+    case ESP_PBAC_CONNECTION_STATE_EVT:
+        if (param->conn_stat.connected) {
+            const uint8_t repo = param->conn_stat.peer_supported_repo;
+            ESP_LOGI(TAG, "rubrica: collegato, il cellulare offre 0x%02X%s", repo,
+                     (repo & PBAP_REPO_PREFERITI) ? " (preferiti compresi)" : "");
+            avvia_scaricamento(param->conn_stat.handle);
+        } else if (param->conn_stat.reason != ESP_PBAC_SUCCESS) {
+            ESP_LOGW(TAG, "rubrica: collegamento non riuscito (0x%02X)",
+                     param->conn_stat.reason);
+        }
+        break;
+
+    case ESP_PBAC_PULL_PHONE_BOOK_RESPONSE_EVT: {
+        const struct pbac_pull_phone_book_rsp_param *r = &param->pull_phone_book_rsp;
+
+        if (r->result != ESP_PBAC_SUCCESS) {
+            ESP_LOGW(TAG, "rubrica: %s (0x%02X)",
+                     spiega_errore_pbap(r->result), r->result);
+            esp_pbac_disconnect(r->handle);
+            break;
+        }
+        /* Si svuota solo quando il cellulare ha accettato: un rifiuto non
+           deve lasciare il telefono senza i nomi che aveva. */
+        if (s_pb_primo) {
+            s_pb_primo = false;
+            const phone_ev_t ev = { .type = EV_PB_CLEAR };
+            metti_in_coda(&ev);
+        }
+        if (r->data && r->data_len) {
+            vcard_feed(&s_vcard, r->data, r->data_len);
+        }
+        if (r->final) {
+            vcard_end(&s_vcard);
+            ESP_LOGI(TAG, "rubrica: %u numeri dai preferiti", s_pb_voci);
+            esp_pbac_disconnect(r->handle);
+        }
+        break;
+    }
+
+    default:
+        break;
+    }
 }
 
 static void azzera_chiamata(void)
@@ -238,6 +375,12 @@ static void hf_cb(esp_hf_client_cb_event_t event, esp_hf_client_cb_param_t *para
             ESP_LOGI(TAG, "cellulare collegato (%s)",
                      mac_corto(param->conn_stat.remote_bda));
             salva_peer(param->conn_stat.remote_bda);
+            /* La rubrica si chiede solo a collegamento fatto: e' il momento
+               in cui il cellulare ha gia' accettato questo apparecchio. La
+               prima volta Android chiede il permesso con una notifica. */
+            if (esp_pbac_connect(param->conn_stat.remote_bda) != ESP_OK) {
+                ESP_LOGW(TAG, "rubrica: lo stack non apre il PBAP");
+            }
             break;
         case ESP_HF_CLIENT_CONNECTION_STATE_DISCONNECTED:
             if (s_slc) {
@@ -380,6 +523,9 @@ void hal_bt_init(QueueHandle_t evt_q)
 
     ESP_ERROR_CHECK(esp_hf_client_register_callback(hf_cb));
     ESP_ERROR_CHECK(esp_hf_client_init());
+
+    ESP_ERROR_CHECK(esp_pbac_register_callback(pbac_cb));
+    ESP_ERROR_CHECK(esp_pbac_init());
 
     /* Accoppiamento sicuro senza tastiera ne' display sull'apparecchio. */
     esp_bt_io_cap_t iocap = ESP_BT_IO_CAP_NONE;

@@ -14,7 +14,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define PB_MAX_CONTACTS 32
+/* Voci, non persone: un preferito con cellulare e fisso ne occupa due. */
+#define PB_MAX_CONTACTS 64
 #define PB_NAME_LEN     24
 #define PB_NUMBER_LEN   24
 

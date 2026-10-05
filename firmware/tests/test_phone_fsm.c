@@ -59,6 +59,14 @@ static void send_incoming(const char *caller)
     phone_handle(&ph, &ev);
 }
 
+static void send_pb_add(const char *name, const char *number)
+{
+    phone_ev_t ev = { .type = EV_PB_ADD, .now_ms = g_fake.now_ms };
+    snprintf(ev.name, sizeof(ev.name), "%s", name);
+    snprintf(ev.caller, sizeof(ev.caller), "%s", number);
+    phone_handle(&ph, &ev);
+}
+
 static void tick_to(uint32_t ms)
 {
     at(ms);
@@ -436,6 +444,31 @@ void test_eventi_fuori_contesto_non_rompono_nulla(void)
     TEST_ASSERT_EQUAL(ST_IDLE, phone_state(&ph));
 }
 
+/* --- rubrica scaricata dal cellulare -------------------------------------- */
+
+void test_la_rubrica_scaricata_da_il_nome_al_chiamante(void)
+{
+    send_pb_add("Lucia", "+39 333 7654321");
+    send_incoming("3337654321");
+    TEST_ASSERT_EQUAL_STRING("Lucia", g_fake.display_name);
+}
+
+void test_un_nuovo_scaricamento_svuota_la_rubrica(void)
+{
+    /* Un preferito tolto sul cellulare non deve sopravvivere sul telefono. */
+    send(EV_PB_CLEAR);
+    send_incoming("+393331234567");
+    TEST_ASSERT_EQUAL_STRING("+393331234567", g_fake.display_name);
+}
+
+void test_la_rubrica_si_aggiorna_anche_durante_uno_squillo(void)
+{
+    send_incoming("+393339999999");
+    send(EV_PB_CLEAR);
+    send_pb_add("Lucia", "+393337654321");
+    TEST_ASSERT_EQUAL(ST_RINGING, phone_state(&ph));
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -458,6 +491,9 @@ int main(void)
     RUN_TEST(test_cornetta_giu_durante_composizione_annulla);
     RUN_TEST(test_numero_troppo_lungo_non_trabocca);
     RUN_TEST(test_cornetta_giu_chiude_la_chiamata);
+    RUN_TEST(test_la_rubrica_scaricata_da_il_nome_al_chiamante);
+    RUN_TEST(test_un_nuovo_scaricamento_svuota_la_rubrica);
+    RUN_TEST(test_la_rubrica_si_aggiorna_anche_durante_uno_squillo);
     RUN_TEST(test_il_disco_in_chiamata_manda_dtmf);
     RUN_TEST(test_chiusura_dal_remoto_torna_a_riposo);
     RUN_TEST(test_chiamata_fallita_da_occupato_poi_torna_a_riposo);

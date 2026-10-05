@@ -124,7 +124,7 @@ si aggiorna `pinout.md` nello stesso commit.
 
 | Funzione | GPIO |
 |---|---|
-| Disco impulsi / NSI | 4 / 32 |
+| Disco impulsi / NSI | 4 / 16 |
 | Gancio | 18 |
 | Campanello IN1 / IN2 | 13 / 14 |
 | Pulsante | 23 |
@@ -132,26 +132,27 @@ si aggiorna `pinout.md` nello stesso commit.
 | I2S BCLK / WS / DIN / DOUT | 26 / 25 / 33 / 22 |
 | I2C SDA / SCL | 21 / 19 |
 
-**Restano 15 pin utilizzabili per 13 segnali: margine due.** I GPIO 16-17, che sui moduli
-WROVER servono alla PSRAM, qui sono liberi. Sono esclusi i GPIO 6-11
+**Resta un solo pin libero: il GPIO 17.** I GPIO 16-17, che sui moduli WROVER servono alla
+PSRAM, qui sono liberi; il 16 porta l'NSI dal 05/10/2026, al posto del **32, guasto e da
+non riusare** (vedi `hardware/guasti.md`). Sono esclusi i GPIO 6-11
 (flash SPI), 1/3 (console UART), 0/2/5/12/15 (strapping: se
 caricati impediscono il boot) e 34-39 (solo input e **senza pull-up interno**, quindi
 inservibili per i contatti puliti di disco e gancio).
 
 ## Configurazione
 
-Tutto in **NVS**: MAC del cellulare accoppiato, contatti, quick-dial, volumi, parametri di
-disco e campanello.
+**La rubrica arriva dal cellulare via PBAP**, a ogni collegamento: `phone_hal/hal_bt.c`
+scarica `telecom/fav.vcf`, cioè **solo i preferiti** di Android, con le sole proprietà
+nome e numero. Il parser a flusso è `core/vcard.c` e tiene il solo **nome di battesimo**,
+ridotto all'ASCII del font del display ("Niccolò Rossi" → "Niccolo"). Ogni numero diventa
+un `EV_PB_ADD` in coda, preceduto da un `EV_PB_CLEAR`: la rubrica resta di proprietà del
+task del telefono e vive solo in RAM. La prima volta Android chiede il permesso ai
+contatti; un rifiuto compare nel log come `rubrica: accesso ai contatti negato`.
 
-**Come ci si scrive non è ancora deciso, e non esiste.** Oggi in NVS finisce solo il MAC del
-cellulare, salvato in automatico alla prima connessione. Contatti e quick-dial sono
-implementati e testati in `core/phonebook.c`, ma **non c'è modo di caricarli**: la rubrica
-all'avvio è vuota, quindi il nome del chiamante e il quick-dial sono di fatto inattivi.
+Il **quick-dial** resta nel codice ma non viene assegnato: per scelta non si usano
+scorciatoie sul disco.
 
-Una prima stesura prevedeva un access point WiFi con una pagina web, ed è stata abbandonata:
-la radio è una sola e il Bluetooth deve restare vivo. Le strade aperte sono **PBAP** — che
-scarica la rubrica direttamente dal cellulare accoppiato, e per cui `sdkconfig.defaults`
-abilita già `CONFIG_BT_PBAC_ENABLED` — oppure una configurazione via seriale.
+In NVS finisce solo il MAC del cellulare, salvato in automatico alla prima connessione.
 
 Il MAC del cellulare non va mai nei sorgenti né stampato per intero nei log.
 

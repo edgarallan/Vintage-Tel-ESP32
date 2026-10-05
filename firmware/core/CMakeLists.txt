@@ -2,6 +2,6 @@
 # da alcun componente di ESP-IDF, ed e' esattamente cio' che la rende
 # compilabile anche dal banco di prova nativo sotto tests/.
 idf_component_register(
-    SRCS "phone_fsm.c" "dial_decode.c" "phonebook.c" "tones.c" "ring_pattern.c"
+    SRCS "phone_fsm.c" "dial_decode.c" "phonebook.c" "tones.c" "ring_pattern.c" "vcard.c"
     INCLUDE_DIRS "."
 )

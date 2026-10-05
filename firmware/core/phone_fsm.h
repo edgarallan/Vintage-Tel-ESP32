@@ -44,13 +44,16 @@ typedef enum {
     EV_CALL_ANSWERED,  /* il chiamato ha risposto: la conversazione comincia */
     EV_CALL_ENDED,     /* la chiamata e' finita dal lato remoto */
     EV_TICK,           /* battito periodico: fa scadere i timeout */
+    EV_PB_CLEAR,       /* comincia uno scaricamento della rubrica: si svuota */
+    EV_PB_ADD,         /* una voce della rubrica scaricata dal cellulare */
 } phone_ev_type_t;
 
 typedef struct {
     phone_ev_type_t type;
     uint32_t        now_ms;
     uint8_t         digit;                    /* EV_DIGIT */
-    char            caller[PB_NUMBER_LEN];    /* EV_INCOMING_CALL */
+    char            caller[PB_NUMBER_LEN];    /* EV_INCOMING_CALL, EV_PB_ADD: il numero */
+    char            name[PB_NAME_LEN];        /* EV_PB_ADD */
 } phone_ev_t;
 
 typedef struct {

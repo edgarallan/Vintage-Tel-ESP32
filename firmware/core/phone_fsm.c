@@ -338,6 +338,24 @@ void phone_init(phone_t *p, const hw_iface_t *hw, phonebook_t *pb,
     transition(p, ST_IDLE);
 }
 
+/* La rubrica arriva dal cellulare a pezzi, nel task di Bluedroid, e qui viene
+   scritta dal task del telefono: e' lo stesso percorso in coda di ogni altro
+   evento, ed e' il motivo per cui la rubrica non ha bisogno di un mutex. Non
+   cambia lo stato: si aggiorna anche durante uno squillo. */
+static void on_pb_clear(phone_t *p)
+{
+    if (p->pb) {
+        pb_init(p->pb);
+    }
+}
+
+static void on_pb_add(phone_t *p, const char *name, const char *number)
+{
+    if (p->pb) {
+        pb_add(p->pb, name, number, PB_NO_QUICK_DIAL);
+    }
+}
+
 void phone_handle(phone_t *p, const phone_ev_t *ev)
 {
     switch (ev->type) {
@@ -349,6 +367,8 @@ void phone_handle(phone_t *p, const phone_ev_t *ev)
     case EV_CALL_ANSWERED: on_call_answered(p);                    break;
     case EV_CALL_ENDED:    on_call_ended(p);                       break;
     case EV_TICK:          on_tick(p, ev->now_ms);                 break;
+    case EV_PB_CLEAR:      on_pb_clear(p);                         break;
+    case EV_PB_ADD:        on_pb_add(p, ev->name, ev->caller);     break;
     default:                                                       break;
     }
 }
