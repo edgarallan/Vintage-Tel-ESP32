@@ -360,3 +360,26 @@ scorta. Poi il cablaggio e' stato rifatto e la scocca richiusa: in chiamata vera
 > **Un livello fisso a 1 non e' silenzio, e' un filo.** Un ingresso analogico muto da' comunque
 > un fondo di rumore; un valore inchiodato dice che i dati digitali non arrivano affatto, e
 > sposta la ricerca dalla cornetta ai fili fra codec ed ESP32.
+
+## Chi parla sembra in una stanza che rimbomba (06/10/2026)
+
+**Sintomo.** Tutto funziona, ma la voce di chi chiama arriva con un'eco leggera, "da
+stanza vuota". Nessun errore nel log.
+
+**Causa.** Sull'adattatore jack a morsetti (`L`, `R`, `G`, `V`) **blu e bianco erano
+invertiti**: il bianco sulla massa `G`, il blu sul microfono `V`. Ma il blu e' il comune
+della cornetta, cioe' anche il ritorno della capsula d'ascolto: l'auricolare si chiudeva
+sull'ingresso microfonico invece che a massa, e la voce in arrivo rientrava dal
+microfono. Il microfono funzionava lo stesso — l'electret fra bianco e blu non bada a quale
+dei due e' la massa nominale — ed e' per questo che l'errore non si notava.
+
+**Diagnosi in trenta secondi**, a fili scollegati: rosso–blu legge la bobina d'ascolto
+(~580 Ω, ferma), rosso–bianco e' aperto. Il filo che chiude la bobina col rosso e' il
+comune, e va a massa.
+
+**Rimedio.** Rosso su `L`, **blu su `G`**, **bianco su `V`**: la mappa della tabella "Cornetta"
+in `pinout.md`, che era giusta. L'eco sparisce.
+
+> **Il comune della cornetta e' anche il ritorno dell'auricolare.** Metterlo sul microfono non
+> zittisce niente: fa rientrare l'ascolto nella voce che si trasmette, e il difetto si sente
+> come un'acustica sbagliata, non come un guasto.
