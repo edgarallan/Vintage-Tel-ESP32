@@ -217,6 +217,24 @@ void test_risposta_dal_cellulare_zittisce_il_campanello(void)
     TEST_ASSERT_FALSE(g_fake.bell_on);
 }
 
+void test_risposta_dal_cellulare_gli_lascia_l_audio(void)
+{
+    /* Chi risponde dal cellulare vuole parlare nel cellulare: il telefono
+       chiude il proprio canale voce, e Android riporta l'audio su di se'
+       senza dover scegliere la sorgente a mano. */
+    send_incoming("+393331234567");
+    send(EV_CALL_ANSWERED);
+    TEST_ASSERT_TRUE(fake_did(&g_fake, "release_audio"));
+}
+
+void test_risposta_dalla_cornetta_tiene_l_audio(void)
+{
+    send_incoming("+393331234567");
+    send(EV_HOOK_UP);
+    send(EV_CALL_ANSWERED);   /* l'indicatore arriva comunque */
+    TEST_ASSERT_FALSE(fake_did(&g_fake, "release_audio"));
+}
+
 void test_risposta_fuori_contesto_non_apre_una_conversazione(void)
 {
     /* L'indicatore di chiamata attiva arriva anche per le entranti, quando la
@@ -503,6 +521,8 @@ int main(void)
     RUN_TEST(test_chi_non_risponde_lascia_riagganciare);
     RUN_TEST(test_risposta_fuori_contesto_non_apre_una_conversazione);
     RUN_TEST(test_risposta_dal_cellulare_zittisce_il_campanello);
+    RUN_TEST(test_risposta_dal_cellulare_gli_lascia_l_audio);
+    RUN_TEST(test_risposta_dalla_cornetta_tiene_l_audio);
     RUN_TEST(test_quick_dial_con_una_cifra_sola);
     RUN_TEST(test_una_seconda_cifra_annulla_il_quick_dial);
     RUN_TEST(test_cifra_senza_quick_dial_aspetta_la_pausa_lunga);

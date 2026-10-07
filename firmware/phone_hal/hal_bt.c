@@ -596,3 +596,21 @@ bool hal_bt_is_connected(void)
 {
     return s_slc;
 }
+
+bool hal_bt_release_audio(void)
+{
+    if (!s_slc) {
+        return false;
+    }
+    /* Chiudere il canale voce dal lato vivavoce e' il modo, previsto
+       dall'HFP, per dire al cellulare "parla tu": Android riporta la
+       conversazione sul proprio auricolare. La chiamata resta in piedi. */
+    const esp_err_t err = esp_hf_client_disconnect_audio(s_peer);
+    if (err != ESP_OK) {
+        ESP_LOGW(TAG, "non riesco a restituire l'audio al cellulare: %s",
+                 esp_err_to_name(err));
+        return false;
+    }
+    ESP_LOGI(TAG, "risposto dal cellulare: audio restituito");
+    return true;
+}

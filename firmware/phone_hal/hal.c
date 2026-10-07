@@ -26,6 +26,7 @@ static const hw_iface_t s_hw = {
     .bt_hangup         = hal_bt_hangup,
     .bt_send_dtmf      = hal_bt_send_dtmf,
     .bt_is_connected   = hal_bt_is_connected,
+    .bt_release_audio  = hal_bt_release_audio,
     .now_ms            = hal_now_ms,
 };
 

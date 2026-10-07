@@ -55,6 +55,9 @@ typedef struct {
     bool (*bt_hangup)(void);
     bool (*bt_send_dtmf)(char digit);
     bool (*bt_is_connected)(void);
+    /* Chiude il canale voce verso il telefono: la conversazione resta in
+       corso, ma l'audio torna sul cellulare. */
+    bool (*bt_release_audio)(void);
 
     /* Millisecondi dall'avvio. Nei test e' un contatore pilotabile a mano,
        ed e' cio' che rende i test deterministici invece che a tempo reale. */

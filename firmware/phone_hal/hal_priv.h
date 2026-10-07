@@ -81,5 +81,6 @@ bool hal_bt_reject(void);
 bool hal_bt_hangup(void);
 bool hal_bt_send_dtmf(char digit);
 bool hal_bt_is_connected(void);
+bool hal_bt_release_audio(void);
 
 #endif /* HAL_PRIV_H */

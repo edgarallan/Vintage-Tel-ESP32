@@ -155,10 +155,14 @@ static void on_call_answered(phone_t *p)
 
     case ST_RINGING:
         /* Entrante con la cornetta ancora giu': ha risposto il cellulare.
-           La conversazione sta li', il telefono deve solo tacere. Se si
+           La conversazione sta li': il telefono tace e le restituisce
+           l'audio, che il cellulare aveva girato qui per lo squillo. Se si
            risponde dalla cornetta lo squillo e' gia' finito in on_hook_up e
            l'indicatore arriva in ST_IN_CALL, dove non fa nulla. */
         stop_ringing(p);
+        if (p->hw && p->hw->bt_release_audio) {
+            p->hw->bt_release_audio();
+        }
         transition(p, ST_IDLE);
         break;
 
