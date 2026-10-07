@@ -130,16 +130,6 @@ static void place_call(phone_t *p, const char *number, uint32_t now_ms)
        l'Audio Gateway segnala la chiamata attiva. */
 }
 
-static void on_call_answered(phone_t *p)
-{
-    /* Vale solo per le uscenti: sulle entranti la conversazione l'ha gia'
-       aperta la cornetta sollevata, e l'indicatore arriva comunque. */
-    if (p->state != ST_CALLING) {
-        return;
-    }
-    transition(p, ST_IN_CALL);
-}
-
 static void hangup(phone_t *p)
 {
     if (p->hw && p->hw->bt_hangup) {
@@ -153,6 +143,28 @@ static void stop_ringing(phone_t *p)
 {
     ring_stop(&p->ring);
     hw_bell(p, false);
+}
+
+static void on_call_answered(phone_t *p)
+{
+    switch (p->state) {
+    case ST_CALLING:
+        /* Uscente: dall'altra parte hanno alzato. */
+        transition(p, ST_IN_CALL);
+        break;
+
+    case ST_RINGING:
+        /* Entrante con la cornetta ancora giu': ha risposto il cellulare.
+           La conversazione sta li', il telefono deve solo tacere. Se si
+           risponde dalla cornetta lo squillo e' gia' finito in on_hook_up e
+           l'indicatore arriva in ST_IN_CALL, dove non fa nulla. */
+        stop_ringing(p);
+        transition(p, ST_IDLE);
+        break;
+
+    default:
+        break;
+    }
 }
 
 /* --- gestione dei singoli eventi ------------------------------------------ */

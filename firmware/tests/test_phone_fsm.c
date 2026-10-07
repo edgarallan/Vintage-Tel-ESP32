@@ -200,6 +200,23 @@ void test_chi_non_risponde_lascia_riagganciare(void)
     TEST_ASSERT_TRUE(fake_did(&g_fake, "hangup"));
 }
 
+void test_risposta_dal_cellulare_zittisce_il_campanello(void)
+{
+    /* Squilla, e si risponde dal cellulare invece che dalla cornetta: il
+       campanello deve tacere subito, e il telefono tornare a riposo con la
+       cornetta ancora giu'. */
+    send_incoming("+393331234567");
+    TEST_ASSERT_TRUE(g_fake.bell_on);
+
+    send(EV_CALL_ANSWERED);
+    TEST_ASSERT_FALSE(g_fake.bell_on);
+    TEST_ASSERT_EQUAL(ST_IDLE, phone_state(&ph));
+
+    /* E non riparte col battito della cadenza. */
+    tick_to(g_fake.now_ms + 6000);
+    TEST_ASSERT_FALSE(g_fake.bell_on);
+}
+
 void test_risposta_fuori_contesto_non_apre_una_conversazione(void)
 {
     /* L'indicatore di chiamata attiva arriva anche per le entranti, quando la
@@ -485,6 +502,7 @@ int main(void)
     RUN_TEST(test_chiamata_uscente_resta_in_calling_finche_non_rispondono);
     RUN_TEST(test_chi_non_risponde_lascia_riagganciare);
     RUN_TEST(test_risposta_fuori_contesto_non_apre_una_conversazione);
+    RUN_TEST(test_risposta_dal_cellulare_zittisce_il_campanello);
     RUN_TEST(test_quick_dial_con_una_cifra_sola);
     RUN_TEST(test_una_seconda_cifra_annulla_il_quick_dial);
     RUN_TEST(test_cifra_senza_quick_dial_aspetta_la_pausa_lunga);
