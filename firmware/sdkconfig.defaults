@@ -50,3 +50,12 @@ CONFIG_BT_LOG_APPL_TRACE_LEVEL_ERROR=y
 # NON e' la soluzione del problema di alimentazione, e' una rete di sicurezza:
 # se scatta, c'e' comunque qualcosa da sistemare a monte.
 CONFIG_ESP_PHY_REDUCE_TX_POWER=y
+
+# --- Watchdog ----------------------------------------------------------------
+# Un telefono bloccato deve riavviarsi da solo: e' chiuso in una scocca e vive a
+# batteria, nessuno sta guardando la seriale. Il task del telefono si iscrive al
+# watchdog in app_main.c; qui si decide che quando scatta si riavvia invece di
+# stampare soltanto un avviso. Dieci secondi: cento volte il battito di 100 ms,
+# abbastanza da non scattare mai durante il lavoro normale del Bluetooth.
+CONFIG_ESP_TASK_WDT_PANIC=y
+CONFIG_ESP_TASK_WDT_TIMEOUT_S=10

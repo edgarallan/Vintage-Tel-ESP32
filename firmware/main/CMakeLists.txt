@@ -1,5 +1,5 @@
 idf_component_register(
-    SRCS "app_main.c" "diag_input.c" "diag_bell.c" "diag_audio.c"
+    SRCS "app_main.c" "riavvio.c" "diag_input.c" "diag_bell.c" "diag_audio.c"
     INCLUDE_DIRS "."
     REQUIRES core phone_hal esp_timer nvs_flash
 )

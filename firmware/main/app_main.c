@@ -20,12 +20,14 @@
 #include "freertos/task.h"
 
 #include "esp_log.h"
+#include "esp_task_wdt.h"
 #include "esp_timer.h"
 #include "nvs_flash.h"
 
 #include "phone_hal.h"
 #include "phone_fsm.h"
 #include "phonebook.h"
+#include "riavvio.h"
 
 static const char *TAG = "vintage-tel";
 
@@ -53,8 +55,17 @@ static void phone_task(void *arg)
     (void)arg;
     phone_ev_t ev;
 
+    /* Sotto watchdog. Il battito arriva ogni 100 ms, quindi un task che non
+       riceve niente per CONFIG_ESP_TASK_WDT_TIMEOUT_S secondi e' bloccato lui,
+       oppure si e' fermato il timer che lo nutre: in entrambi i casi il
+       telefono e' morto, e un riavvio e' meglio di un telefono muto finche'
+       qualcuno non stacca la batteria. Il reset si fa solo a evento ricevuto:
+       farlo su un timeout della coda nasconderebbe proprio il timer fermo. */
+    ESP_ERROR_CHECK(esp_task_wdt_add(NULL));
+
     for (;;) {
         if (xQueueReceive(s_evt_q, &ev, portMAX_DELAY) == pdTRUE) {
+            esp_task_wdt_reset();
             phone_handle(&s_phone, &ev);
         }
     }
@@ -100,6 +111,8 @@ void app_main(void)
         err = nvs_flash_init();
     }
     ESP_ERROR_CHECK(err);
+
+    riavvio_registra();
 
     s_evt_q = xQueueCreate(EVT_QUEUE_LEN, sizeof(phone_ev_t));
     configASSERT(s_evt_q);
