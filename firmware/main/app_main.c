@@ -136,6 +136,10 @@ void app_main(void)
         .interdigit_ms = 6000,
         .quickdial_ms  = 1500,
         .busy_ms       = 3000,
+        /* Trenta secondi di tono di libero senza comporre, poi occupato e
+           silenzio: e' cio' che fa la centrale, e salva la batteria quando
+           la cornetta resta alzata per dimenticanza. */
+        .offhook_ms    = 30000,
     };
     const ring_config_t ring_cfg = {
         .on_ms     = 1000,   /* cadenza italiana: 1 s di squillo... */

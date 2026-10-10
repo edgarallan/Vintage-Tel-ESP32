@@ -383,3 +383,18 @@ in `pinout.md`, che era giusta. L'eco sparisce.
 > **Il comune della cornetta e' anche il ritorno dell'auricolare.** Metterlo sul microfono non
 > zittisce niente: fa rientrare l'ascolto nella voce che si trasmette, e il difetto si sente
 > come un'acustica sbagliata, non come un guasto.
+
+## Cornetta dimenticata alzata: telefono morto dopo tre ore (ottobre 2026)
+
+**Sintomo.** A batteria, con la cornetta rimasta sollevata per circa tre ore, il telefono
+si spegne e non riparte.
+
+**Causa probabile.** A cornetta alzata il firmware suonava il tono di libero **senza limite
+di tempo**, con codec e amplificatore sempre al lavoro: un carico continuo che la cella da
+sola non regge per ore. Nessun watchdog l'avrebbe salvato — per ripartire serve corrente.
+
+**Rimedio.** Come una centrale vera: dopo **30 s** di tono senza comporre (`offhook_ms`)
+arriva l'occupato e poi il silenzio; per riavere il tono si riaggancia e si rialza. In piu'
+il task del telefono e' ora sotto **task watchdog con riavvio** (10 s), e ogni riavvio
+anomalo — watchdog, crash, calo di tensione — e' contato in NVS e stampato all'avvio da
+`main/riavvio.c`: la prossima volta il motivo si legge invece di indovinarlo.

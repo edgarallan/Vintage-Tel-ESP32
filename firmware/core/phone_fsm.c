@@ -175,7 +175,6 @@ static void on_call_answered(phone_t *p)
 
 static void on_hook_up(phone_t *p, uint32_t now_ms)
 {
-    (void)now_ms;
     switch (p->state) {
     case ST_RINGING:
         stop_ringing(p);
@@ -188,6 +187,7 @@ static void on_hook_up(phone_t *p, uint32_t now_ms)
     case ST_IDLE:
         stop_busy(p);
         clear_dialed(p);
+        p->offhook_since_ms = now_ms;
         transition(p, ST_DIALING);
         hw_tone(p, TONE_DIAL);
         break;
@@ -305,7 +305,18 @@ static void on_tick(phone_t *p, uint32_t now_ms)
         stop_busy(p);
     }
 
-    if (p->state != ST_DIALING || p->dialed_len == 0) {
+    if (p->state != ST_DIALING) {
+        return;
+    }
+
+    /* Cornetta alzata e nessuna cifra: dopo offhook_ms si fa come la
+       centrale, occupato e poi silenzio. A ottobre 2026 una cornetta rimasta
+       su tre ore col tono di libero ha scaricato la batteria. Per riavere
+       il tono si riaggancia e si rialza. */
+    if (p->dialed_len == 0) {
+        if (p->cfg.offhook_ms && (now_ms - p->offhook_since_ms) >= p->cfg.offhook_ms) {
+            start_busy(p, now_ms);
+        }
         return;
     }
 

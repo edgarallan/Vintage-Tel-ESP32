@@ -17,6 +17,7 @@ static phonebook_t pb;
 #define INTERDIGIT_MS 8000
 #define QUICKDIAL_MS  1500
 #define BUSY_MS       3000
+#define OFFHOOK_MS    30000
 
 void setUp(void)
 {
@@ -29,6 +30,7 @@ void setUp(void)
         .interdigit_ms = INTERDIGIT_MS,
         .quickdial_ms  = QUICKDIAL_MS,
         .busy_ms       = BUSY_MS,
+        .offhook_ms    = OFFHOOK_MS,
     };
     ring_config_t ring = { .on_ms = 1000, .off_ms = 4000, .max_rings = 30 };
     phone_init(&ph, fake_hw_iface(), &pb, &cfg, &ring);
@@ -504,6 +506,67 @@ void test_la_rubrica_si_aggiorna_anche_durante_uno_squillo(void)
     TEST_ASSERT_EQUAL(ST_RINGING, phone_state(&ph));
 }
 
+/* --- cornetta dimenticata alzata ------------------------------------------ */
+
+void test_cornetta_alzata_senza_comporre_da_occupato_poi_silenzio(void)
+{
+    /* Come una centrale vera: dopo il tempo massimo il tono di libero lascia
+       il posto all'occupato, e poi al silenzio. Tre ore di tono continuo
+       hanno scaricato la batteria. */
+    at(1000);
+    send(EV_HOOK_UP);
+    TEST_ASSERT_EQUAL(TONE_DIAL, g_fake.last_tone);
+
+    tick_to(1000 + OFFHOOK_MS - 100);
+    TEST_ASSERT_EQUAL(TONE_DIAL, g_fake.last_tone);
+
+    tick_to(1000 + OFFHOOK_MS);
+    TEST_ASSERT_EQUAL(TONE_BUSY, g_fake.last_tone);
+    TEST_ASSERT_EQUAL(ST_IDLE, phone_state(&ph));
+
+    tick_to(1000 + OFFHOOK_MS + BUSY_MS);
+    TEST_ASSERT_EQUAL(TONE_NONE, g_fake.last_tone);
+}
+
+void test_riagganciare_e_rialzare_rida_il_tono_di_libero(void)
+{
+    at(0);
+    send(EV_HOOK_UP);
+    tick_to(OFFHOOK_MS + BUSY_MS);
+    send(EV_HOOK_DOWN);
+    send(EV_HOOK_UP);
+    TEST_ASSERT_EQUAL(TONE_DIAL, g_fake.last_tone);
+    TEST_ASSERT_EQUAL(ST_DIALING, phone_state(&ph));
+}
+
+void test_dopo_la_prima_cifra_vale_il_timeout_tra_cifre(void)
+{
+    at(0);
+    send(EV_HOOK_UP);
+    at(OFFHOOK_MS - 1000);
+    send_digit(3);
+    tick_to(OFFHOOK_MS + 500);
+    TEST_ASSERT_EQUAL(ST_DIALING, phone_state(&ph));
+    TEST_ASSERT_FALSE(fake_did(&g_fake, "place_call:3"));
+}
+
+void test_timeout_cornetta_a_zero_e_disattivo(void)
+{
+    phone_config_t cfg = {
+        .interdigit_ms = INTERDIGIT_MS,
+        .quickdial_ms  = QUICKDIAL_MS,
+        .busy_ms       = BUSY_MS,
+        .offhook_ms    = 0,
+    };
+    ring_config_t ring = { .on_ms = 1000, .off_ms = 4000, .max_rings = 30 };
+    phone_init(&ph, fake_hw_iface(), &pb, &cfg, &ring);
+
+    at(0);
+    send(EV_HOOK_UP);
+    tick_to(10 * OFFHOOK_MS);
+    TEST_ASSERT_EQUAL(TONE_DIAL, g_fake.last_tone);
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -523,6 +586,10 @@ int main(void)
     RUN_TEST(test_risposta_dal_cellulare_zittisce_il_campanello);
     RUN_TEST(test_risposta_dal_cellulare_gli_lascia_l_audio);
     RUN_TEST(test_risposta_dalla_cornetta_tiene_l_audio);
+    RUN_TEST(test_cornetta_alzata_senza_comporre_da_occupato_poi_silenzio);
+    RUN_TEST(test_riagganciare_e_rialzare_rida_il_tono_di_libero);
+    RUN_TEST(test_dopo_la_prima_cifra_vale_il_timeout_tra_cifre);
+    RUN_TEST(test_timeout_cornetta_a_zero_e_disattivo);
     RUN_TEST(test_quick_dial_con_una_cifra_sola);
     RUN_TEST(test_una_seconda_cifra_annulla_il_quick_dial);
     RUN_TEST(test_cifra_senza_quick_dial_aspetta_la_pausa_lunga);

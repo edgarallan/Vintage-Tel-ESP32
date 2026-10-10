@@ -60,6 +60,7 @@ typedef struct {
     uint32_t interdigit_ms;  /* attesa massima tra due cifre (IT: 8000) */
     uint32_t quickdial_ms;   /* pausa dopo una cifra sola prima del quick-dial (1500) */
     uint32_t busy_ms;        /* durata del tono di occupato dopo un fallimento (3000) */
+    uint32_t offhook_ms;     /* cornetta alzata senza comporre: poi occupato (30000); 0 = mai */
 } phone_config_t;
 
 typedef struct {
@@ -73,6 +74,7 @@ typedef struct {
     char          last_number[PHONE_MAX_DIGITS + 1];
 
     uint32_t last_digit_ms;
+    uint32_t offhook_since_ms;   /* cornetta alzata a riposo: inizio del tono */
     uint32_t busy_started_ms;
     bool     busy_playing;
 
