@@ -45,6 +45,13 @@ static const char *TAG = "hal_disp";
    c'e' proprio; cinque bastano perche' il ritorno sia percepito immediato. */
 #define RIPESCA_S      5
 
+#define DISPLAY_I2C_TIMEOUT_MS  100
+
+/* Quanto il task del telefono aspetta il display prima di rinunciare al
+   disegno. Il telefono non deve mai fermarsi per uno schermo: meglio una
+   schermata non aggiornata che una chiamata persa. */
+#define ATTESA_LOCK  pdMS_TO_TICKS(1000)
+
 /* Font 5x7: cinque colonne per carattere, un bit per pixel, il bit 0 in alto.
    Copre da spazio (32) a 'Z' (90); le minuscole si convertono in maiuscole,
    e tutto il resto diventa uno spazio. E' l'insieme che serve a un telefono:
@@ -329,6 +336,12 @@ void hal_display_init(void)
         .dc_bit_offset       = 6,
         .lcd_cmd_bits        = 8,
         .lcd_param_bits      = 8,
+        /* Senza questo il driver aspetta PER SEMPRE una transazione che il
+           bus non completa: un contatto che si apre a meta' scrittura
+           lasciava il task del display fermo col lock in mano, e il task del
+           telefono fermo ad aspettarlo. Telefono morto, scoperto dal
+           watchdog il 10/10/2026. Un fotogramma intero a 400 kHz sono ~25 ms. */
+        .transaction_timeout_ms = DISPLAY_I2C_TIMEOUT_MS,
     };
     esp_lcd_panel_io_handle_t io_h = NULL;
     err = esp_lcd_new_panel_io_i2c(bus_h, &io, &io_h);
@@ -426,9 +439,22 @@ static void disegna_stato(void)
     mostra();
 }
 
+/* Il lock per chi arriva dal task del telefono: con un'attesa massima, mai
+   per sempre. */
+static bool prendi_lock(const char *chi)
+{
+    if (xSemaphoreTake(s_lock, ATTESA_LOCK) == pdTRUE) {
+        return true;
+    }
+    ESP_LOGW(TAG, "display occupato: salto l'aggiornamento (%s)", chi);
+    return false;
+}
+
 void hal_display_state(const char *state, const char *extra)
 {
-    xSemaphoreTake(s_lock, portMAX_DELAY);
+    if (!prendi_lock("stato")) {
+        return;
+    }
     snprintf(s_stato, sizeof(s_stato), "%s", state ? state : "");
     snprintf(s_extra, sizeof(s_extra), "%s", extra ? extra : "");
     s_schermata_stato = true;
@@ -524,7 +550,9 @@ static void disegna_chiamata(void)
 
 void hal_display_incoming(const char *name, const char *number)
 {
-    xSemaphoreTake(s_lock, portMAX_DELAY);
+    if (!prendi_lock("chiamata")) {
+        return;
+    }
     snprintf(s_chi, sizeof(s_chi), "%s", name ? name : "");
     snprintf(s_num, sizeof(s_num), "%s", number ? number : "");
     s_schermata_stato = false;

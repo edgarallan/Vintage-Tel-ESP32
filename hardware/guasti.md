@@ -398,3 +398,24 @@ arriva l'occupato e poi il silenzio; per riavere il tono si riaggancia e si rial
 il task del telefono e' ora sotto **task watchdog con riavvio** (10 s), e ogni riavvio
 anomalo — watchdog, crash, calo di tensione — e' contato in NVS e stampato all'avvio da
 `main/riavvio.c`: la prossima volta il motivo si legge invece di indovinarlo.
+
+## Il watchdog scatta: il telefono aspettava il display per sempre (10/10/2026)
+
+**Sintomo.** Al primo avvio dopo l'introduzione del watchdog il log dice `riavvii anomali
+finora: 1, l'ultimo per watchdog dei task`: il task del telefono e' rimasto fermo piu' di
+10 secondi senza che nessuno toccasse niente.
+
+**Causa.** Il display era configurato senza `transaction_timeout_ms`, e il driver `esp_lcd`
+in quel caso **aspetta all'infinito** una transazione I2C che il bus non completa. Un
+contatto che si apre a meta' scrittura — il display sta sui morsetti insieme al codec, e
+nei log era gia' comparso `I2C bus is still busy` — lasciava il task del display fermo
+**col lock in mano**, e il task del telefono fermo ad aspettare quel lock al primo
+aggiornamento dello schermo. Prima del watchdog il blocco era permanente: e' un candidato
+serio anche per il telefono "morto" a cornetta alzata.
+
+**Rimedio.** Timeout di 100 ms sulle transazioni del display; il task del telefono prende
+il lock con un'attesa massima di 1 s e, se non lo ottiene, salta il disegno e lo scrive a
+log (`display occupato: salto l'aggiornamento`).
+
+> **Il task del telefono non aspetta mai per sempre nessuno.** Una periferica lenta o
+> staccata puo' costare una schermata non aggiornata, non una chiamata persa.
