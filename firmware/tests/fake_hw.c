@@ -47,6 +47,7 @@ static bool f_hangup(void)              { record("hangup"); return true; }
 static bool f_send_dtmf(char d)         { record("dtmf:%c", d); return true; }
 static bool f_is_connected(void)        { return g_fake.bt_connected; }
 static bool f_release_audio(void)       { record("release_audio"); return true; }
+static void f_restart(void)             { record("restart"); }
 static uint32_t f_now_ms(void)          { return g_fake.now_ms; }
 
 static const hw_iface_t iface = {
@@ -63,6 +64,7 @@ static const hw_iface_t iface = {
     .bt_send_dtmf      = f_send_dtmf,
     .bt_is_connected   = f_is_connected,
     .bt_release_audio  = f_release_audio,
+    .restart           = f_restart,
     .now_ms            = f_now_ms,
 };
 

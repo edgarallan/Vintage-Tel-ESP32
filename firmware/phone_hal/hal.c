@@ -4,6 +4,7 @@
 #include "hal_priv.h"
 
 #include "esp_log.h"
+#include "esp_system.h"
 #include "esp_timer.h"
 
 uint32_t hal_now_ms(void)
@@ -11,6 +12,16 @@ uint32_t hal_now_ms(void)
     /* esp_timer conta in microsecondi da 64 bit; il core ragiona in ms a 32 bit,
        che bastano per 49 giorni di accensione continua. */
     return (uint32_t)(esp_timer_get_time() / 1000);
+}
+
+/* Riavvio chiesto dal disco. Un riavvio da software riparte da zero: I2S,
+   codec e Bluetooth reinizializzati, cioe' lo stesso effetto di staccare la
+   batteria, senza aprire la scocca. Non conta fra i riavvii anomali. */
+static void hal_restart(void)
+{
+    ESP_LOGW("hal", "riavvio chiesto dal disco");
+    vTaskDelay(pdMS_TO_TICKS(100));   /* il tempo di far uscire la riga */
+    esp_restart();
 }
 
 static const hw_iface_t s_hw = {
@@ -27,6 +38,7 @@ static const hw_iface_t s_hw = {
     .bt_send_dtmf      = hal_bt_send_dtmf,
     .bt_is_connected   = hal_bt_is_connected,
     .bt_release_audio  = hal_bt_release_audio,
+    .restart           = hal_restart,
     .now_ms            = hal_now_ms,
 };
 

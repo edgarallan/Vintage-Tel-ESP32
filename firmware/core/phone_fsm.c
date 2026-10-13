@@ -246,6 +246,21 @@ static void on_digit(phone_t *p, uint8_t digit, uint32_t now_ms)
         p->dialed[p->dialed_len]   = '\0';
     }
 
+    /* Riavvio a comando: quattro zeri, appena arriva il quarto. Nessun numero
+       vero comincia cosi' — "00" e' il prefisso internazionale e nessun
+       paese ha un prefisso che comincia per 0 — quindi non si ruba niente
+       alla composizione. E' la via d'uscita quando qualcosa resta incastrato
+       e la scocca e' chiusa: il 14/10/2026 l'audio era rimasto muto dopo un
+       calo di alimentazione, e si sbloccava solo staccando la batteria. */
+    if (strcmp(p->dialed, RESTART_CODE) == 0) {
+        hw_tone(p, TONE_NONE);
+        clear_dialed(p);
+        if (p->hw && p->hw->restart) {
+            p->hw->restart();
+        }
+        return;
+    }
+
     p->last_digit_ms = now_ms;
     hw_tone(p, TONE_KEYPRESS);
 

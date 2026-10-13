@@ -567,6 +567,55 @@ void test_timeout_cornetta_a_zero_e_disattivo(void)
     TEST_ASSERT_EQUAL(TONE_DIAL, g_fake.last_tone);
 }
 
+/* --- riavvio dal disco ---------------------------------------------------- */
+
+void test_quattro_zeri_riavviano_il_telefono(void)
+{
+    send(EV_HOOK_UP);
+    for (int i = 0; i < 3; i++) {
+        send_digit(0);
+    }
+    TEST_ASSERT_FALSE(fake_did(&g_fake, "restart"));
+    send_digit(0);
+    TEST_ASSERT_TRUE(fake_did(&g_fake, "restart"));
+}
+
+void test_quattro_zeri_non_diventano_una_chiamata(void)
+{
+    at(0);
+    send(EV_HOOK_UP);
+    for (int i = 0; i < 4; i++) {
+        send_digit(0);
+    }
+    tick_to(INTERDIGIT_MS + 1000);
+    TEST_ASSERT_EQUAL(0, fake_count(&g_fake, "place_call:0000"));
+}
+
+void test_numero_internazionale_non_riavvia(void)
+{
+    /* "0039..." contiene due zeri in testa ma non quattro: e' una chiamata. */
+    send(EV_HOOK_UP);
+    send_digit(0);
+    send_digit(0);
+    send_digit(3);
+    send_digit(9);
+    send_digit(0);
+    send_digit(0);
+    TEST_ASSERT_FALSE(fake_did(&g_fake, "restart"));
+}
+
+void test_zeri_dentro_una_conversazione_non_riavviano(void)
+{
+    /* In chiamata il disco manda toni ai menu vocali: "0000" li' e' un
+       codice, non un comando al telefono. */
+    send_incoming("+393331234567");
+    send(EV_HOOK_UP);
+    for (int i = 0; i < 4; i++) {
+        send_digit(0);
+    }
+    TEST_ASSERT_FALSE(fake_did(&g_fake, "restart"));
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -590,6 +639,10 @@ int main(void)
     RUN_TEST(test_riagganciare_e_rialzare_rida_il_tono_di_libero);
     RUN_TEST(test_dopo_la_prima_cifra_vale_il_timeout_tra_cifre);
     RUN_TEST(test_timeout_cornetta_a_zero_e_disattivo);
+    RUN_TEST(test_quattro_zeri_riavviano_il_telefono);
+    RUN_TEST(test_quattro_zeri_non_diventano_una_chiamata);
+    RUN_TEST(test_numero_internazionale_non_riavvia);
+    RUN_TEST(test_zeri_dentro_una_conversazione_non_riavviano);
     RUN_TEST(test_quick_dial_con_una_cifra_sola);
     RUN_TEST(test_una_seconda_cifra_annulla_il_quick_dial);
     RUN_TEST(test_cifra_senza_quick_dial_aspetta_la_pausa_lunga);

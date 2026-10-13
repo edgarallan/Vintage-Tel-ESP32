@@ -437,3 +437,19 @@ l'ESP32 in **sonno profondo per 15 minuti**, prima di accendere il Bluetooth. Il
 scende sotto la soglia del modulo batteria, che di solito taglia l'uscita: il telefono si
 spegne davvero finche' non arriva il caricatore. Dopo 60 s di funzionamento stabile la
 serie si azzera.
+
+## Dopo un calo di alimentazione la cornetta e' muta (14/10/2026)
+
+**Sintomo.** Collegato il caricatore al modulo batteria, il telefono riparte, display
+compreso, ma alzando la cornetta non si sente niente. Il gancio funziona: il LED passa al
+bianco. Staccando e riattaccando la batteria torna tutto normale.
+
+**Causa probabile.** La stessa famiglia dello stallo dell'I2S dopo lo stacco dell'USB: un
+gradino di alimentazione lascia muta la catena audio — l'I2S, o il codec che perde i suoi
+registri mentre l'ESP32 resta acceso — senza nessun errore a log. Non riprodotto con la
+seriale attaccata, quindi senza un log che dica quale dei due.
+
+**Rimedio.** Riavvio a comando dal disco: **0000** a cornetta alzata riavvia il telefono
+appena arriva il quarto zero (`RESTART_CODE` in `core/phone_fsm.h`). Riparte tutto da zero
+come staccando la batteria, senza aprire la scocca. In conversazione gli zeri restano toni
+per i menu vocali.

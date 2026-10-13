@@ -26,6 +26,9 @@
 
 #define PHONE_MAX_DIGITS 20
 
+/* Composto da cornetta alzata, riavvia il telefono. */
+#define RESTART_CODE "0000"
+
 typedef enum {
     ST_IDLE,
     ST_DIALING,

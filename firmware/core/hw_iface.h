@@ -59,6 +59,9 @@ typedef struct {
        corso, ma l'audio torna sul cellulare. */
     bool (*bt_release_audio)(void);
 
+    /* Riavvia l'intero telefono. Non ritorna sull'hardware vero. */
+    void (*restart)(void);
+
     /* Millisecondi dall'avvio. Nei test e' un contatore pilotabile a mano,
        ed e' cio' che rende i test deterministici invece che a tempo reale. */
     uint32_t (*now_ms)(void);
