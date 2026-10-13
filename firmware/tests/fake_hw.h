@@ -28,6 +28,7 @@ typedef struct {
     char          display_state[32];
     char          display_extra[32];
     char          display_name[32];
+    char          display_last[16];   /* "state" o "incoming": cosa e' a schermo */
 
     /* Comportamento pilotabile dal test. */
     bool bt_connected;

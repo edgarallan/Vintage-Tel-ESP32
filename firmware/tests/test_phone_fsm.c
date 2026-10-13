@@ -92,6 +92,15 @@ void test_chiamata_in_arrivo_mostra_il_nome_dalla_rubrica(void)
     TEST_ASSERT_EQUAL_STRING("Mario", g_fake.display_name);
 }
 
+void test_il_nome_del_chiamante_resta_a_schermo(void)
+{
+    /* Il cambio di stato ridisegna lo schermo: se arriva DOPO la schermata
+       della chiamata la cancella, e il nome resta visibile per pochi
+       microsecondi. Successo davvero fino al 14/10/2026. */
+    send_incoming("+393331234567");
+    TEST_ASSERT_EQUAL_STRING("incoming", g_fake.display_last);
+}
+
 void test_chiamante_sconosciuto_mostra_il_numero(void)
 {
     send_incoming("+393339999999");
@@ -621,6 +630,7 @@ int main(void)
     UNITY_BEGIN();
     RUN_TEST(test_chiamata_in_arrivo_fa_squillare);
     RUN_TEST(test_chiamata_in_arrivo_mostra_il_nome_dalla_rubrica);
+    RUN_TEST(test_il_nome_del_chiamante_resta_a_schermo);
     RUN_TEST(test_chiamante_sconosciuto_mostra_il_numero);
     RUN_TEST(test_chiamata_in_arrivo_ignorata_se_non_a_riposo);
     RUN_TEST(test_cornetta_su_risponde);

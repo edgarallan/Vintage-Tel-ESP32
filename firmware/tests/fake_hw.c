@@ -27,11 +27,13 @@ static void f_display_state(const char *state, const char *extra)
 {
     snprintf(g_fake.display_state, sizeof(g_fake.display_state), "%s", state ? state : "");
     snprintf(g_fake.display_extra, sizeof(g_fake.display_extra), "%s", extra ? extra : "");
+    snprintf(g_fake.display_last, sizeof(g_fake.display_last), "state");
 }
 
 static void f_display_incoming(const char *name, const char *number)
 {
     snprintf(g_fake.display_name, sizeof(g_fake.display_name), "%s", name ? name : "");
+    snprintf(g_fake.display_last, sizeof(g_fake.display_last), "incoming");
     record("incoming_shown:%s", number ? number : "");
 }
 

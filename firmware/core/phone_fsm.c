@@ -285,12 +285,14 @@ static void on_incoming(phone_t *p, const char *caller, uint32_t now_ms)
         return;   /* cornetta gia' in mano: non si mette a squillare */
     }
 
+    /* Prima lo stato, poi il chiamante: transition() ridisegna lo schermo da
+       capo, e fatta dopo cancellava il nome appena scritto. */
+    transition(p, ST_RINGING);
+
     const char *name = p->pb ? pb_lookup_name(p->pb, caller) : NULL;
     if (p->hw && p->hw->display_incoming) {
         p->hw->display_incoming(name ? name : caller, caller);
     }
-
-    transition(p, ST_RINGING);
     ring_start(&p->ring, now_ms);
     hw_bell(p, true);
 }
