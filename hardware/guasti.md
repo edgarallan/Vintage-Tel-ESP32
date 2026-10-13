@@ -419,3 +419,21 @@ log (`display occupato: salto l'aggiornamento`).
 
 > **Il task del telefono non aspetta mai per sempre nessuno.** Una periferica lenta o
 > staccata puo' costare una schermata non aggiornata, non una chiamata persa.
+
+## 18.363 riavvii per calo di tensione in tre giorni (13/10/2026)
+
+**Sintomo.** Il contatore dei riavvii anomali dice `18363, l'ultimo per calo di tensione`:
+uno ogni quindici secondi circa, dal 10 al 13/10/2026, col telefono a sola batteria.
+
+**Causa.** A riposo il telefono assorbe ~100 mA: una 18650 da 3000 mAh dura circa un
+giorno. La batteria e' un **tampone**, non l'alimentazione principale (`docs/02_bom.md`).
+Scarica, entra in un circolo: avvio, Bluetooth acceso, picco di corrente, tensione sotto
+soglia, riavvio. Il telefono sembra morto e intanto svuota la cella fino in fondo,
+scrivendo in flash a ogni giro.
+
+**Rimedio.** Il telefono va tenuto **sul caricatore**. Nel firmware, `core/alimentazione.c`
+conta i cali di fila nella memoria RTC (niente flash) e al **terzo** `main/riavvio.c` manda
+l'ESP32 in **sonno profondo per 15 minuti**, prima di accendere il Bluetooth. Il consumo
+scende sotto la soglia del modulo batteria, che di solito taglia l'uscita: il telefono si
+spegne davvero finche' non arriva il caricatore. Dopo 60 s di funzionamento stabile la
+serie si azzera.
