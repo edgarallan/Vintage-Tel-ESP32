@@ -325,8 +325,11 @@ bool hal_audio_play(const int16_t *mono, size_t n)
 }
 
 /* Legge `n` campioni mono dal microfono. Il codec manda stereo: si tiene il
-   canale sinistro, che e' quello dove arriva LINPUT1 — il filo bianco della
-   cornetta. */
+   canale DESTRO. Lo schema Waveshare lo dice chiaro: il microfono del jack —
+   il filo bianco della cornetta — va a RINPUT1 (R1 2,2k da 3V3, C4 1uF), mentre
+   LINPUT1 e' il microfono MEMS di bordo (MIC1). Per mesi si e' letto il
+   sinistro: parlava il MEMS nella base, che sentiva la voce attraverso l'aria.
+   Tolto il MEMS il 14/10/2026, il sinistro e' rimasto muto. */
 bool hal_audio_record(int16_t *mono, size_t n)
 {
     if (!s_pronto || !mono || n == 0) {
@@ -350,7 +353,7 @@ bool hal_audio_record(int16_t *mono, size_t n)
         }
         const size_t campioni = letti / (2 * sizeof(int16_t));
         for (size_t i = 0; i < campioni; i++) {
-            mono[i] = stereo[i * 2];
+            mono[i] = stereo[i * 2 + 1];
         }
         mono += campioni;
         n    -= campioni;
