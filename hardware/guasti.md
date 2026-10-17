@@ -453,3 +453,37 @@ seriale attaccata, quindi senza un log che dica quale dei due.
 appena arriva il quarto zero (`RESTART_CODE` in `core/phone_fsm.h`). Riparte tutto da zero
 come staccando la batteria, senza aprire la scocca. In conversazione gli zeri restano toni
 per i menu vocali.
+
+## La cornetta non arrivava mai al codec: si leggeva il canale sbagliato (17/10/2026)
+
+**Sintomo.** Dopo la saldatura della cornetta sulle piazzole del jack, chi chiama non sente
+o sente bassissimo. Col monitor il livello resta fermo a ~15 parlando nella cornetta.
+
+**Il depistaggio.** Tutte le misure dicevano "cornetta sana" — capsula 1,10 kΩ, fili integri,
+2,73 V di polarizzazione — e intanto il microfono MEMS di bordo mandava il LED in rosso.
+Le ipotesi sulla saldatura, sul cordone e sulle piazzole erano sbagliate.
+
+**Causa.** Lo [schema Waveshare](https://files.waveshare.com/upload/b/b6/WM8960_Audio_Board_Schematic..pdf)
+lo dice in una riga: il microfono del jack va a **`RINPUT1`** (canale **destro**), mentre
+`LINPUT1` e' il MEMS di bordo. `hal_audio_record()` teneva il **sinistro**. Per mesi chi
+chiamava ha sentito il MEMS nella base, che captava la voce attraverso l'aria — ed e' anche
+la "voce da stanza" di settembre. Tolto il MEMS, il sinistro e' rimasto muto.
+
+**Rimedio.** Si legge il canale destro. Il volume digitale dell'ADC, tarato a +10 dB sul MEMS
+lontano, tosava con la capsula vera: ora e' a **-6 dB** (fondo ~95, parlato 2.100-6.700,
+voce alzata ~15.000).
+
+> **Prima di misurare il rame, leggere lo schema.** Una sera di misure su un cablaggio sano
+> l'avrebbe risparmiata una riga del PDF del costruttore.
+
+## Il codec sparisce a ogni avvio: bus I2C tenuto basso (17/10/2026)
+
+**Sintomo.** `nessun WM8960 a 0x1A` a ogni avvio; a volte il codec c'e' e al riavvio no.
+
+**Causa.** Due difetti sovrapposti: il filo SDA con un contatto lento (**9 Ω** contro 1,2 di
+SCL) e il **display collegato male**, che teneva SDA a ~1 V. Lo sblocco col clock mandato
+all'avvio (`sblocca_bus()` in `phone_hal/hal_i2c.c`) lo ha dimostrato: dopo nove colpi SDA
+restava bassa — non un dispositivo fermo a meta' byte, ma qualcosa che la teneva giu'.
+
+**Rimedio.** Filo SDA rifatto (1,3 Ω) e display ricollegato: SDA a 3,3 V, codec presente a
+ogni avvio. Lo sblocco col clock resta, e scrive a log se ha dovuto intervenire.

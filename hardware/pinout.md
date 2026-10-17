@@ -271,7 +271,7 @@ base e una capsula electret nella cornetta, invece di un microfono I2S.
 |---|---|---|
 | **blu** | massa comune | `AGND` del WM8960 |
 | **rosso** | segnale ascolto | `HP_L` del WM8960 — **uscita cuffia**, non speaker (vedi sotto) |
-| **bianco** | segnale microfono | `LINPUT1` del WM8960, bias da `MICBIAS` |
+| **bianco** | segnale microfono | contatto mic del jack → **`RINPUT1`** del WM8960 (C4 1 µF), bias da R1 2,2 kΩ verso 3V3 — **canale destro** |
 
 > ⚠️ Questi colori valgono **per l'esemplare di questo progetto**, verificati col
 > multimetro. Sui telefoni italiani di quell'epoca le convenzioni cromatiche cambiavano
@@ -365,7 +365,11 @@ una capsula da orecchio.
 | DACDAT | GPIO 22 |
 | SDA / SCL | GPIO 21 / 19 (in parallelo all'OLED) |
 
-Il modulo ha anche microfoni MEMS a bordo e un jack cuffia da 3,5 mm: **non si usano**.
+Il modulo ha un microfono MEMS a bordo (MIC1, AOS3729, su `LINPUT1`) e un jack cuffia da
+3,5 mm. **Il MEMS e' stato dissaldato il 14/10/2026** e il jack tolto: la cornetta e' saldata
+sulle sue piazzole. Dallo [schema Waveshare](https://files.waveshare.com/upload/b/b6/WM8960_Audio_Board_Schematic..pdf):
+il microfono del jack va a **`RINPUT1`, canale destro**, ed e' quello che il firmware legge.
+La scheda ha anche un **quarzo proprio da 24 MHz** sulla stessa rete `I2S_MCLK`.
 L'ingresso attivo va instradato via I2C su `LINPUT1`.
 
 ### L298N (campanello)

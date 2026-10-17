@@ -174,7 +174,7 @@ static bool configura_codec(void)
         { R_LIN_VOL,      0x132, "preamp sinistro, +20 dB, non muto" },
         { R_RIN_VOL,      0x132, "preamp destro, +20 dB, non muto" },
 
-        /* Volume digitale degli ADC a +10 dB (0 dB = 0x1C3, passo 0,5 dB).
+        /* Volume digitale degli ADC (0 dB = 0x1C3, passo 0,5 dB).
 
            +10 dB SCELTO MISURANDO la sera del 17/09/2026, dopo il preamp:
 
@@ -188,9 +188,18 @@ static bool configura_codec(void)
            la bocca sta vicina alla capsula. Le righe non sono confrontabili fra
            loro sulla voce — lo sono sul fondo. +10 dB e' il compromesso: alza
            il parlato oltre il doppio e lascia 8 dB di margine prima di tosare
-           quando si alza il tono. */
-        { R_LADC_VOL,     0x1D7, "volume ADC sinistro, +10 dB" },
-        { R_RADC_VOL,     0x1D7, "volume ADC destro, +10 dB" },
+           quando si alza il tono.
+
+           ABBASSATO A -6 dB il 17/10/2026. Quella tabella misurava il MEMS di
+           bordo sul canale sinistro, che sentiva la voce attraverso l'aria
+           della base: la cornetta sta sul destro (RINPUT1) e non era mai stata
+           misurata. Con la capsula vera a +10 dB il fondo e' ~600 e la voce
+           tosa a 32768 di continuo. A 0 dB: fondo ~200, parlato 5000-9000 di
+           picco, voce alzata ancora a 32768. A -6 dB il parlato scende a
+           ~3000-4500, il riferimento di settembre, con margine per alzare il
+           tono. */
+        { R_LADC_VOL,     0x1B7, "volume ADC sinistro, -6 dB" },
+        { R_RADC_VOL,     0x1B7, "volume ADC destro, -6 dB" },
 
         /* SYSCLK preso direttamente da MCLK, nessun PLL, nessuna divisione.
            Con MCLK = 256 x 16 kHz = 4,096 MHz i conti tornano esatti e non
