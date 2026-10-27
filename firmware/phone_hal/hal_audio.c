@@ -109,6 +109,19 @@ static bool     s_tx_avviato;
 static uint32_t s_tx_buchi;
 static uint32_t s_tx_scarti;
 
+/* Byte che la radio puo' ancora prendersi: ogni frame del microfono ne
+   concede FRAME campioni, ogni consegna li consuma.
+   Serve perche' Bluedroid, a ogni "dati pronti", chiede frame in un ciclo
+   senza fine finche' non riceve una risposta corta, e se il canale voce non e'
+   piu' aperto butta il frame e richiede ancora. Col silenzio di riempimento la
+   risposta era sempre piena: chiudendo il canale per restituire l'audio al
+   cellulare il task Bluetooth girava a vuoto, il watchdog riavviava il
+   telefono dopo 10 s e, al ricollegamento, Android gli rigirava la chiamata.
+   Il tetto impedisce che il credito si accumuli mentre nessuno lo consuma. */
+#define TX_CREDITO_MAX  TX_SCORTA
+static size_t      s_tx_credito;
+static portMUX_TYPE s_tx_credito_mux = portMUX_INITIALIZER_UNLOCKED;
+
 /* Generatore dei toni di sistema. Suona solo FUORI dalla chiamata: durante la
    conversazione l'uscita appartiene alla voce. */
 static tone_gen_t s_toni;
@@ -414,6 +427,19 @@ size_t hal_audio_tx_pop(uint8_t *pcm, size_t n)
         return 0;
     }
 
+    /* Senza credito si risponde corto: e' l'unico modo di far uscire
+       Bluedroid dal suo ciclo di richieste. */
+    bool concesso = false;
+    taskENTER_CRITICAL(&s_tx_credito_mux);
+    if (s_tx_credito >= n) {
+        s_tx_credito -= n;
+        concesso = true;
+    }
+    taskEXIT_CRITICAL(&s_tx_credito_mux);
+    if (!concesso) {
+        return 0;
+    }
+
     /* Prima di cominciare a consumare si aspetta la scorta, e si ricomincia ad
        aspettarla ogni volta che la coda si prosciuga. Nel frattempo si manda
        SILENZIO invece di niente: il flusso verso il cellulare deve restare
@@ -446,6 +472,9 @@ void hal_audio_set_chiamata(bool attiva)
     s_tx_avviato = false;
     s_tx_buchi   = 0;
     s_tx_scarti  = 0;
+    taskENTER_CRITICAL(&s_tx_credito_mux);
+    s_tx_credito = 0;
+    taskEXIT_CRITICAL(&s_tx_credito_mux);
     s_in_chiamata = attiva;
     ESP_LOGI(TAG, "audio %s", attiva ? "in chiamata" : "a riposo");
 }
@@ -482,6 +511,12 @@ static void audio_task(void *arg)
             if (xRingbufferSend(s_rb_tx, mic, sizeof(mic), 0) != pdTRUE) {
                 s_tx_scarti++;
             }
+            taskENTER_CRITICAL(&s_tx_credito_mux);
+            s_tx_credito += sizeof(mic);
+            if (s_tx_credito > TX_CREDITO_MAX) {
+                s_tx_credito = TX_CREDITO_MAX;
+            }
+            taskEXIT_CRITICAL(&s_tx_credito_mux);
             hal_bt_audio_pronto();
 
             /* Una riga al secondo, solo se c'e' qualcosa da dire. */
